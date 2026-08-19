@@ -1,0 +1,861 @@
+# Decisions — 서치티쳐마인드
+
+> 문서 상태: v0.1 (Phase 0 / Foundation)
+> 최종 수정: 2026-08-19
+> 이 문서는 **모든 중요 결정의 기록**입니다. 결정이 바뀌면 새 DEC를 추가하고 이전 항목에 `SUPERSEDED`를 표시합니다.
+
+## 이 문서를 쓰는 이유
+
+나중에 "왜 이렇게 만들었지?"라는 질문이 반드시 나옵니다.
+그때 코드를 뒤지는 대신 이 문서를 보면 되도록, **결정과 그 이유를 함께** 남깁니다.
+
+## 상태 값
+
+| 상태 | 뜻 |
+|---|---|
+| `CONFIRMED` | 사용자가 승인함. 구현 진행 가능 |
+| `DEFAULT` | 저(Claude)가 기본값으로 정함. 사용자가 언제든 바꿀 수 있음 |
+| `WAITING` | 사용자 결정 대기 중. **이 결정에 종속된 구현을 시작하지 않음** |
+| `SUPERSEDED` | 다른 DEC로 대체됨 |
+
+## 사용자 승인이 반드시 필요한 항목 (임의 결정 금지)
+
+- 서버 저장 도입 / 개인정보 서버 전송 / Supabase 실제 연결
+- scoring cutoff / tie-break / compatibility logic
+- navigation 구조 변경 / branding
+- architecture contract 변경 / 대형 dependency 추가
+- PRD에 없는 기능 추가
+
+---
+
+## 결정 요약표
+
+| ID | 주제 | 상태 | 결정 |
+|---|---|---|---|
+| DEC-001 | 동점(축 점수 0) 처리 | `CONFIRMED` | 균형 표시 + defaultPole |
+| DEC-002 | 축 강도 표현 방식 | `CONFIRMED` | 3구간 라벨 |
+| DEC-002b | 구간 경계값(cutoff) | `CONFIRMED` | 0~4 / 5~12 / 13~20 |
+| DEC-003 | 브랜딩 | `CONFIRMED` | 서치티쳐마인드 |
+| DEC-004 | 축 식별자 명명 | `DEFAULT` | 중립 axisId, 라벨은 콘텐츠 |
+| DEC-005 | Part 라우팅 | `DEFAULT` | Part별 라우트 |
+| DEC-006 | IndexedDB 라이브러리 | `CONFIRMED` | idb |
+| DEC-007 | PWA 도구 | `CONFIRMED` | @serwist/turbopack |
+| DEC-008 | 결과 이미지 저장 | `CONFIRMED` | html-to-image |
+| DEC-009 | 닉네임 정책 | `DEFAULT` | 선택 입력, 기본 '선생님' |
+| DEC-010 | 재검사 처리 | `CONFIRMED` | 최신 1개만 유지 |
+| DEC-011 | 색상 팔레트 | `CONFIRMED` | 세이지 그린 + 웜 뉴트럴 |
+| DEC-012 | 폰트 | `DEFAULT` | Pretendard Variable |
+| DEC-013 | 결과 공유 | `DEFAULT` | MVP는 이미지 저장만 |
+| DEC-014 | 미응답 처리 | `DEFAULT` | 전 문항 필수 |
+| DEC-015 | 데이터 보존 기간 | `DEFAULT` | 무기한 + 수동 삭제 |
+| DEC-016 | 패키지 매니저 | `DEFAULT` | pnpm |
+| DEC-017 | 테스트 도구 | `DEFAULT` | Vitest |
+| DEC-018 | 척도 라벨 | `DEFAULT` | 양 끝만 |
+| DEC-019 | Analytics | `DEFAULT` | MVP 없음 |
+| DEC-020 | MVP 검사 제목 | `WAITING` | 콘텐츠 패키지와 함께 확정 |
+| DEC-021 | 다크 모드 | `WAITING` | Phase 6 이후 검토 |
+| DEC-022 | 도메인 주소 | `WAITING` | 배포 전 결정 |
+| DEC-023 | 4개 축의 정의 | `WAITING` | **Phase 4 최대 블로커** |
+| DEC-024 | 콘텐츠 작성 주체·일정 | `WAITING` | 40문항 + 16프로필 |
+| DEC-025 | 로고 / 워드마크 | `WAITING` | Phase 2 전 필요 |
+| DEC-026 | 준비 중 검사 3개 이름 | `WAITING` | Phase 2 전 필요 |
+| DEC-027 | Hero 문구 · FAQ 항목 | `WAITING` | Phase 2 전 필요 |
+| DEC-028 | 검사 성격 안내(면책) 문구 | `WAITING` | **법적·윤리적 검토 필요** |
+| DEC-029 | 개인정보 안내 노출 위치 | `WAITING` | Phase 2 전 필요 |
+| DEC-030 | Pretendard 폰트 파일 조달 | `WAITING` | Phase 1 착수 시 필요 |
+| DEC-031 | PWA 아이콘 · 파비콘 제작 | `WAITING` | Phase 5 전 필요 |
+
+---
+
+## DEC-001
+
+**Question:**
+축 점수가 정확히 0점일 때(동점) 어떻게 처리하는가?
+축당 10문항 × 중앙값 변환 구조에서는 0점이 반드시 발생할 수 있다.
+
+**Options:**
+A. 연속 점수는 보존하고, 0인 축은 결과 화면에 '균형'으로 표시. 프로필 매핑은 콘텐츠에 미리 정의한 `defaultPole`로 확정
+B. 0인 축이 있으면 두 방향의 프로필을 함께 소개(주 프로필 + 곁 프로필)
+C. 해당 축 문항 중 극단 응답(1점·5점) 강도가 큰 쪽으로 판정
+
+**Recommendation:**
+A. 결과가 항상 하나로 확정되어 재현 가능하고 구현이 단순하다.
+B는 축 2개가 0이면 프로필이 4개로 늘어 결과 화면과 콘텐츠 분량이 급증한다.
+C는 검증 근거가 없고 사용자에게 설명하기 어렵다.
+
+**Decision:**
+`CONFIRMED` — A (2026-08-19)
+
+**Owner:** User
+
+**Implementation note:**
+- `AssessmentAxis.defaultPole` 필드가 콘텐츠 패키지에 필수
+- `AxisScore.isBalanced = (rawScore === 0)`
+- 화면: 마커 정중앙 + '균형' 배지 + 양쪽 pole 라벨을 동등한 톤으로 표시(한쪽 강조 금지)
+- `rawScore` 0은 결과 스냅샷에 그대로 저장 (defaultPole로 덮어쓰지 않음)
+
+---
+
+## DEC-002
+
+**Question:**
+결과 화면에서 4개 축의 '강도'를 구간 라벨로 나눌 것인가?
+
+**Options:**
+A. 구간 없이 연속 막대만. 양 끝 이름과 마커 위치만 표시
+B. 3구간 라벨 (균형 / 뚜렷 / 매우 뚜렷)
+C. 5구간 세분화
+
+**Recommendation:**
+A. 검증 데이터가 없는 MVP에서 구간 라벨은 과잉 해석 위험이 있다.
+
+**Decision:**
+`CONFIRMED` — **B** (2026-08-19)
+사용자 선택: 강의장에서 대화를 끌어내는 데 라벨이 더 유용하다는 판단.
+
+**Owner:** User
+
+**Implementation note:**
+- 라벨 문구는 콘텐츠 패키지의 `intensityBands[].label`에서 주입 (코드에 하드코딩 금지)
+- 결과 화면에 "이 구간은 통계 규준이 아니라 표현을 돕기 위한 구분"이라는 취지의 안내 캡션을 둔다
+- 1회 시범 강의 후 실제 분포를 보고 경계값 재검토 (PRD "I — Iterate" 항목 1)
+
+---
+
+## DEC-002b
+
+**Question:**
+DEC-002에서 3구간을 채택했다. 경계값을 얼마로 할 것인가?
+한 축은 10문항이므로 점수 범위는 -20 ~ +20이다.
+
+**Options:**
+A. 절대값 0~4 균형 / 5~12 뚜렷 / 13~20 매우 뚜렷 (최대치의 약 20% / 60% 지점)
+B. 절대값 0~3 / 4~10 / 11~20 (느슨하게 — '매우 뚜렷'이 자주 나옴)
+C. 절대값 0~5 / 6~14 / 15~20 (보수적 — '매우 뚜렷'이 드묾)
+
+**Recommendation:**
+A. 세 구간이 비교적 고르게 나뉘어 강의장에서 다양한 결과가 나온다.
+
+**Decision:**
+`CONFIRMED` — A (2026-08-19)
+
+**Owner:** User
+
+**Implementation note:**
+- 경계값은 **코드가 아니라 콘텐츠 패키지 데이터**(`intensityBands`)로 관리한다
+- 축마다 다른 값을 쓸 수 있고, 검사마다도 다를 수 있다
+- 검증: `intensityBands`가 0부터 최대 절대값까지 빈틈·겹침 없이 덮는지 로드 시 확인
+
+---
+
+## DEC-003
+
+**Question:**
+서비스/검사의 이름을 무엇으로 할 것인가?
+MBTI 명칭·4글자 코드를 쓸 수 없으므로 독자적인 이름이 필요하다.
+
+**Options:**
+A. 교실의 결
+B. 티처 리듬 (Teacher Rhythm)
+C. 선생님의 온도
+
+**Recommendation:**
+A. '결'이 사람마다 다른 고유한 리듬을 뜻해 확장에 유리하다.
+
+**Decision:**
+`CONFIRMED` — **서치티쳐마인드** (사용자 직접 제시, 2026-08-19)
+
+**Owner:** User
+
+**Implementation note:**
+- 한글 표기: 서치티쳐마인드
+- 영문/슬러그 표기: `searchteachermind` (IndexedDB 이름, 패키지명에 사용)
+- manifest `name` / `short_name` 모두 "서치티쳐마인드"
+- 이 이름에 MBTI 관련 문자열이 포함되지 않음을 확인함
+
+---
+
+## DEC-004
+
+**Question:**
+4개 축의 식별자와 이름을 엔진에서 어떻게 다룰 것인가?
+실제 축 이름은 콘텐츠 패키지에서 오지만, 엔진이 축을 참조할 수단은 필요하다.
+
+**Options:**
+A. 엔진은 중립적인 `axisId` 문자열만 사용. 사람이 읽는 이름·pole 라벨은 전부 콘텐츠 소유
+B. 엔진에 4축 개념명을 미리 정의
+C. 축을 배열 인덱스(0~3)로만 참조
+
+**Recommendation:**
+A. 엔진이 특정 검사에 종속되지 않는다. C는 순서가 바뀌면 조용히 깨진다.
+
+**Decision:**
+`DEFAULT` — A
+
+**Owner:** User (이의 없으면 A 유지)
+
+**Implementation note:**
+- `AxisId`는 branded string. 콘텐츠 패키지가 `"axis-pace"` 같은 의미 있는 문자열을 부여
+- 엔진 코드에는 축 이름이 등장하지 않는다
+- 축 개수도 고정하지 않는다 (3축·5축 검사도 동작해야 함)
+
+---
+
+## DEC-005
+
+**Question:**
+Part 1~4를 어떻게 이동시킬 것인가?
+
+**Options:**
+A. 단일 라우트 + 클라이언트 상태로 Part 전환
+B. Part별 라우트 (`/assessments/[slug]/run/[part]`)
+C. 문항별 라우트
+
+**Recommendation:**
+B. 브라우저 뒤로가기가 "이전 Part"와 자연스럽게 일치한다.
+A는 뒤로가기가 검사 밖으로 나가 버려 사용자를 당황시킨다. C는 40번 이동이라 부담이 크다.
+
+**Decision:**
+`DEFAULT` — B
+
+**Owner:** User
+
+**Implementation note:**
+- 유효하지 않은 part 번호(0, 5, 문자)는 `notFound()` 처리
+- Part 이동 시 페이지 상단으로 스크롤 (`prefers-reduced-motion`이면 즉시 이동)
+- 응답은 Part 이동과 무관하게 이미 저장되어 있다 (클릭 즉시 저장)
+
+---
+
+## DEC-006
+
+**Question:**
+IndexedDB를 다루는 데 어떤 도구를 쓸 것인가?
+
+**Options:**
+A. `idb` (약 3KB. Promise 래퍼. Repository 코드는 직접 작성)
+B. `Dexie` (약 25KB. 스키마 버전 관리·쿼리 기능 제공)
+C. 순수 IndexedDB API
+
+**Recommendation:**
+A. DEC-010에서 "최신 1개만 유지"로 정해 복잡한 쿼리가 필요 없다.
+Repository 추상화 위에 또 하나의 추상화를 얹지 않는 편이 나중에 Supabase로 갈 때 걸리는 게 없다.
+
+**Decision:**
+`CONFIRMED` — A (2026-08-19)
+
+**Owner:** User
+
+---
+
+## DEC-007
+
+**Question:**
+PWA(설치·오프라인)를 어떤 방식으로 구현할 것인가?
+
+**Options:**
+A. `@serwist/turbopack` (Turbopack 공식 지원, Workbox 계열 검증된 캐싱 전략)
+B. `@serwist/next` (webpack 플래그가 필요할 수 있음)
+C. 라이브러리 없이 Service Worker 직접 작성
+
+**Recommendation:**
+A. Next.js 16은 Turbopack이 기본 번들러다. C는 캐시 무효화·업데이트 처리에서 버그가 나기 쉬운 영역이라,
+"오프라인에서 검사 유지"라는 핵심 요구사항을 위태롭게 한다.
+
+**Decision:**
+`CONFIRMED` — A (2026-08-19)
+
+**Owner:** User
+
+**Implementation note:**
+- 캐싱 전략은 `docs/architecture.md` 9.3 표를 따른다
+- 사용자 응답은 절대 SW 캐시에 넣지 않는다 (IndexedDB가 원본)
+- 새 SW 감지 시 자동 새로고침 금지 — 검사 도중 응답 유실 위험
+
+---
+
+## DEC-008
+
+**Question:**
+결과 이미지 저장 기능을 어떻게 구현할 것인가? (새 dependency 도입)
+
+**Options:**
+A. `html-to-image` — 결과 카드 DOM을 PNG로 변환 (약 10KB)
+B. Next.js `ImageResponse`(satori) — 서버 라우트에서 생성
+C. Canvas 2D로 직접 그리기 (dependency 0)
+
+**Recommendation:**
+A. 화면과 저장 이미지가 항상 일치하고, 서버 왕복이 없어 오프라인에서도 동작한다.
+B는 결과 데이터를 URL로 서버에 보내야 해 "개인정보를 서버로 보내지 않는다"는 원칙과 충돌한다.
+C는 결과 디자인이 바뀔 때마다 그리기 코드를 따로 고쳐야 해 유지비가 가장 크다.
+
+**Decision:**
+`CONFIRMED` — A (2026-08-19)
+
+**Owner:** User
+
+**Implementation note:**
+- 캡처 대상은 전용 컨테이너 하나로 한정 (버튼·내비게이션 제외)
+- 출력 크기 1080 × 1350px
+- 폰트가 로컬 로딩이므로 캡처 시 폰트 누락 문제가 없다
+- 이미지에도 4글자 코드·MBTI 명칭을 넣지 않는다
+
+---
+
+## DEC-009
+
+**Question:**
+닉네임 입력을 필수로 할 것인가?
+
+**Options:**
+A. 필수 입력 (1~12자)
+B. 선택 입력. 비우면 '선생님'으로 표시
+C. 필수 + 금칙어 필터
+
+**Recommendation:**
+B. 랜딩의 닉네임 입력이 "로그인처럼 보이면 안 된다"는 요구사항이 있다.
+필수로 만들면 관문처럼 느껴진다. C는 로컬 전용 표시명에 과한 처리다.
+
+**Decision:**
+`DEFAULT` — B
+
+**Owner:** User
+
+**Implementation note:**
+- 라벨 "어떻게 불러 드릴까요? (선택)"
+- 최대 12자 제한 (결과 제목 레이아웃 보호)
+- 브라우저에만 저장된다는 안내를 인접 캡션에 표시
+
+---
+
+## DEC-010
+
+**Question:**
+이미 검사를 마친 사람이 다시 검사할 때 이전 결과를 어떻게 할 것인가?
+
+**Options:**
+A. 새 세션 생성 + 최근 3개 히스토리 보관
+B. 항상 최신 1개만 유지 (덮어쓰기)
+C. 재검사 시 사용자가 보관 여부 선택
+
+**Recommendation:**
+A. 강의 전/후 변화를 비교할 수 있다.
+
+**Decision:**
+`CONFIRMED` — **B** (2026-08-19)
+사용자 선택: 구조를 단순하게 유지.
+
+**Owner:** User
+
+**Implementation note:**
+- IndexedDB `sessions` / `results` store의 keyPath를 `assessmentId`로 두어 자연스럽게 1개만 유지
+- 다시 검사하기 전에 **덮어쓰기임을 명시하는 확인 안내**를 반드시 표시 (F-5.6)
+- 확인은 AlertDialog가 아니라 인라인 확인 또는 2단계 버튼으로 처리 (Modal 남용 금지 규칙)
+
+---
+
+## DEC-011
+
+**Question:**
+디자인 SSOT의 기본 색 방향을 무엇으로 할 것인가?
+
+**Options:**
+A. 세이지 그린 + 웜 뉴트럴 (포인트: 머스타드/테라코타)
+B. 웜 샌드 + 테라코타 포인트
+C. 소프트 잉크 블루그레이 + 살구 포인트
+
+**Recommendation:**
+A. 신뢰감과 친근함이 함께 있고, 교육 도메인과 어울리며,
+금지 사항인 "AI 서비스 같은 보라/파랑"을 확실히 피한다.
+
+**Decision:**
+`CONFIRMED` — A (2026-08-19)
+
+**Owner:** User
+
+**Implementation note:**
+- OKLCH 토큰 정의는 `docs/design.md` 2절
+- **주의**: 테마가 녹색이므로 `success` 상태를 녹색만으로 표현하면 구분이 안 된다.
+  모든 상태는 아이콘 + 텍스트를 동반한다 (접근성 요구사항과도 일치)
+
+---
+
+## DEC-012
+
+**Question:**
+한글 서체를 무엇으로 할 것인가?
+
+**Options:**
+A. Pretendard Variable (`next/font/local`, SIL OFL)
+B. 시스템 폰트 스택
+C. Noto Sans KR (Google Fonts)
+
+**Recommendation:**
+A. 한글 가독성이 우수하고 상업적 사용이 자유롭다.
+로컬 파일로 넣으므로 **외부 요청이 없어 오프라인에서도 동일하게 표시**된다.
+C는 외부 요청이 발생해 오프라인 목표와 충돌한다.
+
+**Decision:**
+`DEFAULT` — A
+
+**Owner:** User
+
+**Implementation note:**
+- `weight: "45 920"` 지정 (미지정 시 WebKit에서 렌더링 이상)
+- `display: "swap"`
+- 폰트 파일 용량이 크면 서브셋 적용 검토
+
+---
+
+## DEC-013
+
+**Question:**
+결과를 어떻게 공유하게 할 것인가?
+
+**Options:**
+A. 이미지 저장만 (MVP)
+B. 결과 코드가 담긴 URL 공유 (`/r/[code]`)
+C. 둘 다
+
+**Recommendation:**
+A. B는 결과 데이터를 URL에 실어야 하고, 공유 미리보기를 위해 서버 렌더가 필요해진다.
+MVP의 local-first 원칙과 충돌한다.
+
+**Decision:**
+`DEFAULT` — A (B는 Phase 6 이후 재검토)
+
+**Owner:** User
+
+---
+
+## DEC-014
+
+**Question:**
+미응답 문항이 있는 상태에서 결과 확인을 허용할 것인가?
+
+**Options:**
+A. 전 문항 응답 필수
+B. 90% 이상이면 허용 (미응답은 중앙값으로 처리)
+
+**Recommendation:**
+A. B는 점수를 왜곡시키고, 같은 사람이 같은 응답을 해도 결과가 달라질 수 있다.
+
+**Decision:**
+`DEFAULT` — A
+
+**Owner:** User
+
+**Implementation note:**
+- `INCOMPLETE_RESPONSES` 오류 → 첫 미응답 문항으로 scroll + focus
+- Modal이 아니라 인라인 안내 + 해당 문항 시각 표시
+
+---
+
+## DEC-015
+
+**Question:**
+브라우저에 저장된 데이터를 얼마나 보관할 것인가?
+
+**Options:**
+A. 무기한 보관 + 사용자가 직접 삭제하는 버튼 제공
+B. 30일 후 자동 정리
+
+**Recommendation:**
+A. 서버가 없으므로 사용자가 스스로 통제하는 편이 명확하다.
+B는 사용자가 모르는 사이 데이터가 사라져 혼란을 준다.
+
+**Decision:**
+`DEFAULT` — A
+
+**Owner:** User
+
+**Implementation note:**
+- Footer에 "저장된 검사 데이터 삭제" 링크 → 확인 후 `clearAll()`
+
+---
+
+## DEC-016
+
+**Question:**
+패키지 매니저를 무엇으로 할 것인가?
+
+**Options:**
+A. pnpm
+B. npm
+C. bun
+
+**Recommendation:**
+A. 설치가 빠르고 디스크를 절약한다. Vercel이 자동 인식한다.
+
+**Decision:**
+`DEFAULT` — A
+
+**Owner:** User
+
+---
+
+## DEC-017
+
+**Question:**
+테스트 도구를 도입할 것인가?
+
+**Options:**
+A. Vitest (채점 순수 함수 우선), E2E는 Phase 5에서 검토
+B. 테스트 없이 진행
+
+**Recommendation:**
+A. 채점 로직이 이 제품의 심장이다. 여기가 조용히 틀리면 아무도 눈치채지 못한 채
+모든 사용자에게 잘못된 결과가 나간다. 순수 함수라 테스트 비용도 매우 낮다.
+
+**Decision:**
+`DEFAULT` — A
+
+**Owner:** User
+
+---
+
+## DEC-018
+
+**Question:**
+5점 척도에 라벨을 몇 개 표시할 것인가?
+
+**Options:**
+A. 양 끝만 ("전혀 그렇지 않다" / "매우 그렇다")
+B. 5개 모두
+
+**Recommendation:**
+A. 요구사항에 명시되어 있고, 360px 화면에서 5개 라벨은 들어가지 않는다.
+
+**Decision:**
+`DEFAULT` — A
+
+**Owner:** User
+
+**Implementation note:**
+- 시각적으로는 양 끝만 보이지만, **모든 선택지에 `aria-label`을 제공**한다
+  (예: "3점, 보통이다") — 스크린리더 사용자가 중간 값을 알 수 있어야 한다
+
+---
+
+## DEC-019
+
+**Question:**
+사용 통계(analytics)를 수집할 것인가?
+
+**Options:**
+A. 수집하지 않음
+B. Vercel Analytics 도입
+
+**Recommendation:**
+A. "개인정보를 서버로 보내지 않는다"는 제품 원칙과 일관되게 간다.
+지표가 필요해지면 그때 별도 승인 후 도입한다.
+
+**Decision:**
+`DEFAULT` — A
+
+**Owner:** User
+
+---
+
+## DEC-020
+
+**Question:**
+MVP 검사의 정식 제목을 무엇으로 할 것인가?
+(서비스명은 "서치티쳐마인드"로 확정. 그 안의 검사 1종 이름이 별도로 필요하다.)
+
+**Options:**
+A. "나의 교직 스타일 탐색"
+B. "교실 운영 리듬 검사"
+C. 콘텐츠 패키지 작성 시 함께 확정
+
+**Recommendation:**
+C. 검사 제목은 실제 문항·축 이름과 톤이 맞아야 한다.
+콘텐츠 작성 시점(Phase 4)에 함께 정하는 편이 자연스럽다.
+
+**Decision:**
+`WAITING` — 개발 중에는 임시 제목 "나의 교직 스타일 탐색"을 fixture에 사용
+
+**Owner:** User
+
+---
+
+## DEC-021
+
+**Question:**
+다크 모드를 지원할 것인가?
+
+**Options:**
+A. MVP는 라이트 전용. 토큰 구조만 다크 대응 가능하게 준비
+B. 처음부터 다크 모드 함께 구현
+
+**Recommendation:**
+A. 색 토큰을 semantic으로 잡아 두었으므로 나중에 값만 교체하면 된다.
+지금 두 벌을 만들면 검증할 조합이 두 배가 되어 MVP 일정에 부담이다.
+
+**Decision:**
+`WAITING` — Phase 6 이후 검토
+
+**Owner:** User
+
+---
+
+## DEC-022
+
+**Question:**
+배포 도메인 주소를 무엇으로 할 것인가?
+
+**Options:**
+A. Vercel 기본 도메인 사용 (`*.vercel.app`)
+B. 별도 도메인 구매
+
+**Recommendation:**
+A로 시작하고, 강의에서 실제로 쓰기 시작하면 B로 전환.
+QR로 접속하므로 주소를 외울 필요는 없지만, 짧은 주소가 신뢰감을 준다.
+
+**Decision:**
+`WAITING` — 배포 직전(Phase 6) 결정
+
+**Owner:** User
+
+**주의:** 도메인 문자열에도 MBTI 관련 표현을 쓰지 않는다.
+
+---
+
+## DEC-023
+
+**Question:**
+4개 축을 각각 무엇으로 정의할 것인가? (축 이름 + 양 끝 스타일 이름 + 설명)
+
+**Options:**
+A. 클라이언트(강사)가 교직 경험을 바탕으로 직접 정의 → 개발자는 형식만 검증
+B. 개발자/에이전트가 초안 4축을 제안하고 클라이언트가 수정
+C. 외부 전문가(교육학·심리측정) 자문을 받아 정의
+
+**Recommendation:**
+A 또는 B. 이 서비스는 강의용 대화 도구이므로 강사의 현장 감각이 가장 중요하다.
+B로 시작해 초안을 놓고 다듬는 편이 백지에서 시작하는 것보다 빠르다.
+**단, 기존 성격유형 검사의 축을 그대로 옮기는 것은 금지다.**
+
+**Decision:**
+`WAITING`
+
+**Owner:** User
+
+**Blocking:** Phase 4 전체. 축이 정해지지 않으면 문항도 결과 프로필도 쓸 수 없다.
+Phase 1~3은 fixture로 진행 가능하므로 지금 당장 막히지는 않는다.
+
+**필요한 산출물 (축마다):**
+- `axisId`(영문), 축 이름, positive/negative pole 이름 + 짧은 이름(6자 이내) + 설명 1~2문장, `defaultPole`
+- 형식은 `docs/content/teacher-style-v1.md` 3절 참조
+
+---
+
+## DEC-024
+
+**Question:**
+40문항과 16개 결과 프로필 텍스트를 누가, 언제까지 작성하는가?
+
+**Options:**
+A. 클라이언트가 전부 작성 → 개발자는 코드로 옮기고 검증만
+B. 개발자/에이전트가 초안 작성 → 클라이언트가 검수·수정
+C. 문항은 클라이언트, 결과 텍스트는 개발자 초안 + 클라이언트 검수
+
+**Recommendation:**
+C. 문항은 교직 현장 감각이 필요해 클라이언트가 유리하고,
+결과 텍스트는 분량이 크므로(16개 × 6개 섹션 ≈ 100개 문단) 초안을 받는 편이 현실적이다.
+
+**Decision:**
+`WAITING`
+
+**Owner:** User
+
+**Blocking:** Phase 4
+
+**참고 분량:**
+- 문항 40개 (각 40자 내외)
+- 결과 프로필 16개 × (제목 + 한 줄 설명 + 리듬 2~4문장 + 3개 항목 × 3묶음 + 협업 2+2) ≈ **A4 15~20쪽**
+
+---
+
+## DEC-025
+
+**Question:**
+로고 / 워드마크를 어떤 형태로 할 것인가?
+
+**Options:**
+A. 텍스트 워드마크만 (Pretendard로 "서치티쳐마인드" 조판)
+B. 심볼 + 워드마크 (별도 디자인 필요)
+C. 외부 디자이너 의뢰
+
+**Recommendation:**
+A. `docs/design.md`의 editorial 방향과 잘 맞고 추가 비용이 없다.
+심볼이 없어도 헤더는 충분히 정돈되어 보인다. 나중에 B로 올리기도 쉽다.
+
+**Decision:**
+`WAITING`
+
+**Owner:** User
+
+**Blocking:** Phase 2 (랜딩 헤더)
+
+---
+
+## DEC-026
+
+**Question:**
+랜딩에 "준비 중"으로 노출할 검사 3개의 표시 이름을 무엇으로 할 것인가?
+(MVP가 비어 보이지 않게 하려면 필요하다 — `docs/PRD.md` F-1.6)
+
+**Options:**
+A. PRD 확장 계획에서 3개 선택 (협업 스타일 / 수업 운영 리듬 / 교직 가치관)
+B. 클라이언트가 실제 개발 예정 순서대로 지정
+C. "준비 중" 카드를 없애고 다른 콘텐츠로 채움
+
+**Recommendation:**
+B. 실제로 만들 계획이 있는 것만 노출해야 신뢰를 잃지 않는다.
+A는 초안으로 쓰되 클라이언트 확인이 필요하다.
+
+**Decision:**
+`WAITING` — 개발 중에는 A의 3개를 fixture로 사용
+
+**Owner:** User
+
+**Blocking:** Phase 2
+
+---
+
+## DEC-027
+
+**Question:**
+랜딩의 Hero 문구와 FAQ 항목을 무엇으로 채울 것인가?
+
+**Options:**
+A. 개발자/에이전트가 초안 작성 → 클라이언트 검수
+B. 클라이언트가 직접 작성
+
+**Recommendation:**
+A. 분량이 작고(Hero 2줄 + FAQ 4~6개) 검수가 쉽다.
+
+**Decision:**
+`WAITING`
+
+**Owner:** User
+
+**Blocking:** Phase 2
+
+**필요한 것:**
+- Hero 제목 1줄, 부제 1줄
+- FAQ 4~6개 (예상 질문: 소요 시간 / 결과 저장 위치 / 재검사 가능 여부 / 결과 정확도 / 개인정보 / 오프라인 사용)
+
+---
+
+## DEC-028
+
+**Question:**
+이 검사의 성격을 사용자에게 어떻게 안내할 것인가? (면책·범위 고지)
+
+이 도구는 강의용 자기이해·대화 촉진 목적이며, 표준화된 심리검사가 아니다.
+그런데 "검사", "결과"라는 단어를 쓰면 사용자가 진단적 신뢰를 부여할 수 있다.
+
+**Options:**
+A. 검사 시작 화면과 결과 하단에 짧은 안내 문구를 명시
+   (예: "이 검사는 표준화된 심리검사가 아니라, 자기 이해와 대화를 돕기 위한 탐색 도구예요.")
+B. FAQ에만 넣고 화면에는 노출하지 않음
+C. 별도 안내 없음
+
+**Recommendation:**
+**A.** 교사 대상 서비스이고 강의에서 공식적으로 쓰이므로,
+과잉 해석을 막는 한 줄이 신뢰를 오히려 높인다. 부담스럽지 않은 톤으로 짧게 넣으면 된다.
+C는 권하지 않는다.
+
+**Decision:**
+`WAITING`
+
+**Owner:** User
+
+**Blocking:** Phase 2 (검사 소개 화면), Phase 3 (결과 화면)
+
+**참고:** 이 결정은 제품 신뢰도·윤리와 직결되므로 **반드시 사용자 확인을 받는다.**
+
+---
+
+## DEC-029
+
+**Question:**
+"응답이 서버로 전송되지 않고 브라우저에만 저장된다"는 안내를 어디에 노출할 것인가?
+
+**Options:**
+A. 닉네임 입력 옆 캡션 + 검사 소개 화면 + Footer (3곳)
+B. Footer와 FAQ에만
+C. 개인정보 처리방침 페이지를 따로 만듦
+
+**Recommendation:**
+A. 이 서비스의 강점이므로 오히려 눈에 띄게 알리는 편이 좋다.
+C는 서버 저장이 없는 MVP에서는 과하다 (Phase 7에서 Supabase를 붙이면 그때 필수가 된다).
+
+**Decision:**
+`WAITING`
+
+**Owner:** User
+
+**Blocking:** Phase 2
+
+---
+
+## DEC-030
+
+**Question:**
+Pretendard 폰트 파일을 어떻게 조달할 것인가? (DEC-012에서 서체는 확정)
+
+**Options:**
+A. 공식 배포처에서 `PretendardVariable.woff2` 전체 파일을 받아 `public/fonts/`에 둔다
+B. 한글 서브셋을 만들어 용량을 줄인다
+C. 정적 weight 파일 여러 개(400/600/700)를 받는다
+
+**Recommendation:**
+A로 시작한다. Variable 파일 하나로 모든 굵기를 커버해 관리가 단순하다.
+Lighthouse에서 폰트 용량이 문제로 잡히면 그때 B를 적용한다
+(서브셋을 먼저 하면 결과 이미지 캡처 시 글자가 깨질 위험이 있다).
+
+**Decision:**
+`WAITING`
+
+**Owner:** User
+
+**Blocking:** Phase 1 (폰트 설정)
+
+**주의:** 폰트는 SIL Open Font License다. 라이선스 파일도 함께 저장소에 포함한다.
+
+---
+
+## DEC-031
+
+**Question:**
+PWA 아이콘(192·512·maskable)과 파비콘을 누가 만드는가?
+
+**Options:**
+A. 워드마크 첫 글자를 세이지 배경에 얹은 단순 아이콘을 개발자가 생성
+B. 디자이너 의뢰
+C. 임시 placeholder로 두고 배포 직전에 교체
+
+**Recommendation:**
+A. DEC-025에서 텍스트 워드마크를 택하면 아이콘도 같은 톤으로 만들 수 있다.
+C는 배포 후 교체를 잊기 쉬워 권하지 않는다.
+
+**Decision:**
+`WAITING`
+
+**Owner:** User
+
+**Blocking:** Phase 5 (PWA 설치 가능 요건)
+
+**필요 규격:** 192×192, 512×512, maskable 512×512(안전 영역 여백 포함), favicon.ico 또는 SVG
+
+---
+
+## 변경 이력
+
+| 날짜 | 내용 |
+|---|---|
+| 2026-08-19 | 문서 생성. DEC-001, 002, 002b, 003, 006, 007, 008, 010, 011 사용자 승인 완료 |
+| 2026-08-19 | 인수인계 준비. 콘텐츠·브랜딩·운영 관련 DEC-023~031 추가 등록 |

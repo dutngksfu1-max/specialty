@@ -369,7 +369,7 @@ MVP에서는 검사 1종(40문항)만 제공하지만, 코드 구조는 처음�
 
 ### AC-1. 콘텐츠 비노출
 
-- [ ] `grep -ri "mbti\|ENFP\|INTJ" src/ public/ docs/` 결과에 사용자 노출 문구 0건
+- [ ] `grep -rEi "mbti|[EI][NS][TF][JP]" src/ public/` 결과에 사용자 노출 문구 0건
 - [ ] URL·`<title>`·metadata·OG 태그에 4글자 코드 없음
 - [ ] 결과 키는 내부 식별자이며 화면에 그대로 노출되지 않음
 
