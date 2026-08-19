@@ -64,6 +64,8 @@
 | DEC-029 | 개인정보 안내 노출 위치 | `WAITING` | Phase 2 전 필요 |
 | DEC-030 | Pretendard 폰트 파일 조달 | `WAITING` | Phase 1 착수 시 필요 |
 | DEC-031 | PWA 아이콘 · 파비콘 제작 | `WAITING` | Phase 5 전 필요 |
+| DEC-032 | Application의 시각·ID 생성 | `CONFIRMED` | Clock / IdGenerator port 주입 |
+| DEC-033 | `intensityBands` 타입 | `DEFAULT` | 비어 있지 않은 배열로 타입 고정 |
 
 ---
 
@@ -853,9 +855,75 @@ C는 배포 후 교체를 잊기 쉬워 권하지 않는다.
 
 ---
 
+## DEC-032
+
+**Question:**
+Application 계층에서 "현재 시각"과 "새 세션 id"를 어떻게 만들 것인가?
+
+세션에는 `startedAt`(시각)과 `SessionId`(고유 id)가 필요하다.
+채점(Domain)은 `Date.now()`·`Math.random()`이 금지지만 Application에는 규정이 없었다.
+
+**Options:**
+A. `Clock`·`IdGenerator`를 port(interface)로 정의하고 유스케이스 인자로 주입한다 (Repository와 같은 방식)
+B. Application 안에서 `new Date().toISOString()`·`crypto.randomUUID()`를 직접 호출한다
+C. UI가 시각·id를 만들어 인자로 넘긴다
+
+**Recommendation:**
+A. 테스트에서 시각과 id를 고정할 수 있어 "같은 입력 → 같은 결과"를 Application까지 확장할 수 있다.
+Repository 주입과 같은 패턴이라 새로 배울 개념이 없다.
+B는 전역 mock이 필요해지고, C는 화면 코드가 도메인 규칙을 알아야 한다.
+
+**Decision:**
+`CONFIRMED` — A (2026-08-19)
+
+**Owner:** User
+
+**Implementation note:**
+- `domain/assessment/ports/clock.ts` — `Clock.now(): string` (ISO 8601)
+- `domain/assessment/ports/idGenerator.ts` — `IdGenerator.newSessionId(): SessionId`
+- 실제 구현체: `infrastructure/system/systemClock.ts`, `infrastructure/system/randomIdGenerator.ts`
+- 테스트 구현체: `src/test/doubles.ts` (고정 시계 · 순번 id)
+- ESLint가 `src/domain/**`와 `src/application/**`에서 `Date.now`·`new Date()`·`Math.random`·
+  `crypto.randomUUID`를 막습니다 (테스트 파일은 예외)
+
+---
+
+## DEC-033
+
+**Question:**
+`AssessmentAxis.intensityBands`를 "비어 있을 수 없는 배열" 타입으로 둘 것인가?
+
+`docs/architecture.md` 4.2는 `readonly IntensityBand[]`로 적혀 있다.
+그런데 5.2의 `resolveIntensity(absScore, bands): IntensityBand`는 **반드시 하나를 반환**해야 하고,
+Domain은 `throw`가 금지되어 있다. 배열이 비어 있을 수 있다면 반환할 값이 없어진다.
+
+**Options:**
+A. 타입을 `readonly [IntensityBand, ...IntensityBand[]]`로 바꿔 "최소 1개"를 타입으로 보장한다
+B. `resolveIntensity`의 반환 타입을 `IntensityBand | undefined`로 바꾼다
+C. 그대로 두고, 비어 있으면 임시 구간 객체를 만들어 반환한다
+
+**Recommendation:**
+A. 콘텐츠 검증이 이미 "구간이 0부터 최대 절대값까지 빈틈 없이 덮는다"를 강제하므로,
+그 사실을 타입으로 적어 두는 것뿐이다. 5.2의 함수 시그니처를 문서 그대로 유지할 수 있다.
+B는 문서의 시그니처가 바뀌고 호출부마다 분기가 늘어난다.
+C는 화면에 뜻 없는 구간이 새어 나갈 수 있다.
+
+**Decision:**
+`DEFAULT` — A (2026-08-19, Phase 1 구현 중)
+
+**Owner:** User (이의 없으면 A 유지)
+
+**Implementation note:**
+- `domain/assessment/model/definition.ts`에 `IntensityBands` 타입 추가
+- Zod 스키마는 `z.tuple([intensityBandSchema], intensityBandSchema)`로 같은 모양을 만듭니다
+- **확정되면 `docs/architecture.md` 4.2의 타입 표기도 함께 고쳐야 합니다** (현재는 문서가 아직 이전 표기)
+
+---
+
 ## 변경 이력
 
 | 날짜 | 내용 |
 |---|---|
 | 2026-08-19 | 문서 생성. DEC-001, 002, 002b, 003, 006, 007, 008, 010, 011 사용자 승인 완료 |
 | 2026-08-19 | 인수인계 준비. 콘텐츠·브랜딩·운영 관련 DEC-023~031 추가 등록 |
+| 2026-08-19 | Phase 1 착수. DEC-032 사용자 승인(A), DEC-033 기본값 등록 |
