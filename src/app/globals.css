@@ -173,7 +173,8 @@
   }
 
   body {
-    background-color: var(--color-background);
+    background: linear-gradient(135deg, oklch(0.985 0.015 95) 0%, oklch(0.945 0.035 65) 100%);
+    background-attachment: fixed;
     color: var(--color-foreground-body);
     font-family: var(--font-sans);
     font-size: var(--text-body);

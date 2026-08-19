@@ -4,6 +4,7 @@ import { completeAssessment } from "@/application/assessment/completeAssessment"
 import type { AssessmentDeps } from "@/application/assessment/dependencies";
 import { getPartState } from "@/application/assessment/getPartState";
 import { getResult } from "@/application/assessment/getResult";
+import { loadNickname, updateNickname } from "@/application/assessment/nickname";
 import { resetAssessment } from "@/application/assessment/resetAssessment";
 import { resumeSession } from "@/application/assessment/resumeSession";
 import { saveResponse } from "@/application/assessment/saveResponse";
@@ -61,10 +62,12 @@ describe("startAssessment", () => {
     expect(started.value.session.nickname).toBe("테스트");
     expect(started.value.session.startedAt).toBe("2026-08-19T09:00:00.000Z");
     expect(started.value.session.completedAt).toBeNull();
+    // 콘텐츠 버전이 올라가도 깨지지 않도록, 지금 검사 정의와 같은지를 확인합니다.
+    const definition = definitionOf(deps);
     expect(started.value.session.versions).toEqual({
-      assessmentVersion: 1,
-      contentVersion: "1.0.0",
-      scoringVersion: 1,
+      assessmentVersion: definition.assessmentVersion,
+      contentVersion: definition.contentVersion,
+      scoringVersion: definition.scoring.scoringVersion,
     });
   });
 
@@ -235,7 +238,7 @@ describe("resumeSession", () => {
     await startAssessment(deps, { slug: SLUG });
 
     const bumped = JSON.parse(JSON.stringify(teacherStyleV1Package)) as Record<string, unknown>;
-    bumped.assessmentVersion = 2;
+    bumped.assessmentVersion = definitionOf(deps).assessmentVersion + 1;
 
     const bumpedDeps: AssessmentDeps = {
       ...deps,
@@ -348,7 +351,9 @@ describe("getResult", () => {
     if (!result.ok) return;
 
     expect(String(result.value.profile.key)).toBe("pppp");
-    expect(result.value.profile.title).toContain("pppp");
+    // 결과 키는 내부 식별자입니다. 화면에 나가는 제목에 새어 나오면 안 됩니다 (PRD AC-1).
+    expect(result.value.profile.title).not.toContain(String(result.value.profile.key));
+    expect(result.value.profile.title.length).toBeGreaterThan(0);
     expect(result.value.snapshot.nickname).toBe("테스트");
   });
 
@@ -376,6 +381,84 @@ describe("getResult", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error.code).toBe("VERSION_MISMATCH");
+  });
+});
+
+describe("결과 화면이 필요로 하는 데이터가 모두 갖춰집니다 (PRD F-5)", () => {
+  it("축 점수마다 축 정의와 강도 구간을 찾을 수 있습니다", async () => {
+    await startAssessment(deps, { slug: SLUG, nickname: "테스트" });
+    await answerAll(5);
+    await completeAssessment(deps, { slug: SLUG });
+
+    const result = await getResult(deps, { slug: SLUG });
+    if (!result.ok) throw new Error("결과를 불러오지 못했습니다.");
+
+    const { definition, snapshot, profile } = result.value;
+    const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
+
+    for (const score of snapshot.score.axisScores) {
+      // AxisBar가 축 이름·양 끝 라벨을 그리려면 축 정의를 찾을 수 있어야 합니다.
+      const axis = axisById.get(String(score.axisId));
+      expect(axis).toBeDefined();
+      if (axis === undefined) continue;
+
+      // 강도 배지 문구는 콘텐츠에서 옵니다. 못 찾으면 배지가 빈 칸으로 나옵니다.
+      const band = axis.intensityBands.find((current) => current.id === score.intensityBandId);
+      expect(band).toBeDefined();
+      expect(band?.label.length).toBeGreaterThan(0);
+
+      // 마커 위치는 0~1 범위여야 막대 밖으로 나가지 않습니다.
+      expect(score.normalized).toBeGreaterThanOrEqual(0);
+      expect(score.normalized).toBeLessThanOrEqual(1);
+    }
+
+    // 결과 본문 6개 묶음이 모두 비어 있지 않아야 화면에 빈 섹션이 생기지 않습니다.
+    expect(profile.title.length).toBeGreaterThan(0);
+    expect(profile.oneLiner.length).toBeGreaterThan(0);
+    expect(profile.rhythm.length).toBeGreaterThan(0);
+    expect(profile.shiningMoments.length).toBeGreaterThan(0);
+    expect(profile.underPressure.length).toBeGreaterThan(0);
+    expect(profile.withColleagues.length).toBeGreaterThan(0);
+    expect(profile.collaboration.naturalFit.length).toBeGreaterThan(0);
+    expect(profile.collaboration.needsTuning.length).toBeGreaterThan(0);
+  });
+
+  it("이름을 바꾸면 저장된 결과의 이름도 함께 바뀝니다 (F-2.4)", async () => {
+    await startAssessment(deps, { slug: SLUG, nickname: "처음이름" });
+    await answerAll(3);
+    await completeAssessment(deps, { slug: SLUG });
+
+    const updated = await updateNickname(
+      { ...deps, preferences: repository },
+      { slug: SLUG, nickname: "  바꾼이름  " },
+    );
+    expect(updated.ok).toBe(true);
+    if (!updated.ok) return;
+    expect(updated.value).toBe("바꾼이름");
+
+    const result = await getResult(deps, { slug: SLUG });
+    if (!result.ok) throw new Error("결과를 불러오지 못했습니다.");
+    expect(result.value.snapshot.nickname).toBe("바꾼이름");
+
+    // 점수는 그대로여야 합니다 — 이름은 채점과 무관합니다.
+    expect(result.value.snapshot.score.axisScores.every((axis) => axis.rawScore === 0)).toBe(true);
+
+    const remembered = await loadNickname({ preferences: repository });
+    expect(remembered.ok && remembered.value).toBe("바꾼이름");
+  });
+
+  it("12자를 넘는 이름은 잘립니다 (DEC-009)", async () => {
+    await startAssessment(deps, { slug: SLUG });
+
+    const updated = await updateNickname(
+      { ...deps, preferences: repository },
+      { slug: SLUG, nickname: "가나다라마바사아자차카타파하" },
+    );
+
+    expect(updated.ok).toBe(true);
+    if (!updated.ok) return;
+    expect(updated.value).toBe("가나다라마바사아자차카타");
+    expect([...updated.value]).toHaveLength(12);
   });
 });
 

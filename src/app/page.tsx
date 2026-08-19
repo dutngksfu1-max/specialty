@@ -1,8 +1,5 @@
 import { ActiveAssessmentCard } from "@/features/landing/ActiveAssessmentCard";
-import { FaqAccordion } from "@/features/landing/FaqAccordion";
-import { Hero } from "@/features/landing/Hero";
 import { NicknameEntry } from "@/features/landing/NicknameEntry";
-import { UpcomingList } from "@/features/landing/UpcomingList";
 import { SiteFooter } from "@/features/shared/SiteFooter";
 import { SiteHeader } from "@/features/shared/SiteHeader";
 import { StorageNotice } from "@/features/shared/StorageNotice";
@@ -24,44 +21,43 @@ export default function HomePage() {
       <SiteHeader />
       <StorageNotice />
 
-      <main id="main" className="mx-auto max-w-(--container-landing) px-5 sm:px-6">
-        <Hero />
-        <NicknameEntry />
+      <main id="main" className="mx-auto px-5 sm:px-6 flex flex-col items-center justify-center min-h-[calc(100vh-140px)] py-8">
+        <div className="w-full max-w-2xl bg-surface/80 backdrop-blur-md shadow-elev-3 rounded-[2.5rem] p-8 sm:p-12 border-4 border-white/60 flex flex-col items-center text-center">
+          <NicknameEntry />
 
-        <div className="flex flex-col gap-6 py-12">
-          {published.map((definition) => (
-            <ActiveAssessmentCard
-              key={definition.slug}
-              assessment={{
-                slug: definition.slug,
-                title: definition.title,
-                summary: definition.summary,
-                description: definition.description,
-                estimatedMinutes: definition.estimatedMinutes,
-                questionCount: definition.questions.length,
-                sectionCount: definition.sections.length,
-              }}
-            />
-          ))}
+          <div className="w-full flex flex-col gap-6 pt-8 border-t border-border/50">
+            {published.map((definition) => (
+              <ActiveAssessmentCard
+                key={definition.slug}
+                assessment={{
+                  slug: definition.slug,
+                  title: definition.title,
+                  summary: definition.summary,
+                  description: definition.description,
+                  estimatedMinutes: definition.estimatedMinutes,
+                  questionCount: definition.questions.length,
+                  sectionCount: definition.sections.length,
+                }}
+              />
+            ))}
 
-          {published.length === 0 && (
-            <section className="rounded-lg border border-border bg-surface p-6 sm:p-8">
-              <h2 className="text-h2 text-foreground">
-                {contentBroken
-                  ? ERROR_MESSAGES.INVALID_CONTENT_PACKAGE.title
-                  : "준비된 검사가 아직 없어요"}
-              </h2>
-              <p className="mt-2 text-body text-foreground-muted">
-                {contentBroken
-                  ? ERROR_MESSAGES.INVALID_CONTENT_PACKAGE.body
-                  : "곧 첫 검사가 열릴 예정이에요."}
-              </p>
-            </section>
-          )}
+            {published.length === 0 && (
+              <section className="flex flex-col items-center">
+                <h2 className="text-h2 text-foreground">
+                  {contentBroken
+                    ? ERROR_MESSAGES.INVALID_CONTENT_PACKAGE.title
+                    : "준비된 검사가 아직 없어요"}
+                </h2>
+                <p className="mt-2 text-body text-foreground-muted">
+                  {contentBroken
+                    ? ERROR_MESSAGES.INVALID_CONTENT_PACKAGE.body
+                    : "곧 첫 검사가 열릴 예정이에요."}
+                </p>
+              </section>
+            )}
+          </div>
         </div>
 
-        <UpcomingList />
-        <FaqAccordion />
       </main>
 
       <SiteFooter />

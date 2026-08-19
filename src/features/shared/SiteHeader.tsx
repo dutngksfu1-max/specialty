@@ -7,11 +7,11 @@ import { BRAND_NAME } from "@/lib/siteCopy";
  */
 export function SiteHeader() {
   return (
-    <header className="border-b border-border bg-background">
-      <div className="mx-auto flex h-14 max-w-(--container-landing) items-center px-5 sm:h-16 sm:px-6">
+    <header className="w-full pt-6 pb-2">
+      <div className="mx-auto flex justify-center items-center px-5 sm:px-6">
         <Link
           href="/"
-          className="rounded-sm text-h3 font-bold tracking-[-0.01em] text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+          className="rounded-full px-4 py-2 text-4xl sm:text-5xl font-extrabold tracking-[-0.02em] text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
         >
           {BRAND_NAME}
         </Link>

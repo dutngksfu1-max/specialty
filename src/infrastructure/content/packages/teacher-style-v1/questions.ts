@@ -1,43 +1,388 @@
-import { axisIds, sectionIds } from "./definition";
-
 /**
- * fixture 문항 40개 (축 4개 × 10문항)
+ * 문항 40개 (실제 콘텐츠 초안 — 검수 필요)
  *
- * ⚠️ 실제 문항이 아닙니다. Phase 4에서 40행짜리 리터럴 배열로 교체됩니다.
- * 여기서는 아래 형식 조건만 실제와 똑같이 맞춥니다.
- *   - 축마다 polarity +1 5개 / -1 5개  (묵종 편향 상쇄)
- *   - Part마다 여러 축이 섞여 있음      (응답자가 의도를 눈치채지 못하도록)
- *   - order는 1부터 연속
- *   - weight는 전부 1
+ * 배분 규칙 (docs/content/teacher-style-v1.md 5.1)
+ *   - 축 4개 × 10문항
+ *   - 축마다 polarity +1 다섯 개 / -1 다섯 개 (묵종 편향 상쇄)
+ *   - Part마다 여러 축이 섞이도록 축을 번갈아 배치
+ *   - 같은 축 안에서도 +1 / -1 을 번갈아 두어, 한 Part가 한 방향으로 쏠리지 않게 함
+ *
+ * 작성 규칙 (같은 문서 5.2)
+ *   - 교실·학교 상황을 구체적으로
+ *   - 한 문항에 한 가지만
+ *   - 부정문을 쓰지 않고 polarity로 방향을 뒤집음
+ *   - 40자 내외, "항상 / 절대" 같은 극단 표현 없음
+ *   - 빈도가 아니라 성향을 물음 ("~하는 편이다")
+ *
+ * id는 축 이름 + 번호입니다. 문항 순서를 바꿔도 id는 그대로 두세요.
+ * (id가 바뀌면 이미 저장된 응답을 못 찾습니다)
  */
-
-const QUESTIONS_PER_AXIS = 10;
-const TOTAL_QUESTIONS = axisIds.length * QUESTIONS_PER_AXIS;
-const QUESTIONS_PER_SECTION = TOTAL_QUESTIONS / sectionIds.length;
-
-/** 축이 몇 번째 문항을 배정받았는지 세는 카운터 */
-const takenPerAxis = new Map<string, number>();
-
-export const questions = Array.from({ length: TOTAL_QUESTIONS }, (_, index) => {
-  const order = index + 1;
-
-  // 축을 번갈아 배정하면 한 Part 안에 여러 축이 자연스럽게 섞입니다.
-  const axisId = axisIds[index % axisIds.length] ?? axisIds[0];
-  const sectionId = sectionIds[Math.floor(index / QUESTIONS_PER_SECTION)] ?? sectionIds[0];
-
-  const takenSoFar = takenPerAxis.get(axisId) ?? 0;
-  takenPerAxis.set(axisId, takenSoFar + 1);
-
-  // 축의 앞쪽 절반은 +1, 뒤쪽 절반은 -1
-  const polarity = takenSoFar < QUESTIONS_PER_AXIS / 2 ? 1 : -1;
-
-  return {
-    id: `${axisId}-q${takenSoFar + 1}`,
-    sectionId,
-    order,
-    text: `[fixture] 축 ${axisId} 문항 ${takenSoFar + 1}`,
-    axisId,
-    polarity,
+export const questions = [
+  // ── Part 1 ──────────────────────────────────────────────────────────────
+  {
+    id: "design-01",
+    sectionId: "part-1",
+    order: 1,
+    text: "학기가 시작되기 전에 한 달 치 수업 흐름을 먼저 그려 두는 편이다.",
+    axisId: "axis-design",
+    polarity: 1,
     weight: 1,
-  };
-});
+  },
+  {
+    id: "order-01",
+    sectionId: "part-1",
+    order: 2,
+    text: "학기 초에 교실 규칙을 먼저 정하고 잘 보이는 곳에 붙여 두는 편이다.",
+    axisId: "axis-order",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "decision-01",
+    sectionId: "part-1",
+    order: 3,
+    text: "아이들에게 적용하는 기준은 누구에게나 같아야 한다고 생각한다.",
+    axisId: "axis-decision",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "change-01",
+    sectionId: "part-1",
+    order: 4,
+    text: "새로운 수업 방법을 알게 되면 다음 주에 바로 해 보는 편이다.",
+    axisId: "axis-change",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "design-02",
+    sectionId: "part-1",
+    order: 5,
+    text: "아이들 반응을 보고 그 자리에서 수업 흐름을 바꾸는 편이다.",
+    axisId: "axis-design",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "order-02",
+    sectionId: "part-1",
+    order: 6,
+    text: "규칙을 세우기 전에 아이들과 이야기 나누는 시간을 먼저 갖는 편이다.",
+    axisId: "axis-order",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "decision-02",
+    sectionId: "part-1",
+    order: 7,
+    text: "같은 행동이라도 그 아이가 놓인 사정에 따라 다르게 대하는 편이다.",
+    axisId: "axis-decision",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "change-02",
+    sectionId: "part-1",
+    order: 8,
+    text: "여러 해 해 온 활동을 조금씩 다듬어 쓰는 편이다.",
+    axisId: "axis-change",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "design-03",
+    sectionId: "part-1",
+    order: 9,
+    text: "수업 자료는 필요한 날보다 며칠 앞서 만들어 두어야 마음이 놓인다.",
+    axisId: "axis-design",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "order-03",
+    sectionId: "part-1",
+    order: 10,
+    text: "아이들이 헷갈려 할 때는 정해 둔 절차를 다시 안내하는 편이다.",
+    axisId: "axis-order",
+    polarity: 1,
+    weight: 1,
+  },
+
+  // ── Part 2 ──────────────────────────────────────────────────────────────
+  {
+    id: "decision-03",
+    sectionId: "part-2",
+    order: 11,
+    text: "한 명에게 예외를 두면 다른 아이들에게 설명하기 어려워진다고 느낀다.",
+    axisId: "axis-decision",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "change-03",
+    sectionId: "part-2",
+    order: 12,
+    text: "연수에서 배운 것을 교실에서 곧바로 시험해 보는 편이다.",
+    axisId: "axis-change",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "design-04",
+    sectionId: "part-2",
+    order: 13,
+    text: "자세한 계획보다 큰 방향만 정해 두고 시작하는 편이 편하다.",
+    axisId: "axis-design",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "order-04",
+    sectionId: "part-2",
+    order: 14,
+    text: "상황마다 아이의 마음을 먼저 물어보고 방법을 정하는 편이다.",
+    axisId: "axis-order",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "decision-04",
+    sectionId: "part-2",
+    order: 15,
+    text: "결정을 내리기 전에 그 아이의 요즘 상황을 먼저 떠올리는 편이다.",
+    axisId: "axis-decision",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "change-04",
+    sectionId: "part-2",
+    order: 16,
+    text: "새로운 방법은 한 학기쯤 지켜본 뒤에 들여오는 편이다.",
+    axisId: "axis-change",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "design-05",
+    sectionId: "part-2",
+    order: 17,
+    text: "단원을 시작하기 전에 마무리 활동까지 정해 두는 편이다.",
+    axisId: "axis-design",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "order-05",
+    sectionId: "part-2",
+    order: 18,
+    text: "청소나 급식 같은 일과는 순서를 정해 두고 그대로 운영하는 편이다.",
+    axisId: "axis-order",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "decision-05",
+    sectionId: "part-2",
+    order: 19,
+    text: "역할이나 상을 정할 때 미리 정해 둔 기준을 그대로 따르는 편이다.",
+    axisId: "axis-decision",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "change-05",
+    sectionId: "part-2",
+    order: 20,
+    text: "잘 되던 활동도 다르게 바꿔 보고 싶어지는 편이다.",
+    axisId: "axis-change",
+    polarity: 1,
+    weight: 1,
+  },
+
+  // ── Part 3 ──────────────────────────────────────────────────────────────
+  {
+    id: "design-06",
+    sectionId: "part-3",
+    order: 21,
+    text: "수업 중에 나온 이야기가 좋으면 계획한 활동을 미뤄 두는 편이다.",
+    axisId: "axis-design",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "order-06",
+    sectionId: "part-3",
+    order: 22,
+    text: "정해 둔 규칙보다 그날의 관계가 교실을 움직인다고 느낀다.",
+    axisId: "axis-order",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "decision-06",
+    sectionId: "part-3",
+    order: 23,
+    text: "기준보다 지금 그 아이에게 필요한 것을 먼저 보는 편이다.",
+    axisId: "axis-decision",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "change-06",
+    sectionId: "part-3",
+    order: 24,
+    text: "잘 되는 수업 방식은 그대로 유지하는 편이 아이들에게 좋다고 본다.",
+    axisId: "axis-change",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "design-07",
+    sectionId: "part-3",
+    order: 25,
+    text: "다음 주 시간표를 미리 훑어보며 준비물을 챙겨 두는 편이다.",
+    axisId: "axis-design",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "order-07",
+    sectionId: "part-3",
+    order: 26,
+    text: "문제가 생기면 우리가 정한 약속을 함께 확인하는 것부터 한다.",
+    axisId: "axis-order",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "decision-07",
+    sectionId: "part-3",
+    order: 27,
+    text: "결정을 내릴 때 지난번에는 어떻게 했는지를 먼저 확인하는 편이다.",
+    axisId: "axis-decision",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "change-07",
+    sectionId: "part-3",
+    order: 28,
+    text: "처음 쓰는 도구나 앱을 수업에 들여오는 일이 즐거운 편이다.",
+    axisId: "axis-change",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "design-08",
+    sectionId: "part-3",
+    order: 29,
+    text: "준비물이 갑자기 바뀌어도 그 자리에서 다른 방법을 찾아내는 편이다.",
+    axisId: "axis-design",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "order-08",
+    sectionId: "part-3",
+    order: 30,
+    text: "아이가 약속을 지키지 못했을 때 이유를 듣는 데 시간을 더 쓰는 편이다.",
+    axisId: "axis-order",
+    polarity: -1,
+    weight: 1,
+  },
+
+  // ── Part 4 ──────────────────────────────────────────────────────────────
+  {
+    id: "decision-08",
+    sectionId: "part-4",
+    order: 31,
+    text: "규칙대로 하기보다 다시 해 볼 기회를 주는 쪽을 고르는 편이다.",
+    axisId: "axis-decision",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "change-08",
+    sectionId: "part-4",
+    order: 32,
+    text: "새 방법을 쓰기 전에 먼저 해 본 동료의 이야기를 찾아보는 편이다.",
+    axisId: "axis-change",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "design-09",
+    sectionId: "part-4",
+    order: 33,
+    text: "계획한 순서대로 흘러갈 때 수업이 잘 풀렸다고 느낀다.",
+    axisId: "axis-design",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "order-09",
+    sectionId: "part-4",
+    order: 34,
+    text: "예측 가능한 하루 흐름이 아이들을 편안하게 한다고 생각한다.",
+    axisId: "axis-order",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "decision-09",
+    sectionId: "part-4",
+    order: 35,
+    text: "같은 상황에는 같은 안내를 하는 편이 아이들에게 공정하다고 본다.",
+    axisId: "axis-decision",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "change-09",
+    sectionId: "part-4",
+    order: 36,
+    text: "잘 안 되더라도 새로 해 보는 편이 배우는 게 많다고 생각한다.",
+    axisId: "axis-change",
+    polarity: 1,
+    weight: 1,
+  },
+  {
+    id: "design-10",
+    sectionId: "part-4",
+    order: 37,
+    text: "그날 교실 분위기를 보고 활동을 고르는 편이다.",
+    axisId: "axis-design",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "order-10",
+    sectionId: "part-4",
+    order: 38,
+    text: "교실 분위기가 좋아지면 약속은 자연스럽게 지켜진다고 생각한다.",
+    axisId: "axis-order",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "decision-10",
+    sectionId: "part-4",
+    order: 39,
+    text: "아이마다 다르게 대하는 것이 오히려 공평하다고 느낀다.",
+    axisId: "axis-decision",
+    polarity: -1,
+    weight: 1,
+  },
+  {
+    id: "change-10",
+    sectionId: "part-4",
+    order: 40,
+    text: "익숙한 방식을 깊이 다듬을 때 수업이 단단해진다고 느낀다.",
+    axisId: "axis-change",
+    polarity: -1,
+    weight: 1,
+  },
+];

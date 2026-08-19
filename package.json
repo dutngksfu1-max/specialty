@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "html-to-image": "^1.11.13",
     "idb": "^8.0.3",
     "next": "16.3.1",
     "react": "19.2.8",

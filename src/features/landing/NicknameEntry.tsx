@@ -42,8 +42,8 @@ export function NicknameEntry() {
   }
 
   return (
-    <section className="border-t border-border py-10">
-      <label htmlFor={inputId} className="block text-label text-foreground-body">
+    <section className="flex flex-col items-center pb-8 w-full">
+      <label htmlFor={inputId} className="block text-label text-foreground-body text-center">
         어떻게 불러 드릴까요? (선택)
       </label>
 
@@ -69,7 +69,7 @@ export function NicknameEntry() {
             void persist(value);
           }
         }}
-        className="mt-2 h-11 w-full max-w-xs rounded-sm border border-border bg-surface px-3 text-body text-foreground-body placeholder:text-foreground-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:bg-surface-muted"
+        className="mt-2 h-13 w-full max-w-xs rounded-full border border-border bg-surface px-5 text-body text-foreground-body text-center shadow-sm placeholder:text-foreground-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:bg-surface-muted"
       />
 
       <p id={helperId} className="mt-2 max-w-prose text-body-sm text-foreground-muted">

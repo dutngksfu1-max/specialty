@@ -25,7 +25,7 @@ const SIZE_CLASS: Record<ButtonSize, string> = {
 };
 
 export const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 rounded-md font-medium " +
+  "inline-flex items-center justify-center gap-2 rounded-xl font-medium " +
   "transition-colors duration-[120ms] ease-out-soft " +
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring " +
   "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-foreground-disabled " +

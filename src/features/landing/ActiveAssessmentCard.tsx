@@ -61,26 +61,26 @@ export function ActiveAssessmentCard({ assessment }: { readonly assessment: Asse
   const isResumable = progress.kind === "inProgress" && progress.answered > 0;
 
   return (
-    <section className="rounded-lg border border-border bg-surface p-6 shadow-elev-1 sm:p-8">
+    <section className="group flex flex-col items-center text-center w-full bg-surface/80 rounded-[2rem] border-2 border-primary-soft/30 p-6 shadow-sm sm:p-8 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-elev-2 hover:border-primary-soft hover:bg-surface">
       <h2 className="text-h1 text-foreground sm:text-h1-lg">{assessment.title}</h2>
       <p className="mt-3 max-w-prose text-body-lg text-foreground-muted">{assessment.summary}</p>
 
-      <dl className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-body-sm text-foreground-muted">
-        <div className="flex gap-2">
-          <dt className="text-foreground-subtle">문항</dt>
-          <dd className="font-semibold text-foreground-body">{assessment.questionCount}개</dd>
+      <dl className="mt-6 flex flex-wrap justify-center gap-3 text-body-sm">
+        <div className="flex items-center gap-1.5 rounded-full bg-primary-soft/50 px-3 py-1.5 text-primary-active">
+          <dt className="font-medium">문항</dt>
+          <dd className="font-bold">{assessment.questionCount}개</dd>
         </div>
-        <div className="flex gap-2">
-          <dt className="text-foreground-subtle">묶음</dt>
-          <dd className="font-semibold text-foreground-body">{assessment.sectionCount}개</dd>
+        <div className="flex items-center gap-1.5 rounded-full bg-primary-soft/50 px-3 py-1.5 text-primary-active">
+          <dt className="font-medium">묶음</dt>
+          <dd className="font-bold">{assessment.sectionCount}개</dd>
         </div>
-        <div className="flex gap-2">
-          <dt className="text-foreground-subtle">예상 시간</dt>
-          <dd className="font-semibold text-foreground-body">약 {assessment.estimatedMinutes}분</dd>
+        <div className="flex items-center gap-1.5 rounded-full bg-primary-soft/50 px-3 py-1.5 text-primary-active">
+          <dt className="font-medium">예상 시간</dt>
+          <dd className="font-bold">약 {assessment.estimatedMinutes}분</dd>
         </div>
       </dl>
 
-      <div className="mt-6 border-t border-border">
+      <div className="mt-6 w-full max-w-md border-t border-border/50 text-left">
         <Accordion summary="검사 안내 자세히 보기">
           <p className="max-w-prose">{assessment.description}</p>
           <p className="mt-3 max-w-prose">{DISCLAIMER}</p>
@@ -95,7 +95,7 @@ export function ActiveAssessmentCard({ assessment }: { readonly assessment: Asse
         </p>
       )}
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row justify-center">
         {isResumable && progress.kind === "inProgress" ? (
           <>
             <Link
