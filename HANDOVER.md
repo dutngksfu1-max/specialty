@@ -56,7 +56,7 @@ MBTI/                          ← 로컬 폴더명일 뿐. 배포물에 포함�
 
 | # | 규칙 | 확인 방법 |
 |---|---|---|
-| 1 | **MBTI 명칭·4글자 유형 코드를 어디에도 노출하지 않는다** (UI·URL·metadata·OG·manifest·결과 이미지 포함) | `grep -rEi "mbti\|[EI][NS][TF][JP]" src/ public/` → 0건 |
+| 1 | **MBTI 명칭·4글자 유형 코드를 어디에도 노출하지 않는다** (UI·URL·metadata·OG·manifest·결과 이미지 포함) | `grep -rEni "\bmbti\b\|\b[EI][NS][TF][JP]\b" src/ public/` → 0건 |
 | 2 | **개인정보를 서버로 보내지 않는다.** 닉네임·응답·결과는 브라우저 로컬에만 | 네트워크 탭에 응답 전송 요청 없음 |
 | 3 | **엔진과 콘텐츠를 분리한다.** 문항 수(40)·Part 수(4)·척도(5)·점수 범위(20)를 코드에 하드코딩하지 않는다 | 새 검사 폴더 추가만으로 검사 2종 노출되는지 실험 |
 | 4 | **의존 방향을 지킨다.** `domain/`은 react·next·idb·supabase를 import하지 않는다 | `pnpm lint` (ESLint가 검사) |
@@ -312,8 +312,12 @@ text: `[fixture] 축 ${axisId} 문항 ${order}`
 pnpm lint
 pnpm vitest run
 pnpm build
-grep -rEi "mbti|[EI][NS][TF][JP]" src/ public/     # 0건이어야 함
+grep -rEni "\bmbti\b|\b[EI][NS][TF][JP]\b" src/ public/     # 0건이어야 함
 ```
+
+> 단어 경계(`\b`)를 반드시 붙입니다. 빼면 `listPublished`(→`istP`),
+> `contentPackageSchema`(→`entP`) 같은 평범한 영어 식별자가 오탐으로 잡힙니다.
+> `public/`은 Phase 2부터 생깁니다.
 
 - [ ] 360px 폭에서 가로 스크롤 없음
 - [ ] 키보드만으로 조작 가능, focus 링 보임

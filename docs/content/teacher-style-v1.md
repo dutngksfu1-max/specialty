@@ -365,7 +365,7 @@ const PACKAGES = [teacherStyleV1 /* , collaborationV1, ... */];
 
 - [ ] Zod 검증 통과
 - [ ] `pnpm vitest run` 통과 (16개 조합 전부 프로필이 찾아지는지 포함)
-- [ ] `grep -ri "mbti" src/` 0건
+- [ ] `grep -rEni "\bmbti\b|\b[EI][NS][TF][JP]\b" src/ public/` 0건
 - [ ] fixture 파일을 실제 콘텐츠로 완전히 교체했는가
 
 ---

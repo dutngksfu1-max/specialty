@@ -1,6 +1,6 @@
 # Architecture — 서치티쳐마인드
 
-> 문서 상태: v0.1 (Phase 0 / Foundation)
+> 문서 상태: v0.2 (Phase 1 반영)
 > 최종 수정: 2026-08-19
 > 이 문서는 **구조 설계의 SSOT**입니다. 코드가 이 문서와 다르면 코드가 틀린 것입니다.
 
@@ -39,10 +39,10 @@
 domain/
   assessment/
     model/       AssessmentDefinition, Axis, Section, Question, ResponseScale, ScoringSpec
-    session/     AssessmentSession, AssessmentResponse
+    session/     AssessmentSession, AssessmentResponse, findUnansweredQuestions
     scoring/     centerResponse, scoreAxis, resolveIntensity, resolveResultKey, scoreAssessment
     result/      ResultProfile, ResultSnapshot
-    ports/       AssessmentRepository, AssessmentCatalog  ← interface만
+    ports/       AssessmentRepository, AssessmentCatalog, Clock, IdGenerator  ← interface만
     errors/      AssessmentErrorCode, AssessmentError
   shared/        Result<T, E>, branded id 타입, 배열 유틸(순수)
 ```
@@ -65,6 +65,8 @@ application/assessment/
 **Application의 규칙**
 
 - Repository는 **인자로 주입받습니다** (직접 import 금지). 테스트에서 InMemory 구현체로 교체 가능
+- **현재 시각과 새 id도 같은 방식으로 주입받습니다** (`Clock`, `IdGenerator` — DEC-032).
+  `new Date()`·`crypto.randomUUID()`를 직접 부르면 테스트에서 결과를 고정할 수 없습니다
 - 반환은 `Promise<Result<T, AssessmentError>>` — 예외를 던지지 않습니다
 - 채점 자체는 Domain의 순수 함수를 호출만 합니다
 
@@ -139,6 +141,11 @@ features / app  ──▶  application  ──▶  domain
 
 추가 dependency 없이 `no-restricted-imports`로 막습니다.
 
+> **glob 주의**: 패턴의 `*`는 슬래시(`/`)를 넘지 않습니다.
+> `"@/application/*"`만 쓰면 `@/application/assessment/startAssessment` 같은
+> 2단계 이상 경로를 잡지 못해 규칙이 있으나 마나가 됩니다.
+> 반드시 `"@/application"`과 `"@/application/**"` 두 가지를 함께 넣습니다.
+
 ```js
 // eslint.config.mjs (요지)
 {
@@ -148,7 +155,8 @@ features / app  ──▶  application  ──▶  domain
       patterns: [
         { group: ["react", "react-dom", "next", "next/*"], message: "Domain은 프레임워크에 의존할 수 없습니다." },
         { group: ["idb", "@supabase/*", "html-to-image"],  message: "Domain은 인프라에 의존할 수 없습니다." },
-        { group: ["@/application/*", "@/infrastructure/*", "@/features/*", "@/app/*"],
+        { group: ["@/application", "@/application/**", "@/infrastructure", "@/infrastructure/**",
+                  "@/features", "@/features/**", "@/app", "@/app/**"],
           message: "Domain은 상위 계층을 import할 수 없습니다." },
       ],
     }],
@@ -160,7 +168,8 @@ features / app  ──▶  application  ──▶  domain
     "no-restricted-imports": ["error", {
       patterns: [
         { group: ["react", "next", "next/*"], message: "Application은 프레임워크에 의존할 수 없습니다." },
-        { group: ["@/infrastructure/*", "@/features/*", "@/app/*"],
+        { group: ["@/infrastructure", "@/infrastructure/**", "@/features", "@/features/**",
+                  "@/app", "@/app/**"],
           message: "Application은 하위 구현이나 UI를 import할 수 없습니다." },
       ],
     }],
@@ -171,7 +180,7 @@ features / app  ──▶  application  ──▶  domain
   rules: {
     "no-restricted-imports": ["error", {
       patterns: [
-        { group: ["@/infrastructure/persistence/*"],
+        { group: ["@/infrastructure/persistence", "@/infrastructure/persistence/**"],
           message: "Repository 구현체는 조립 지점(provider)에서만 참조합니다." },
       ],
     }],
@@ -228,6 +237,7 @@ MBTI/
 │  ├─ application/assessment/
 │  ├─ infrastructure/
 │  │  ├─ persistence/{indexeddb,memory}/
+│  │  ├─ system/            systemClock.ts, randomIdGenerator.ts   # Clock / IdGenerator 구현 (DEC-032)
 │  │  └─ content/{StaticAssessmentCatalog.ts,contentPackageSchema.ts,packages/}
 │  ├─ features/
 │  │  ├─ shared/            AssessmentRepositoryProvider, ErrorMessage, OfflineBanner
@@ -237,6 +247,7 @@ MBTI/
 │  │  └─ result/            ResultRenderer, AxisBar, ResultShareCard, SaveImageButton
 │  ├─ components/ui/        shadcn/ui
 │  ├─ lib/                  cn.ts, errorMessages.ts
+│  ├─ test/                 테스트 전용 빌더·테스트 더블 (배포물에 포함되지 않음)
 │  └─ styles/globals.css
 ├─ eslint.config.mjs
 ├─ next.config.ts
@@ -291,13 +302,17 @@ export interface IntensityBand {
   readonly maxAbsScore: number;  // 이하
 }
 
+// 축에는 강도 구간이 최소 1개 있어야 합니다 (DEC-033).
+// 이렇게 적어 두면 resolveIntensity가 예외 없이 항상 하나를 반환할 수 있습니다.
+export type IntensityBands = readonly [IntensityBand, ...IntensityBand[]];
+
 export interface AssessmentAxis {
   readonly id: AxisId;
   readonly name: string;
   readonly positive: AxisPole;
   readonly negative: AxisPole;
   readonly defaultPole: PoleSide;   // 동점(0점)일 때 사용 (DEC-001)
-  readonly intensityBands: readonly IntensityBand[];
+  readonly intensityBands: IntensityBands;
 }
 
 export interface ResponseOption {
@@ -476,7 +491,7 @@ export function scoreAxis(
 
 export function resolveIntensity(
   absScore: number,
-  bands: readonly IntensityBand[],
+  bands: IntensityBands,     // 비어 있을 수 없음 (DEC-033)
 ): IntensityBand;
 
 export function resolveResultKey(
@@ -560,13 +575,22 @@ resultKey  는 defaultPole을 포함해 정상적으로 16개 중 하나로 확�
 ```
 - 모든 question.axisId 가 axes 에 존재하는가
 - 모든 question.sectionId 가 sections 에 존재하는가
-- 축별 문항 수가 균등한가 (경고 수준 — 다른 검사는 다를 수 있음)
+- axis / question / section id 와 resultProfile key 에 중복이 없는가
 - resultProfiles 개수 = 2 ^ (축 개수) 인가  (4축이면 16개)
-- resultProfiles 의 poles 조합에 중복·누락이 없는가
-- intensityBands 가 0부터 최대 절대값까지 빈틈·겹침 없이 덮는가
-- scale.options 에 centerValue 가 존재하는가
+- resultProfiles 의 poles 조합에 중복·누락이 없는가 (poles 의 축 목록이 axes 와 일치하는가)
+- intensityBands 가 0부터 그 축의 최대 절대값까지 빈틈·겹침 없이 덮는가
+  ※ 최대 절대값 = (그 축의 문항 수) × (척도 최대 편차) × weight — 상수가 아니라 계산값
+- scale.options 에 centerValue 가 존재하는가 / option value 에 중복이 없는가
 - question.order 가 1부터 연속인가
+- polarity 가 +1 또는 -1 인가
+- weight 가 전부 1 인가 (MVP 규칙 — PRD F-4.2)
+- 사용자에게 보이는 문자열(slug·title·summary·description·문항·결과 제목)에
+  노출이 금지된 표현이 없는가 (AGENTS.md 1.1)
 실패 시 → INVALID_CONTENT_PACKAGE
+
+- 축별 문항 수가 균등한가 / 축마다 polarity 가 반반인가
+  → **경고 수준**. 실패시키지 않고 `collectContentWarnings()` 가 문자열로 돌려줍니다
+  (다른 검사는 구성이 다를 수 있으므로)
 ```
 
 ---
@@ -606,6 +630,23 @@ export interface AssessmentCatalog {
   findById(id: AssessmentId): Result<AssessmentDefinition, AssessmentError>;
 }
 ```
+
+```ts
+// domain/assessment/ports/clock.ts       (DEC-032)
+// domain/assessment/ports/idGenerator.ts
+export interface Clock {
+  now(): string;                 // ISO 8601 문자열
+}
+
+export interface IdGenerator {
+  newSessionId(): SessionId;
+}
+```
+
+구현체는 `infrastructure/system/`에 있습니다 (`systemClock`, `randomIdGenerator`).
+테스트는 `src/test/doubles.ts`의 고정 시계·순번 id 생성기로 바꿔 끼웁니다.
+ESLint가 `domain/`·`application/`에서 `Date.now()`·`new Date()`·`Math.random()`·
+`crypto.randomUUID()`를 막습니다 (테스트 파일은 예외).
 
 ### 6.2 IndexedDB 구현
 
@@ -850,6 +891,7 @@ src/components/ui/**  0줄
 | 콘텐츠 검증 | Vitest | 정상 패키지 통과, 축 불일치·프로필 개수 오류 시 `INVALID_CONTENT_PACKAGE` |
 | Application | Vitest + InMemoryRepository | 미응답 시 `INCOMPLETE_RESPONSES`, 버전 불일치 시 `VERSION_MISMATCH` |
 | Repository | Vitest (fake-indexeddb) | 저장·복구·삭제, 손상 데이터 처리 |
+| 확장성 | Vitest | 축 3개·7점 척도·18문항짜리 검사를 같은 엔진으로 채점 (`src/test/engineAgnostic.test.ts`) |
 | UI 통합 | 수동 QA (Phase 5에서 Playwright 검토) | 새로고침·뒤로가기·오프라인·키보드 완주 |
 
 ```bash

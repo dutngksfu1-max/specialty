@@ -916,7 +916,7 @@ C는 화면에 뜻 없는 구간이 새어 나갈 수 있다.
 **Implementation note:**
 - `domain/assessment/model/definition.ts`에 `IntensityBands` 타입 추가
 - Zod 스키마는 `z.tuple([intensityBandSchema], intensityBandSchema)`로 같은 모양을 만듭니다
-- **확정되면 `docs/architecture.md` 4.2의 타입 표기도 함께 고쳐야 합니다** (현재는 문서가 아직 이전 표기)
+- `docs/architecture.md` 4.2(타입)와 5.2(`resolveIntensity` 시그니처)를 이 결정에 맞춰 갱신했습니다 (2026-08-19)
 
 ---
 
@@ -927,3 +927,4 @@ C는 화면에 뜻 없는 구간이 새어 나갈 수 있다.
 | 2026-08-19 | 문서 생성. DEC-001, 002, 002b, 003, 006, 007, 008, 010, 011 사용자 승인 완료 |
 | 2026-08-19 | 인수인계 준비. 콘텐츠·브랜딩·운영 관련 DEC-023~031 추가 등록 |
 | 2026-08-19 | Phase 1 착수. DEC-032 사용자 승인(A), DEC-033 기본값 등록 |
+| 2026-08-19 | Phase 1 완료. architecture.md v0.2 갱신(ports·타입·무결성 항목), 금지어 grep 명령 정정 |

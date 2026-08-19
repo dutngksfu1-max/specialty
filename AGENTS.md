@@ -223,7 +223,8 @@ focus outline 제거 · placeholder를 label 대용으로 · "궁합" 표현
 - [ ] `pnpm lint` — 의존 규칙 위반 없음
 - [ ] `pnpm vitest run` — 채점 테스트 통과
 - [ ] `pnpm build` — 타입 오류 없음
-- [ ] `grep -ri "mbti" src/ public/` — 사용자 노출 경로에 0건
+- [ ] `grep -rEni "\bmbti\b|\b[EI][NS][TF][JP]\b" src/ public/` — 0건
+      (단어 경계 `\b`를 빼면 `listPublished`·`contentPackageSchema` 같은 평범한 식별자가 오탐으로 잡힙니다)
 - [ ] 360px 폭에서 가로 스크롤 없음
 - [ ] 키보드만으로 조작 가능, focus 링 보임
 - [ ] Forbidden Pattern 해당 없음
@@ -239,3 +240,13 @@ focus outline 제거 · placeholder를 label 대용으로 · "궁합" 표현
 - **사용자가 할 일과 에이전트가 할 일을 나눠서** 적습니다
 - 미결정 사항은 **A/B/C 선다형**으로 제시하고, 각 선택지에 장점·단점·추천 여부를 짧게 붙입니다
 - 코드·명령어·파일명은 원문 그대로 둡니다
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
