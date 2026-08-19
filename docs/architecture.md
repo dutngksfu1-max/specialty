@@ -795,10 +795,26 @@ Serwist는 Google Workbox 계열의 검증된 캐싱 전략을 제공하고, **T
 // next.config.ts
 import { withSerwist } from "@serwist/turbopack";
 
-export default withSerwist({
-  // Next.js 설정
-});
+export default withSerwist(nextConfig);
 ```
+
+**실제 구성 (Phase 5)**
+
+| 파일 | 역할 |
+|---|---|
+| `src/app/sw.ts` | Service Worker 본체. `skipWaiting: false`, `/~offline` fallback |
+| `src/app/serwist/[path]/route.ts` | SW 파일을 내려보내는 Route Handler → `/serwist/sw.js` |
+| `src/features/shared/ServiceWorkerProvider.tsx` | 등록. `scope: "/"`, `reloadOnOnline={false}` |
+| `src/features/shared/ConnectionNotices.tsx` | 오프라인 배너 + 새 버전 안내(수동 갱신) |
+| `src/app/~offline/page.tsx` | 오프라인 fallback 화면 |
+
+> **왜 `/serwist/sw.js`인가**: Turbopack에는 아직 빌드 플러그인이 없어서, Serwist가
+> Route Handler로 SW를 만들어 냅니다. 루트가 아닌 경로에서도 사이트 전체를 담당할 수 있도록
+> 응답에 `Service-Worker-Allowed: /` 헤더가 붙고, 등록할 때 `scope: "/"`를 지정합니다.
+>
+> **번들러**: `@serwist/turbopack`은 SW를 esbuild로 묶습니다. 윈도우에서는 네이티브 `esbuild`,
+> 그 외 환경에서는 `esbuild-wasm`이 기본값이라 **둘 다 devDependency로 설치**해 두었습니다.
+> (esbuild-wasm은 가상 파일시스템을 써서 `C:\...` 형태의 윈도우 경로를 받지 못합니다)
 
 ### 9.3 캐싱 전략
 
@@ -826,13 +842,29 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait",
     lang: "ko",
     icons: [
-      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       { src: "/icons/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }
 ```
+
+**아이콘 생성 (DEC-031)**
+
+이미지 파일을 저장소에 넣지 않고 `next/og`의 `ImageResponse`로 빌드 시점에 만듭니다.
+디자인 토큰이 바뀌면 `src/lib/appIcon.tsx` 한 곳만 고치면 다섯 개가 함께 바뀝니다.
+
+| 경로 | 크기 | 용도 |
+|---|---|---|
+| `/icon` | 64 | 브라우저 탭 |
+| `/apple-icon` | 180 | iOS 홈 화면 |
+| `/icons/icon-192.png` | 192 | manifest (설치 요건) |
+| `/icons/icon-512.png` | 512 | manifest (설치 요건) |
+| `/icons/maskable-512.png` | 512 | 안드로이드 maskable (여백 26%) |
+
+> 아이콘에 **글자를 넣지 않았습니다.** 아이콘을 그릴 때는 페이지의 폰트를 쓸 수 없어서
+> 한글을 넣으려면 폰트 파일을 따로 실어야 하고, 그만큼 무거워집니다.
 
 > manifest·metadata·OG 태그 어디에도 **기존 성격유형 검사의 명칭이나 4글자 코드를 넣지 않습니다.**
 

@@ -22,7 +22,14 @@ export default function HomePage() {
       <StorageNotice />
 
       <main id="main" className="mx-auto px-5 sm:px-6 flex flex-col items-center justify-center min-h-[calc(100vh-140px)] py-8">
-        <div className="w-full max-w-2xl bg-surface/80 backdrop-blur-md shadow-elev-3 rounded-[2.5rem] p-8 sm:p-12 border-4 border-white/60 flex flex-col items-center text-center">
+        {/*
+          페이지마다 h1이 하나 있어야 스크린리더 사용자가 "여기가 어디인지" 알 수 있습니다
+          (docs/design.md 15장). 지금 랜딩은 큰 제목 없이 바로 시작하는 구성이라,
+          화면에는 보이지 않고 보조기기에만 읽히는 제목을 둡니다.
+        */}
+        <h1 className="sr-only">서치티쳐마인드 — 교직 성향·업무 스타일 탐색</h1>
+
+        <div className="w-full max-w-2xl bg-surface/80 backdrop-blur-md shadow-elev-3 rounded-3xl p-8 sm:p-12 border-4 border-white/60 flex flex-col items-center text-center">
           <NicknameEntry />
 
           <div className="w-full flex flex-col gap-6 pt-8 border-t border-border/50">

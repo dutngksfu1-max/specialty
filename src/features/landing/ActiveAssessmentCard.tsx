@@ -61,7 +61,7 @@ export function ActiveAssessmentCard({ assessment }: { readonly assessment: Asse
   const isResumable = progress.kind === "inProgress" && progress.answered > 0;
 
   return (
-    <section className="group flex flex-col items-center text-center w-full bg-surface/80 rounded-[2rem] border-2 border-primary-soft/30 p-6 shadow-sm sm:p-8 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-elev-2 hover:border-primary-soft hover:bg-surface">
+    <section className="group flex flex-col items-center text-center w-full bg-surface/80 rounded-2xl border-2 border-primary-soft/30 p-6 shadow-sm sm:p-8 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-elev-2 hover:border-primary-soft hover:bg-surface">
       <h2 className="text-h1 text-foreground sm:text-h1-lg">{assessment.title}</h2>
       <p className="mt-3 max-w-prose text-body-lg text-foreground-muted">{assessment.summary}</p>
 

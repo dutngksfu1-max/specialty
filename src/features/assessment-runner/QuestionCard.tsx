@@ -32,7 +32,10 @@ export function QuestionCard({
   return (
     <li
       id={`q-${String(question.id)}`}
-      className={cn("scroll-mt-32 list-none", isMissing && "border-l-4 border-status-warning pl-4")}
+      className={cn(
+        "scroll-mt-32 list-none bg-surface/90 backdrop-blur-sm rounded-[2.5rem] border-4 border-white/60 p-6 sm:p-8 shadow-sm",
+        isMissing && "border-status-warning shadow-status-warning/20 bg-status-warning-soft/20"
+      )}
     >
       <p id={labelId} className="text-body-lg text-foreground-body sm:text-body-lg-desktop">
         <span className="mr-2 text-foreground-subtle tabular-nums">{question.order}.</span>

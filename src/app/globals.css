@@ -141,12 +141,16 @@
   --text-label--line-height: 1.4;
   --text-label--font-weight: 600;
 
-  /* ---------- Radius (design.md 5) --------------------------------------- */
+  /* ---------- Radius (design.md 5) ---------------------------------------
+     바깥에서 안쪽으로 갈수록 반경을 줄입니다.
+     패널 40 → 카드 32 → 버튼 18 → 배지 4 */
   --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 18px;
+  --radius-2xl: 32px;
+  --radius-3xl: 40px;
 
   /* ---------- Elevation (design.md 6) — 그림자 색은 웜 뉴트럴 ------------- */
   --shadow-elev-1: 0 1px 2px oklch(0.30 0.02 90 / 0.06);
@@ -160,6 +164,15 @@
   /* ---------- Layout 폭 (design.md 13) ----------------------------------- */
   --container-survey: 40rem;
   --container-landing: 72rem;
+
+  /* ---------- 페이지 배경 (design.md 2.6) --------------------------------
+     단색이 아니라 아주 옅은 웜 그라데이션입니다.
+     두 정지점 모두 채도 0.04 이하 — 더 진해지면 본문 대비가 무너집니다. */
+  --gradient-page: linear-gradient(
+    135deg,
+    oklch(0.985 0.015 95) 0%,
+    oklch(0.945 0.035 65) 100%
+  );
 }
 
 /* =============================================================================
@@ -173,7 +186,7 @@
   }
 
   body {
-    background: linear-gradient(135deg, oklch(0.985 0.015 95) 0%, oklch(0.945 0.035 65) 100%);
+    background: var(--gradient-page);
     background-attachment: fixed;
     color: var(--color-foreground-body);
     font-family: var(--font-sans);

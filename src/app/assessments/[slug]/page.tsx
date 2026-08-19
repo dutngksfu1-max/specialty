@@ -37,7 +37,8 @@ export default async function AssessmentIntroPage({ params }: PageProps<"/assess
       <SiteHeader />
       <StorageNotice />
 
-      <main id="main" className="mx-auto max-w-(--container-survey) px-5 py-10 sm:px-6">
+      <main id="main" className="mx-auto max-w-2xl px-5 sm:px-6 flex flex-col items-center justify-center min-h-[calc(100vh-140px)] py-8">
+        <div className="w-full bg-surface/90 backdrop-blur-md shadow-elev-3 rounded-3xl p-8 sm:p-12 border-4 border-white/60">
         <nav className="mb-6 text-body-sm">
           <Link
             href="/"
@@ -103,6 +104,7 @@ export default async function AssessmentIntroPage({ params }: PageProps<"/assess
             </Accordion>
           </div>
         </section>
+        </div>
       </main>
 
       <SiteFooter />
