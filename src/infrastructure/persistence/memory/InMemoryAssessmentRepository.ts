@@ -1,5 +1,6 @@
 import type { AssessmentError } from "@/domain/assessment/errors/assessmentError";
 import type { AssessmentRepository } from "@/domain/assessment/ports/assessmentRepository";
+import type { PreferencesRepository } from "@/domain/assessment/ports/preferencesRepository";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 import type {
   AssessmentResponse,
@@ -17,10 +18,13 @@ import { ok, type Result } from "@/domain/shared/result";
  *
  * 새로고침하면 사라집니다. 영속 저장은 IndexedDB 구현체(Phase 2)가 담당합니다.
  */
-export class InMemoryAssessmentRepository implements AssessmentRepository {
+export class InMemoryAssessmentRepository
+  implements AssessmentRepository, PreferencesRepository
+{
   private readonly sessions = new Map<string, AssessmentSession>();
   private readonly responses = new Map<string, Map<string, AssessmentResponse>>();
   private readonly results = new Map<string, ResultSnapshot>();
+  private nickname: string | null = null;
 
   async loadSession(
     assessmentId: AssessmentId,
@@ -74,6 +78,16 @@ export class InMemoryAssessmentRepository implements AssessmentRepository {
     this.sessions.clear();
     this.responses.clear();
     this.results.clear();
+    this.nickname = null;
+    return ok(undefined);
+  }
+
+  async loadNickname(): Promise<Result<string | null, AssessmentError>> {
+    return ok(this.nickname);
+  }
+
+  async saveNickname(nickname: string): Promise<Result<void, AssessmentError>> {
+    this.nickname = nickname;
     return ok(undefined);
   }
 

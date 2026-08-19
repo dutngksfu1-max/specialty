@@ -207,7 +207,7 @@ src/features/shared/AssessmentRepositoryProvider.tsx   ("use client")
 ## 3. Folder Structure
 
 ```
-MBTI/
+specialty/
 ├─ AGENTS.md
 ├─ docs/
 │  ├─ PRD.md
@@ -834,8 +834,7 @@ export default function manifest(): MetadataRoute.Manifest {
 }
 ```
 
-> manifest·metadata·OG 태그 어디에도 **MBTI 명칭이나 4글자 코드를 넣지 않습니다.**
-> 로컬 폴더명이 `MBTI`이지만 이는 배포물에 포함되지 않습니다.
+> manifest·metadata·OG 태그 어디에도 **기존 성격유형 검사의 명칭이나 4글자 코드를 넣지 않습니다.**
 
 ### 9.5 업데이트 처리
 

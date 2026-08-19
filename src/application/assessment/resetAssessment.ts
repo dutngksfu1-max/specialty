@@ -24,3 +24,17 @@ export async function resetAssessment(
 
   return ok(undefined);
 }
+
+/**
+ * 저장 데이터 전체 삭제 (DEC-015)
+ *
+ * 사용자가 Footer의 삭제 버튼을 눌렀을 때만 실행합니다.
+ * 자동으로 지우지 않습니다 — 사용자를 당황시키기 때문입니다.
+ */
+export async function clearAllData(
+  deps: Pick<AssessmentDeps, "repository">,
+): Promise<Result<void, AssessmentError>> {
+  const cleared = await deps.repository.clearAll();
+  if (!cleared.ok) return err(cleared.error);
+  return ok(undefined);
+}

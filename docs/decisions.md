@@ -57,15 +57,17 @@
 | DEC-022 | 도메인 주소 | `WAITING` | 배포 전 결정 |
 | DEC-023 | 4개 축의 정의 | `WAITING` | **Phase 4 최대 블로커** |
 | DEC-024 | 콘텐츠 작성 주체·일정 | `WAITING` | 40문항 + 16프로필 |
-| DEC-025 | 로고 / 워드마크 | `WAITING` | Phase 2 전 필요 |
-| DEC-026 | 준비 중 검사 3개 이름 | `WAITING` | Phase 2 전 필요 |
-| DEC-027 | Hero 문구 · FAQ 항목 | `WAITING` | Phase 2 전 필요 |
-| DEC-028 | 검사 성격 안내(면책) 문구 | `WAITING` | **법적·윤리적 검토 필요** |
-| DEC-029 | 개인정보 안내 노출 위치 | `WAITING` | Phase 2 전 필요 |
-| DEC-030 | Pretendard 폰트 파일 조달 | `WAITING` | Phase 1 착수 시 필요 |
+| DEC-025 | 로고 / 워드마크 | `WAITING` | 초안 A(텍스트 워드마크) 적용, 검수 대기 |
+| DEC-026 | 준비 중 검사 3개 이름 | `WAITING` | 초안 A 적용, 검수 대기 |
+| DEC-027 | Hero 문구 · FAQ 항목 | `WAITING` | 초안 작성 완료, 검수 대기 |
+| DEC-028 | 검사 성격 안내(면책) 문구 | `WAITING` | 초안 A 적용, **검수 필요** |
+| DEC-029 | 개인정보 안내 노출 위치 | `WAITING` | 초안 A(3곳) 적용, 검수 대기 |
+| DEC-030 | Pretendard 폰트 파일 조달 | `CONFIRMED` | Variable 전체 파일 1개 (자체 호스팅) |
 | DEC-031 | PWA 아이콘 · 파비콘 제작 | `WAITING` | Phase 5 전 필요 |
 | DEC-032 | Application의 시각·ID 생성 | `CONFIRMED` | Clock / IdGenerator port 주입 |
 | DEC-033 | `intensityBands` 타입 | `DEFAULT` | 비어 있지 않은 배열로 타입 고정 |
+| DEC-034 | UI primitive 조달 | `DEFAULT` | shadcn/ui 미도입, 직접 작성 |
+| DEC-035 | 폰트 로딩 방식(`font-display`) | `CONFIRMED` | `block` — 대체 폰트를 보여 주지 않음 |
 
 ---
 
@@ -154,7 +156,7 @@ A. 세 구간이 비교적 고르게 나뉘어 강의장에서 다양한 결과�
 
 **Question:**
 서비스/검사의 이름을 무엇으로 할 것인가?
-MBTI 명칭·4글자 코드를 쓸 수 없으므로 독자적인 이름이 필요하다.
+기존 성격유형 검사의 명칭·4글자 코드를 쓸 수 없으므로 독자적인 이름이 필요하다.
 
 **Options:**
 A. 교실의 결
@@ -173,7 +175,7 @@ A. '결'이 사람마다 다른 고유한 리듬을 뜻해 확장에 유리하�
 - 한글 표기: 서치티쳐마인드
 - 영문/슬러그 표기: `searchteachermind` (IndexedDB 이름, 패키지명에 사용)
 - manifest `name` / `short_name` 모두 "서치티쳐마인드"
-- 이 이름에 MBTI 관련 문자열이 포함되지 않음을 확인함
+- 이 이름에 금지 표현이 포함되지 않음을 확인함
 
 ---
 
@@ -300,7 +302,7 @@ C는 결과 디자인이 바뀔 때마다 그리기 코드를 따로 고쳐야 �
 - 캡처 대상은 전용 컨테이너 하나로 한정 (버튼·내비게이션 제외)
 - 출력 크기 1080 × 1350px
 - 폰트가 로컬 로딩이므로 캡처 시 폰트 누락 문제가 없다
-- 이미지에도 4글자 코드·MBTI 명칭을 넣지 않는다
+- 이미지에도 4글자 코드·기존 성격유형 검사 명칭을 넣지 않는다
 
 ---
 
@@ -619,7 +621,7 @@ QR로 접속하므로 주소를 외울 필요는 없지만, 짧은 주소가 신
 
 **Owner:** User
 
-**주의:** 도메인 문자열에도 MBTI 관련 표현을 쓰지 않는다.
+**주의:** 도메인 문자열에도 금지 표현을 쓰지 않는다.
 
 ---
 
@@ -694,7 +696,7 @@ A. `docs/design.md`의 editorial 방향과 잘 맞고 추가 비용이 없다.
 심볼이 없어도 헤더는 충분히 정돈되어 보인다. 나중에 B로 올리기도 쉽다.
 
 **Decision:**
-`WAITING`
+`WAITING` — 초안으로 **A(텍스트 워드마크)**를 적용했습니다. 헤더의 `서치티쳐마인드` 텍스트가 그것입니다 (`src/features/shared/SiteHeader.tsx`).
 
 **Owner:** User
 
@@ -720,6 +722,8 @@ A는 초안으로 쓰되 클라이언트 확인이 필요하다.
 **Decision:**
 `WAITING` — 개발 중에는 A의 3개를 fixture로 사용
 
+초안이 `src/lib/siteCopy.ts`의 `UPCOMING_ASSESSMENTS`에 들어가 있습니다. 실제 개발 예정 검사로 바꿔 주세요.
+
 **Owner:** User
 
 **Blocking:** Phase 2
@@ -739,7 +743,7 @@ B. 클라이언트가 직접 작성
 A. 분량이 작고(Hero 2줄 + FAQ 4~6개) 검수가 쉽다.
 
 **Decision:**
-`WAITING`
+`WAITING` — 초안을 작성해 `src/lib/siteCopy.ts`의 `HERO`·`FAQ`에 넣어 두었습니다. **문구 검수가 필요합니다.**
 
 **Owner:** User
 
@@ -771,7 +775,7 @@ C. 별도 안내 없음
 C는 권하지 않는다.
 
 **Decision:**
-`WAITING`
+`WAITING` — 초안으로 **A**를 적용했습니다. 문구는 `src/lib/siteCopy.ts`의 `DISCLAIMER`이고, 검사 소개 화면과 결과 화면에 노출됩니다. **문구 검수가 필요합니다.**
 
 **Owner:** User
 
@@ -796,7 +800,7 @@ A. 이 서비스의 강점이므로 오히려 눈에 띄게 알리는 편이 좋
 C는 서버 저장이 없는 MVP에서는 과하다 (Phase 7에서 Supabase를 붙이면 그때 필수가 된다).
 
 **Decision:**
-`WAITING`
+`WAITING` — 초안으로 **A(3곳)**를 적용했습니다. 닉네임 helper · 검사 소개 · Footer에 `src/lib/siteCopy.ts`의 `PRIVACY_NOTE`가 노출됩니다.
 
 **Owner:** User
 
@@ -820,13 +824,15 @@ Lighthouse에서 폰트 용량이 문제로 잡히면 그때 B를 적용한다
 (서브셋을 먼저 하면 결과 이미지 캡처 시 글자가 깨질 위험이 있다).
 
 **Decision:**
-`WAITING`
+`CONFIRMED` — A (2026-08-19, 사용자 지시: "웹폰트를 네가 다운받아서 사용해")
 
 **Owner:** User
 
-**Blocking:** Phase 1 (폰트 설정)
-
-**주의:** 폰트는 SIL Open Font License다. 라이선스 파일도 함께 저장소에 포함한다.
+**Implementation note:**
+- `public/fonts/PretendardVariable.woff2` (v1.3.9, 약 2.0MB) + `public/fonts/OFL.txt`
+- `src/app/fonts.ts`에서 `next/font/local`로 불러옵니다. **외부 CDN 요청이 없습니다**
+- 용량이 Lighthouse에서 문제로 잡히면 그때 B(동적 서브셋 92개 파일)로 전환합니다.
+  서브셋을 먼저 적용하면 드문 한글이 든 닉네임에서 글자가 깨질 수 있어 A로 시작합니다
 
 ---
 
@@ -920,6 +926,76 @@ C는 화면에 뜻 없는 구간이 새어 나갈 수 있다.
 
 ---
 
+## DEC-034
+
+**Question:**
+Phase 2의 UI primitive(버튼·아코디언·라디오)를 shadcn/ui로 가져올 것인가?
+
+확정 스택에는 shadcn/ui(Base UI 기반)가 들어 있다.
+그런데 이번 화면이 요구하는 것은 세 가지뿐이고, 그중 두 가지가 shadcn과 어긋난다.
+
+- `docs/design.md` 10.2는 척도를 **진짜 `<input type="radio">`**로 만들라고 명시한다.
+  shadcn/Base UI의 RadioGroup은 `role="radio"`를 붙인 button을 렌더한다 — 규격과 다르다.
+- Accordion은 네이티브 `<details>/<summary>`로 충분하며, 브라우저가 키보드·스크린리더를 이미 처리한다.
+
+**Options:**
+A. shadcn/ui를 지금 도입하지 않고, design.md 규격대로 필요한 것만 직접 작성한다
+B. `shadcn init`을 실행하고 RadioGroup만 직접 만든다
+C. shadcn을 도입하고 design.md의 라디오 규격을 shadcn 방식에 맞춰 바꾼다
+
+**Recommendation:**
+A. 지금 필요한 primitive가 3개뿐이고, 그중 라디오는 규격상 직접 만들어야 한다.
+`shadcn init`은 자체 색 토큰을 `globals.css`에 덮어써 design.md의 OKLCH 토큰과 충돌하고,
+dependency도 4~5개 늘어난다. C는 접근성 요구사항(PRD 비기능-접근성)을 낮추는 방향이라 택하지 않는다.
+나중에 Dialog·Combobox처럼 손이 많이 가는 컴포넌트가 필요해지면 그때 도입하면 된다.
+
+**Decision:**
+`DEFAULT` — A (2026-08-19, Phase 2 구현 중)
+
+**Owner:** User (이의 없으면 A 유지)
+
+**Implementation note:**
+- `src/components/ui/Button.tsx`, `src/components/ui/Accordion.tsx` (네이티브 `<details>`)
+- 척도는 `src/features/assessment-runner/LikertScale.tsx` — 네이티브 라디오 5개.
+  같은 `name`을 공유하므로 화살표 키 이동·Space 선택을 브라우저가 처리합니다
+- `cn()`은 clsx·tailwind-merge 없이 8줄짜리 함수로 대체했습니다
+- **Phase 2에서 늘어난 dependency: `idb`, `fake-indexeddb` 둘뿐입니다** (둘 다 DEC-006/017로 승인됨)
+
+---
+
+## DEC-035
+
+**Question:**
+폰트가 아직 내려오지 않은 동안 화면을 어떻게 보여 줄 것인가? (`font-display`)
+
+`docs/design.md` 3.1은 `display: "swap"`으로 적혀 있다.
+swap은 폰트가 준비되기 전 시스템 폰트(맑은 고딕 등)로 글자를 먼저 그린 뒤 바꿔치기한다.
+
+**Options:**
+A. `block` — 폰트가 준비될 때까지 글자를 감춘다. 대체 폰트가 보이지 않는다
+B. `swap` — 대체 폰트로 먼저 그리고 나중에 바꾼다 (design.md 초안)
+C. `optional` — 느리면 대체 폰트로 그대로 둔다
+
+**Recommendation:**
+A. 사용자 요구가 "어떤 기기로 접속해도 우리가 정한 폰트가 뜨게, 맑은 고딕이 절대 안 뜨게"이므로
+대체 폰트가 화면에 나타나는 B·C는 요구를 만족하지 못한다.
+
+**Decision:**
+`CONFIRMED` — A (2026-08-19, 사용자 지시)
+
+**Owner:** User
+
+**Trade-off (알고 있어야 하는 점):**
+- `block`은 폰트 로딩이 아주 느릴 때(약 3초 초과) 그 시간 동안 글자가 보이지 않습니다.
+  그 뒤에는 브라우저가 대체 폰트로 그립니다 — 100% 보장은 어떤 설정으로도 불가능합니다
+- 완화책: 폰트를 같은 서버에서 preload로 내려보내고(현재 적용),
+  Phase 5에서 Service Worker가 미리 받아 둡니다. 두 번째 방문부터는 즉시 표시됩니다
+- 첫 방문 속도가 문제가 되면 DEC-030의 B안(동적 서브셋)으로 전환합니다
+
+**Implementation note:** `src/app/fonts.ts`
+
+---
+
 ## 변경 이력
 
 | 날짜 | 내용 |
@@ -928,3 +1004,4 @@ C는 화면에 뜻 없는 구간이 새어 나갈 수 있다.
 | 2026-08-19 | 인수인계 준비. 콘텐츠·브랜딩·운영 관련 DEC-023~031 추가 등록 |
 | 2026-08-19 | Phase 1 착수. DEC-032 사용자 승인(A), DEC-033 기본값 등록 |
 | 2026-08-19 | Phase 1 완료. architecture.md v0.2 갱신(ports·타입·무결성 항목), 금지어 grep 명령 정정 |
+| 2026-08-19 | Phase 2 착수. DEC-030·035 확정, DEC-034 기본값 등록. DEC-025~029는 초안을 코드에 반영하고 검수 대기 |

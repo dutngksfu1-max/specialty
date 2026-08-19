@@ -162,6 +162,15 @@ const eslintConfig = defineConfig([
     },
   },
 
+  // 조립 지점(Composition Root)만 예외입니다.
+  // 저장소 구현체를 고르는 파일은 이 하나뿐이어야 합니다 (docs/architecture.md 2장).
+  {
+    files: ["src/features/shared/AssessmentRepositoryProvider.tsx"],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
+
   // 테스트는 계층을 조립하는 자리입니다.
   // (예: application 테스트가 InMemoryAssessmentRepository를 끼워 넣습니다)
   {
