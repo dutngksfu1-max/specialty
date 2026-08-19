@@ -77,6 +77,12 @@
 
   --color-focus-ring: var(--color-sage-500);
 
+  /* ---------- Type emblem (DEC-039 · docs/type-emblem.md) ----------------
+     16종이 전부 같은 색을 씁니다. 유형을 색으로 구분하면 색맹 사용자에게
+     정보가 통째로 사라집니다. 구분은 형태가 담당합니다. */
+  --em-line: var(--color-primary);
+  --em-core: var(--color-accent);
+
   /* ---------- Typography (design.md 3) ----------------------------------- */
   --font-sans: var(--font-pretendard), -apple-system, BlinkMacSystemFont,
     "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;

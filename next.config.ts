@@ -14,7 +14,8 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // 폰트는 잘 바뀌지 않으므로 오래 캐시합니다.
+        // 라이선스 고지 등 정적 파일. 실제 폰트는 next/font가 해시 붙은 경로로 내보내며
+        // 그쪽은 Next가 알아서 immutable 캐시 헤더를 붙입니다.
         source: "/fonts/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },

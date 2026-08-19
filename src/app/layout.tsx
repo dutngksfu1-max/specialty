@@ -4,11 +4,15 @@ import { pretendard } from "@/app/fonts";
 import { AssessmentRepositoryProvider } from "@/features/shared/AssessmentRepositoryProvider";
 import { ConnectionNotices } from "@/features/shared/ConnectionNotices";
 import { ServiceWorkerProvider } from "@/features/shared/ServiceWorkerProvider";
-import { BRAND_NAME } from "@/lib/siteCopy";
+import { BRAND_NAME, SITE_URL } from "@/lib/siteCopy";
 
 import "./globals.css";
 
 export const metadata: Metadata = {
+  // 절대 URL의 기준점입니다. 없으면 OG 이미지가 상대 경로로 나가
+  // 카카오톡·슬랙 미리보기가 깨집니다 (DEC-022).
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: "/" },
   title: {
     default: BRAND_NAME,
     template: `%s · ${BRAND_NAME}`,
@@ -27,8 +31,16 @@ export const metadata: Metadata = {
   openGraph: {
     title: BRAND_NAME,
     description: "교직 성향과 업무 스타일을 탐색하는 교사용 검사",
+    siteName: BRAND_NAME,
+    url: "/",
     locale: "ko_KR",
     type: "website",
+  },
+  // 개인 결과는 공유 링크로 나가지 않습니다 (DEC-013). 카드는 서비스 소개만 담습니다.
+  twitter: {
+    card: "summary_large_image",
+    title: BRAND_NAME,
+    description: "교직 성향과 업무 스타일을 탐색하는 교사용 검사",
   },
   robots: { index: true, follow: true },
 };

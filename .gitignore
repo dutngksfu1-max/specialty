@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 검수용 원본 참고 자료 (저작권 자료 — 저장소에 올리지 않음)
+/docs/reference/*
+!/docs/reference/README.md

@@ -1,18 +1,23 @@
 /**
- * 콘텐츠 패키지 — teacher-style-v1 (실제 콘텐츠 초안)
+ * 콘텐츠 패키지 — teacher-style-v1 (contentVersion 3.0.0)
  *
- * ⚠️ **검수가 필요한 초안입니다.** DEC-023(축 정의)·DEC-024(콘텐츠 작성)·DEC-020(검사 제목)이
- * `WAITING` 상태여서, 각 DEC의 추천안대로 개발자가 초안을 작성해 넣은 것입니다.
- * 문구를 고치려면 이 폴더의 세 파일(definition / questions / profiles)만 고치면 됩니다.
- * 엔진·화면 코드는 한 줄도 건드리지 않아도 됩니다.
+ * 2026-08-20 전면 개정. 검수안: docs/content/teacher-style-v1-revision.md
+ *
+ * 무엇이 바뀌었나
+ *   - 축 4개를 다시 설계했습니다. 기존 `axis-order`는 `axis-design`과 `axis-decision`을
+ *     섞어 놓은 축이라 독립 축이 아니었고, 그 때문에 결과 16칸이 고르게 나오지 않았습니다.
+ *   - 새 4축은 서로 다른 영역을 하나씩 맡고, **축마다 전용 장면군**을 씁니다.
+ *     같은 장면이 두 축에 나오지 않으므로 축 사이 겹침이 원천 차단됩니다.
+ *   - 기존 `axis-change`(시도형/안정형)는 독립 축에서 빠지고,
+ *     `axis-lens` × `axis-rhythm` 조합 해석(`axisCombinations`)으로 표현됩니다.
  *
  * 형식 규격: docs/content/teacher-style-v1.md
  *
- * 축 설계 원칙 (같은 문서 3절)
+ * 축 설계 원칙
  *   - 네 축이 서로 다른 것을 잰다
  *   - 양 끝 중 한쪽이 더 좋아 보이지 않는다
  *   - 교직 맥락에서 실제로 관찰되는 차이다
- *   - 기존 성격유형 검사의 축을 그대로 옮기지 않는다
+ *   - 기존 성격유형 검사의 명칭·유형 코드·축 이름을 쓰지 않는다 (AGENTS.md 1.1)
  */
 
 /** 강도 구간 — DEC-002b 확정값. 축당 10문항 × 최대 편차 2 = 최대 20점 */
@@ -26,88 +31,144 @@ const intensityBands = [
  * 축 식별자. 엔진은 이 문자열만 알고, 사람이 읽는 이름은 아래 데이터가 소유합니다 (DEC-004).
  * 결과 키(pppp … nnnn)의 자리 순서도 이 배열 순서를 따릅니다.
  */
-export const axisIds = ["axis-design", "axis-order", "axis-decision", "axis-change"] as const;
+export const axisIds = ["axis-energy", "axis-lens", "axis-decision", "axis-rhythm"] as const;
 
 const axes = [
   {
-    id: "axis-design",
-    name: "수업을 준비하는 방식",
+    id: "axis-energy",
+    name: "힘을 얻는 방향",
     positive: {
       side: "positive",
-      label: "미리 그려 두는 준비형",
-      shortLabel: "준비형",
+      label: "함께 있을 때 채워지는 교류형",
+      shortLabel: "교류형",
       description:
-        "학기와 단원의 흐름을 앞서 그려 두고, 그 지도를 따라 하루를 운영해요. 다음에 무엇이 오는지 알기 때문에 교실이 예측 가능해집니다.",
+        "사람들 사이에 있을 때 생각이 정리되고 힘이 납니다. 옆 반 선생님과 나눈 짧은 대화가 다음 수업을 가볍게 만들어 줘요.",
     },
     negative: {
       side: "negative",
-      label: "흐름을 따라가는 조율형",
-      shortLabel: "조율형",
+      label: "혼자 있을 때 채워지는 몰입형",
+      shortLabel: "몰입형",
       description:
-        "그날 교실에서 벌어지는 일을 보고 방향을 정해요. 계획에 매이지 않기 때문에 마침 찾아온 좋은 순간을 놓치지 않습니다.",
+        "혼자 있는 시간에 힘이 채워집니다. 방해받지 않는 시간이 확보되면 그날 할 일이 훨씬 깊게 들어가요.",
     },
     defaultPole: "positive",
     intensityBands,
   },
   {
-    id: "axis-order",
-    name: "교실의 질서를 세우는 방식",
+    id: "axis-lens",
+    name: "먼저 눈에 들어오는 것",
     positive: {
       side: "positive",
-      label: "약속을 먼저 세우는 구조형",
-      shortLabel: "구조형",
+      label: "눈앞의 사실부터 챙기는 실제형",
+      shortLabel: "실제형",
       description:
-        "규칙과 절차를 분명히 해 두고 모두가 같은 그림을 보게 해요. 무엇을 기대받는지 알 때 아이들이 편안해진다고 봅니다.",
+        "지금 눈앞에 있는 사실과 구체적인 장면이 먼저 잡힙니다. 관찰한 것과 아이가 실제로 해낸 결과를 근거로 삼아요.",
     },
     negative: {
       side: "negative",
-      label: "관계를 먼저 쌓는 관계형",
-      shortLabel: "관계형",
+      label: "흐름과 가능성부터 보는 가능성형",
+      shortLabel: "가능성형",
       description:
-        "규칙보다 먼저 아이와의 신뢰를 쌓아요. 마음이 이어지면 교실은 자연스럽게 정돈된다고 봅니다.",
+        "지금 모습보다 이것이 어디로 이어질지가 먼저 그려집니다. 세부보다 전체가 어떤 이야기인지를 먼저 보게 돼요.",
     },
     defaultPole: "positive",
     intensityBands,
   },
   {
     id: "axis-decision",
-    name: "결정할 때 먼저 보는 것",
+    name: "결정할 때 딛는 발판",
     positive: {
       side: "positive",
-      label: "같은 기준을 지키는 형평형",
-      shortLabel: "형평형",
+      label: "기준을 먼저 세우는 원칙형",
+      shortLabel: "원칙형",
       description:
-        "누구에게나 같은 기준을 적용해, 아이들이 예외 없이 존중받는다고 느끼게 해요. 기준이 흔들리지 않아 설명하기도 쉽습니다.",
+        "누구에게나 같은 기준을 적용해, 아이들이 예외 없이 존중받는다고 느끼게 합니다. 기준이 흔들리지 않아 설명하기도 쉬워요.",
     },
     negative: {
       side: "negative",
-      label: "각자의 사정을 살피는 맥락형",
+      label: "사정을 먼저 살피는 맥락형",
       shortLabel: "맥락형",
       description:
-        "같은 행동도 그 아이가 놓인 사정에 따라 다르게 봐요. 지금 이 아이에게 무엇이 필요한지를 먼저 묻습니다.",
+        "같은 행동도 그 아이가 놓인 사정에 따라 다르게 봅니다. 지금 이 아이에게 무엇이 필요한지를 먼저 물어요.",
     },
     defaultPole: "positive",
     intensityBands,
   },
   {
-    id: "axis-change",
-    name: "새로운 방식을 대하는 태도",
+    id: "axis-rhythm",
+    name: "일을 굴리는 리듬",
     positive: {
       side: "positive",
-      label: "먼저 해 보는 시도형",
-      shortLabel: "시도형",
+      label: "미리 정해 두는 계획형",
+      shortLabel: "계획형",
       description:
-        "괜찮아 보이는 방법이 있으면 교실에서 직접 해 봐요. 해 보고 남는 것으로 다음 걸음을 정합니다.",
+        "앞을 미리 정해 두어야 마음이 놓입니다. 다음에 무엇이 오는지 알기 때문에 교실이 예측 가능해져요.",
     },
     negative: {
       side: "negative",
-      label: "해 오던 것을 다지는 안정형",
-      shortLabel: "안정형",
+      label: "열어 두고 맞추는 유연형",
+      shortLabel: "유연형",
       description:
-        "이미 잘 되던 방식을 조금씩 다듬어 완성도를 높여요. 검증된 것을 깊게 가져가는 데서 힘이 나옵니다.",
+        "열어 두고 그때그때 맞춰 갑니다. 계획에 매이지 않기 때문에 마침 찾아온 좋은 순간을 놓치지 않아요.",
     },
     defaultPole: "positive",
     intensityBands,
+  },
+];
+
+/**
+ * 축 조합 해석 — 두 축이 만났을 때만 보이는 이야기입니다.
+ *
+ * 축을 늘리지 않고 해석만 늘리는 방법이라, 축 사이 겹침을 만들지 않으면서
+ * 결과의 두께를 키울 수 있습니다. 검수안 2.5절에서 폐지한 `axis-change`(새로움)가
+ * 첫 번째 조합으로 되살아납니다.
+ */
+const axisCombinations = [
+  {
+    id: "combo-novelty",
+    title: "새로운 것을 대하는 태도",
+    axisIds: ["axis-lens", "axis-rhythm"],
+    readings: [
+      {
+        poles: { "axis-lens": "positive", "axis-rhythm": "positive" },
+        text: "새 방법을 들여올 때 먼저 준비물과 절차부터 확인하고, 언제 어디에 넣을지 정해 둔 다음 시작해요. 그래서 시도한 것이 흐지부지되는 일이 적고, 한 번 자리 잡으면 다음 해에도 그대로 쓸 수 있는 형태로 남습니다.",
+      },
+      {
+        poles: { "axis-lens": "positive", "axis-rhythm": "negative" },
+        text: "괜찮아 보이는 방법이 있으면 다음 수업에서 바로 한번 해 봅니다. 해 보고 남는 것으로 판단하기 때문에 결정이 빠르고, 아이들 반응이 시원찮으면 미련 없이 접는 편이에요.",
+      },
+      {
+        poles: { "axis-lens": "negative", "axis-rhythm": "positive" },
+        text: "새로운 것을 들여올 때 '이게 우리 반을 어디로 데려갈까'를 먼저 그려 보고, 그림이 그려지면 학기 계획 안에 자리를 만들어 둡니다. 시작은 느려 보여도 한번 시작하면 오래 갑니다.",
+      },
+      {
+        poles: { "axis-lens": "negative", "axis-rhythm": "negative" },
+        text: "떠오른 생각을 그 자리에서 시도해 보는 편이라 교실에 새로운 장면이 자주 생깁니다. 벌여 놓은 것이 여럿일 때가 있어서, 학기 중간에 한 번 정리하는 시간을 두면 훨씬 편해져요.",
+      },
+    ],
+  },
+  {
+    id: "combo-friction",
+    title: "부딪힘을 다루는 방식",
+    axisIds: ["axis-energy", "axis-decision"],
+    readings: [
+      {
+        poles: { "axis-energy": "positive", "axis-decision": "positive" },
+        text: "문제가 생기면 관련된 사람을 모아 놓고 무엇이 어긋났는지를 그 자리에서 정리하는 편이에요. 논의가 빨리 끝나는 대신, 아직 말할 준비가 안 된 사람에게는 속도가 빠르게 느껴질 수 있습니다.",
+      },
+      {
+        poles: { "axis-energy": "positive", "axis-decision": "negative" },
+        text: "부딪힘이 생기면 먼저 사람을 찾아가 이야기를 들어 봅니다. 서로의 사정이 풀리면서 문제가 저절로 가라앉을 때가 많고, 대신 매듭을 언제 지을지는 스스로 정해 두는 편이 좋습니다.",
+      },
+      {
+        poles: { "axis-energy": "negative", "axis-decision": "positive" },
+        text: "곧바로 반응하기보다 혼자 상황을 정리한 뒤에 기준을 들고 이야기하는 편이에요. 말이 정확한 대신 시간이 걸려서, 상대에게 '생각 정리하고 내일 이야기하자'고 한마디 해 두면 오해가 줄어듭니다.",
+      },
+      {
+        poles: { "axis-energy": "negative", "axis-decision": "negative" },
+        text: "부딪힘을 안으로 오래 품는 편이라, 겉으로는 조용해 보여도 안에서는 그 사람의 사정을 계속 헤아리고 있어요. 혼자 삭이는 시간이 길어지면 지치니, 믿는 동료 한 명에게 털어놓는 통로를 만들어 두면 좋습니다.",
+      },
+    ],
   },
 ];
 
@@ -140,19 +201,19 @@ const scale = {
 export const teacherStyleV1Base = {
   id: "teacher-style",
   slug: "teacher-style",
-  // DEC-020 대기 중 — 추천안이었던 제목을 초안으로 씁니다.
   title: "나의 교직 스타일 탐색",
   summary: "40문항으로 살펴보는 나의 교실 운영 스타일",
   description:
-    "교실을 어떻게 준비하고, 질서를 어떻게 세우고, 무엇을 기준으로 결정하고, 새로운 것을 어떻게 대하는지 네 가지 축으로 살펴봅니다. 맞고 틀린 답은 없고, 어느 쪽이 더 좋은 스타일인 것도 아니에요. 나와 동료가 서로 어떻게 다른지를 이야기해 보는 데 쓰시면 좋습니다.",
+    "어디에서 힘을 얻고, 무엇이 먼저 눈에 들어오고, 무엇을 딛고 결정하고, 어떤 리듬으로 일을 굴리는지 네 가지 축으로 살펴봅니다. 맞고 틀린 답은 없고, 어느 쪽이 더 좋은 스타일인 것도 아니에요. 나와 동료가 서로 어떻게 다른지를 이야기해 보는 데 쓰시면 좋습니다.",
   estimatedMinutes: 10,
   status: "published",
-  // fixture(1)에서 실제 콘텐츠로 바뀌며 문항 구성이 완전히 달라졌습니다.
-  // 버전을 올려야 예전 응답이 조용히 섞이지 않고 "새로 시작" 안내를 받습니다 (architecture 7.3).
-  assessmentVersion: 2,
-  contentVersion: "2.0.0",
+  // 축과 문항이 통째로 바뀌었습니다. 버전을 올려야 예전 응답이 조용히 섞이지 않고
+  // "새로 시작" 안내를 받습니다 (architecture 7.3).
+  assessmentVersion: 3,
+  contentVersion: "3.0.0",
   scale,
   axes,
+  axisCombinations,
   sections,
   scoring: { strategyId: "centered-likert-axis-sum", scoringVersion: 1 },
 };

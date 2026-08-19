@@ -111,13 +111,15 @@ function buildProfiles(axes: readonly AssessmentAxis[]): readonly ResultProfile[
       title: `[fixture] 결과 ${key}`,
       oneLiner: `[fixture] 한 줄 설명 ${key}`,
       rhythm: `[fixture] 리듬 ${key}`,
-      shiningMoments: [`[fixture] 빛나는 순간 ${key}`],
-      underPressure: [`[fixture] 바쁠 때 ${key}`],
-      withColleagues: [`[fixture] 동료와 ${key}`],
+      shiningMoments: [{ scene: "[fixture] 장면", text: `[fixture] 빛나는 순간 ${key}` }],
+      underPressure: [{ scene: "[fixture] 장면", text: `[fixture] 바쁠 때 ${key}` }],
+      withColleagues: [{ scene: "[fixture] 장면", text: `[fixture] 동료와 ${key}` }],
       collaboration: {
         naturalFit: [`[fixture] 자연스러운 ${key}`],
         needsTuning: [`[fixture] 조율하면 ${key}`],
       },
+      nextSteps: [`[fixture] 내일 해 볼 것 ${key}`],
+      talkingPoints: [`[fixture] 나눌 질문 ${key}`],
     };
   });
 }
@@ -167,6 +169,7 @@ export function buildDefinition(spec: DefinitionSpec): AssessmentDefinition {
     contentVersion: "1.0.0",
     scale: buildScale(scalePoints),
     axes,
+    axisCombinations: [],
     sections,
     questions,
     scoring: { strategyId: "centered-likert-axis-sum", scoringVersion: 1 },

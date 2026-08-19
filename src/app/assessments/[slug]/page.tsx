@@ -17,9 +17,20 @@ export async function generateMetadata({
   const found = staticAssessmentCatalog.findBySlug(slug);
   if (!found.ok) return { title: "검사를 찾을 수 없어요" };
 
+  const definition = found.value;
+  const url = `/assessments/${definition.slug}`;
+
   return {
-    title: found.value.title,
-    description: found.value.summary,
+    title: definition.title,
+    description: definition.summary,
+    alternates: { canonical: url },
+    openGraph: {
+      title: definition.title,
+      description: definition.summary,
+      url,
+      type: "website",
+      locale: "ko_KR",
+    },
   };
 }
 

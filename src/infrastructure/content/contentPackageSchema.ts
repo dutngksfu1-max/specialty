@@ -86,16 +86,37 @@ const collaborationProfileSchema = z.object({
   needsTuning: z.array(z.string().min(1)).min(1),
 });
 
+/** 장면이 붙은 서술 한 줄 (contentVersion 3.0.0) */
+const sceneNoteSchema = z.object({
+  scene: z.string().min(1),
+  text: z.string().min(1),
+});
+
 const resultProfileSchema = z.object({
   key: z.string().min(1).transform(toResultKey),
   poles: z.record(z.string().min(1), poleSideSchema),
   title: z.string().min(1),
   oneLiner: z.string().min(1),
   rhythm: z.string().min(1),
-  shiningMoments: z.array(z.string().min(1)).min(1),
-  underPressure: z.array(z.string().min(1)).min(1),
-  withColleagues: z.array(z.string().min(1)).min(1),
+  shiningMoments: z.array(sceneNoteSchema).min(1),
+  underPressure: z.array(sceneNoteSchema).min(1),
+  withColleagues: z.array(sceneNoteSchema).min(1),
   collaboration: collaborationProfileSchema,
+  nextSteps: z.array(z.string().min(1)).min(1),
+  talkingPoints: z.array(z.string().min(1)).min(1),
+});
+
+/** 축 조합 해석 (contentVersion 3.0.0) */
+const axisCombinationReadingSchema = z.object({
+  poles: z.record(z.string().min(1), poleSideSchema),
+  text: z.string().min(1),
+});
+
+const axisCombinationSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  axisIds: z.array(z.string().min(1).transform(toAxisId)).min(2),
+  readings: z.array(axisCombinationReadingSchema).min(2),
 });
 
 const baseDefinitionSchema = z.object({
@@ -110,6 +131,7 @@ const baseDefinitionSchema = z.object({
   contentVersion: z.string().min(1),
   scale: responseScaleSchema,
   axes: z.array(axisSchema).min(1),
+  axisCombinations: z.array(axisCombinationSchema).default([]),
   sections: z.array(sectionSchema).min(1),
   questions: z.array(questionSchema).min(1),
   scoring: scoringSpecSchema,
@@ -296,6 +318,54 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
     issue("pole 조합에 누락이 있습니다.", ["resultProfiles"]);
   }
 
+  // --- 축 조합 해석이 모든 방향 조합을 빠짐없이 담고 있는가 ----------------
+  definition.axisCombinations.forEach((combination, index) => {
+    const path = ["axisCombinations", index] as const;
+    const comboAxisIds = combination.axisIds.map((axisId) => String(axisId));
+
+    const unknownAxes = comboAxisIds.filter((axisId) => !axisIds.has(axisId));
+    if (unknownAxes.length > 0) {
+      issue(`없는 축을 가리킵니다: ${unknownAxes.join(", ")}`, [...path, "axisIds"]);
+      return;
+    }
+
+    const expectedReadingCount = 2 ** comboAxisIds.length;
+    if (combination.readings.length !== expectedReadingCount) {
+      issue(
+        `해석은 2^축개수(${expectedReadingCount})개여야 합니다. 현재 ${combination.readings.length}개입니다.`,
+        [...path, "readings"],
+      );
+    }
+
+    const seenReadings = new Set<string>();
+    combination.readings.forEach((reading, readingIndex) => {
+      const readingPath = [...path, "readings", readingIndex] as const;
+      const missingAxes = comboAxisIds.filter((axisId) => reading.poles[axisId] === undefined);
+      if (missingAxes.length > 0) {
+        issue(`poles에 빠진 축이 있습니다: ${missingAxes.join(", ")}`, [...readingPath, "poles"]);
+        return;
+      }
+      const extraAxes = Object.keys(reading.poles).filter((axisId) => !comboAxisIds.includes(axisId));
+      if (extraAxes.length > 0) {
+        issue(`이 조합이 읽지 않는 축이 들어 있습니다: ${extraAxes.join(", ")}`, [...readingPath, "poles"]);
+        return;
+      }
+
+      const signature = comboAxisIds.map((axisId) => reading.poles[axisId]).join("|");
+      if (seenReadings.has(signature)) {
+        issue(`방향 조합이 중복됩니다: ${signature}`, [...readingPath, "poles"]);
+      }
+      seenReadings.add(signature);
+    });
+
+    if (
+      combination.readings.length === expectedReadingCount &&
+      seenReadings.size !== expectedReadingCount
+    ) {
+      issue("방향 조합에 누락이 있습니다.", [...path, "readings"]);
+    }
+  });
+
   // --- 금지 표현 (AGENTS.md 1.1) ------------------------------------------
   const userFacingStrings: readonly (readonly [string, string])[] = [
     ["slug", definition.slug],
@@ -304,6 +374,12 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
     ["description", definition.description],
     ...definition.questions.map((question) => [`questions.${question.order}.text`, question.text] as const),
     ...definition.resultProfiles.map((profile) => [`resultProfiles.${profile.key}.title`, profile.title] as const),
+    ...definition.axisCombinations.flatMap((combination) => [
+      [`axisCombinations.${combination.id}.title`, combination.title] as const,
+      ...combination.readings.map(
+        (reading, index) => [`axisCombinations.${combination.id}.readings.${index}`, reading.text] as const,
+      ),
+    ]),
   ];
 
   for (const [field, value] of userFacingStrings) {

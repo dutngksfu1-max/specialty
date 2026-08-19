@@ -12,6 +12,24 @@
 /** 서비스 이름 (DEC-003 확정) */
 export const BRAND_NAME = "서치티쳐마인드";
 
+/**
+ * 배포 주소 (DEC-022 확정 — 2026-08-20)
+ *
+ * metadataBase·canonical·sitemap이 이 값을 씁니다.
+ * 절대 URL이 없으면 OG 이미지가 상대 경로로 나가서 카카오톡·슬랙 미리보기가 깨집니다.
+ *
+ * Vercel이 넣어 주는 환경변수를 먼저 보고, 없으면 확정 도메인을 씁니다.
+ * (프리뷰 배포에서도 그 배포의 주소가 잡히게 하려는 것입니다.)
+ * 주소에도 금지 표현이 들어가면 안 됩니다 (AGENTS.md 1.1).
+ */
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_ENV === "production"
+    ? "https://specialty-nu.vercel.app"
+    : process.env.VERCEL_URL !== undefined
+      ? `https://${process.env.VERCEL_URL}`
+      : "https://specialty-nu.vercel.app");
+
 /** DEC-027 초안 — Hero */
 export const HERO = {
   title: "나를 닮은 교직 스타일을 찾아보세요",

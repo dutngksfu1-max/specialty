@@ -4,6 +4,7 @@ import type { AssessmentDefinition } from "@/domain/assessment/model/definition"
 import type { ResultProfile } from "@/domain/assessment/result/profile";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 import { AxisBar } from "@/features/result/AxisBar";
+import { TypeEmblem } from "@/features/result/TypeEmblem";
 import { BRAND_NAME } from "@/lib/siteCopy";
 
 export const SHARE_CARD_WIDTH = 1080;
@@ -53,7 +54,17 @@ export const ResultShareCard = forwardRef<
         {BRAND_NAME}
       </p>
 
-      <p style={{ marginTop: 56, fontSize: 26, color: "var(--color-foreground-subtle)" }}>
+      {/* 유형 엠블럼 — 카드 전체가 aria-hidden이므로 decorative로 넘깁니다 */}
+      <div style={{ marginTop: 40 }}>
+        <TypeEmblem
+          axisIds={definition.axes.map((axis) => axis.id)}
+          poles={profile.poles}
+          size={132}
+          decorative
+        />
+      </div>
+
+      <p style={{ marginTop: 32, fontSize: 26, color: "var(--color-foreground-subtle)" }}>
         {nickname} 님의 결과
       </p>
 

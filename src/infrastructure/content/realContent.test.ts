@@ -8,6 +8,11 @@ import { teacherStyleV1Package } from "@/infrastructure/content/packages/teacher
  *
  * 형식(Zod)만으로는 못 잡는 **작성 규칙**을 여기서 지킵니다.
  * 나중에 문구를 고칠 때 규칙을 넘어서면 여기서 걸립니다.
+ *
+ * contentVersion 3.0.0에서 추가된 검사 (검수안 5절)
+ *   - 축 간 어휘 누수: 한 축 전용 낱말이 다른 축 문항에 나오면 실패
+ *   - 사회적 바람직성: 반박하기 어려운 문형을 차단
+ *   - 장면 편중: 한 축 안에서 같은 장면이 3번 이상 나오면 실패
  */
 
 const parsed = parseAssessmentDefinition(teacherStyleV1Package);
@@ -37,17 +42,23 @@ function allVisibleText(): readonly string[] {
       axis.negative.description,
       ...axis.intensityBands.map((band) => band.label),
     ]),
+    ...definition.axisCombinations.flatMap((combination) => [
+      combination.title,
+      ...combination.readings.map((reading) => reading.text),
+    ]),
     ...definition.sections.map((section) => section.description ?? ""),
     ...definition.questions.map((question) => question.text),
     ...definition.resultProfiles.flatMap((profile) => [
       profile.title,
       profile.oneLiner,
       profile.rhythm,
-      ...profile.shiningMoments,
-      ...profile.underPressure,
-      ...profile.withColleagues,
+      ...profile.shiningMoments.flatMap((note) => [note.scene, note.text]),
+      ...profile.underPressure.flatMap((note) => [note.scene, note.text]),
+      ...profile.withColleagues.flatMap((note) => [note.scene, note.text]),
       ...profile.collaboration.naturalFit,
       ...profile.collaboration.needsTuning,
+      ...profile.nextSteps,
+      ...profile.talkingPoints,
     ]),
   ];
 }
@@ -71,9 +82,15 @@ describe("축 정의 (DEC-023)", () => {
     }
   });
 
-  it("축 이름이 서로 겹치지 않습니다", () => {
+  it("축 이름과 짧은 이름이 서로 겹치지 않습니다", () => {
     const names = definition.axes.map((axis) => axis.name);
     expect(new Set(names).size).toBe(names.length);
+
+    const shortLabels = definition.axes.flatMap((axis) => [
+      axis.positive.shortLabel,
+      axis.negative.shortLabel,
+    ]);
+    expect(new Set(shortLabels).size).toBe(shortLabels.length);
   });
 });
 
@@ -138,6 +155,99 @@ describe("문항 작성 규칙 (5.2)", () => {
     const texts = definition.questions.map((question) => question.text);
     expect(new Set(texts).size).toBe(texts.length);
   });
+
+  /**
+   * 축 간 어휘 누수 (신규)
+   *
+   * 축마다 전용 장면군을 쓰기로 했으므로, 한 축의 전용 낱말이 다른 축 문항에 나오면
+   * 두 축이 같은 것을 재기 시작했다는 신호입니다. 이게 이전 버전에서 축이
+   * 사실상 3개가 되어 버린 원인이었습니다.
+   */
+  it("한 축 전용 어휘가 다른 축 문항에 새어 들어가지 않습니다", () => {
+    const ownedWords: Readonly<Record<string, readonly string[]>> = {
+      "axis-energy": ["혼자", "동료와", "옆 반", "대화", "협의회", "털어놓"],
+      "axis-rhythm": ["계획", "마감", "미리", "정해 두고", "일정"],
+      "axis-decision": ["기준", "규정", "사정", "형편", "잘못"],
+      "axis-lens": ["관찰", "근거", "사실대로", "결과물", "떠올리"],
+    };
+
+    for (const question of definition.questions) {
+      for (const [owner, words] of Object.entries(ownedWords)) {
+        if (owner === String(question.axisId)) continue;
+        for (const word of words) {
+          expect(
+            question.text.includes(word),
+            `${question.id}(${String(question.axisId)})에 ${owner} 전용 어휘 "${word}"가 있습니다: ${question.text}`,
+          ).toBe(false);
+        }
+      }
+    }
+  });
+
+  /**
+   * 사회적 바람직성 (신규)
+   *
+   * 교사라면 누구나 "그렇다"고 답할 문장은 사람을 구분해 내지 못합니다.
+   * 10문항 중 2~3개가 이러면 실질 문항 수가 7~8개로 줄어듭니다.
+   */
+  it("반박하기 어려운 문형을 쓰지 않습니다", () => {
+    for (const question of definition.questions) {
+      expect(question.text, question.text).not.toMatch(
+        /아이를 사랑|최선을 다|열심히 하는 편|노력하는 편|아이들에게 좋다|중요하다고 생각한다\.$/,
+      );
+    }
+  });
+
+  /**
+   * 장면 편중 (신규)
+   *
+   * 한 축의 10문항이 같은 장면만 맴돌면, 그 축은 "성향"이 아니라
+   * "그 장면에 대한 태도"를 재게 됩니다.
+   */
+  it("한 축 안에서 같은 장면이 3번 이상 나오지 않습니다", () => {
+    // 장면은 문항 텍스트에서 뽑을 수 없으므로, 대표 낱말로 장면을 추정합니다.
+    const sceneMarkers: readonly (readonly [string, RegExp])[] = [
+      ["연수", /연수/],
+      ["회의", /회의|협의회/],
+      ["학부모", /학부모/],
+      ["업무", /공문|업무|마감/],
+      ["교재연구", /교재 연구|단원/],
+      ["수업진행", /수업 중|교실 분위기|활동을 고르/],
+      ["갈등중재", /다툼/],
+      ["생활지도", /늦는 아이|잘못/],
+    ];
+
+    for (const axis of definition.axes) {
+      const mine = definition.questions.filter((question) => question.axisId === axis.id);
+      for (const [scene, pattern] of sceneMarkers) {
+        const hits = mine.filter((question) => pattern.test(question.text)).length;
+        expect(hits, `${String(axis.id)}의 "${scene}" 장면이 ${hits}회입니다`).toBeLessThanOrEqual(2);
+      }
+    }
+  });
+});
+
+describe("축 조합 해석 (3.0.0 신규)", () => {
+  it("조합마다 두 축을 읽고, 방향 조합 4가지를 모두 담습니다", () => {
+    expect(definition.axisCombinations.length).toBeGreaterThanOrEqual(1);
+
+    for (const combination of definition.axisCombinations) {
+      expect(combination.axisIds).toHaveLength(2);
+      expect(combination.readings).toHaveLength(4);
+      for (const reading of combination.readings) {
+        expect(letters(reading.text)).toBeGreaterThanOrEqual(40);
+      }
+    }
+  });
+
+  it("조합이 가리키는 축이 실제로 존재합니다", () => {
+    const axisIds = new Set(definition.axes.map((axis) => String(axis.id)));
+    for (const combination of definition.axisCombinations) {
+      for (const axisId of combination.axisIds) {
+        expect(axisIds.has(String(axisId))).toBe(true);
+      }
+    }
+  });
 });
 
 describe("결과 프로필 작성 규칙 (6.3)", () => {
@@ -173,6 +283,42 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
       expect(profile.withColleagues.length).toBeLessThanOrEqual(3);
       expect(profile.collaboration.naturalFit).toHaveLength(2);
       expect(profile.collaboration.needsTuning).toHaveLength(2);
+      expect(profile.nextSteps).toHaveLength(3);
+      expect(profile.talkingPoints).toHaveLength(3);
+    }
+  });
+
+  it("장면 라벨은 정해진 다섯 가지만 씁니다", () => {
+    const allowed = new Set(["수업", "생활지도", "업무", "동료", "학부모"]);
+    for (const profile of definition.resultProfiles) {
+      const notes = [...profile.shiningMoments, ...profile.underPressure, ...profile.withColleagues];
+      for (const note of notes) {
+        expect(allowed.has(note.scene), `${profile.key}: 모르는 장면 "${note.scene}"`).toBe(true);
+      }
+    }
+  });
+
+  it("'빛나는 순간'이 한 장면에만 몰리지 않습니다", () => {
+    for (const profile of definition.resultProfiles) {
+      const scenes = new Set(profile.shiningMoments.map((note) => note.scene));
+      expect(scenes.size, `${profile.key}의 빛나는 순간이 ${scenes.size}개 장면에만 있습니다`).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it("'내일 해 볼 것'이 성향 서술이 아니라 행동 제안입니다", () => {
+    for (const profile of definition.resultProfiles) {
+      for (const step of profile.nextSteps) {
+        // 권유형 어미로 끝나야 실제로 해 볼 수 있는 제안입니다.
+        expect(step, `${profile.key}: ${step}`).toMatch(/(보세요|두세요|주세요|정하세요)\.$/);
+      }
+    }
+  });
+
+  it("'동료와 나눌 질문'이 질문 형태입니다", () => {
+    for (const profile of definition.resultProfiles) {
+      for (const point of profile.talkingPoints) {
+        expect(point, `${profile.key}: ${point}`).toMatch(/\?$/);
+      }
     }
   });
 
@@ -182,11 +328,13 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
         profile.title,
         profile.oneLiner,
         profile.rhythm,
-        ...profile.shiningMoments,
-        ...profile.underPressure,
-        ...profile.withColleagues,
+        ...profile.shiningMoments.map((note) => note.text),
+        ...profile.underPressure.map((note) => note.text),
+        ...profile.withColleagues.map((note) => note.text),
         ...profile.collaboration.naturalFit,
         ...profile.collaboration.needsTuning,
+        ...profile.nextSteps,
+        ...profile.talkingPoints,
       ].join(" ");
       expect(visible).not.toContain(String(profile.key));
     }
@@ -200,6 +348,14 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
         expect(item, item).toMatch(/형과는/);
         // "~해 두면 / ~해 주면 / ~하면" 처럼 조건절이 있어야 실제로 해 볼 수 있는 조언입니다.
         expect(item, item).toMatch(/[가-힣]면[\s,]/);
+      }
+    }
+  });
+
+  it("'호흡이 자연스러운 스타일'도 어떤 스타일인지 밝힙니다", () => {
+    for (const profile of definition.resultProfiles) {
+      for (const item of profile.collaboration.naturalFit) {
+        expect(item, item).toMatch(/형과는/);
       }
     }
   });

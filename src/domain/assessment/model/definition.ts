@@ -46,6 +46,28 @@ export interface AssessmentAxis {
   readonly intensityBands: IntensityBands;
 }
 
+/**
+ * 축 조합 해석 (contentVersion 3.0.0)
+ *
+ * 두 축이 만났을 때만 보이는 이야기입니다. 축을 늘리지 않고 해석만 늘리는 방법이라,
+ * 축 사이 겹침을 만들지 않으면서 결과의 두께를 키울 수 있습니다.
+ */
+export interface AxisCombinationReading {
+  /** 이 해석이 적용되는 축 → 방향 조합. `axisIds`의 축을 모두 포함해야 합니다. */
+  readonly poles: Readonly<Record<AxisId, PoleSide>>;
+  readonly text: string;
+}
+
+export interface AxisCombination {
+  readonly id: string;
+  /** 화면에 보이는 제목 (예: "새로운 것을 대하는 태도") */
+  readonly title: string;
+  /** 이 해석이 읽는 축들. 2개 이상 */
+  readonly axisIds: readonly AxisId[];
+  /** 축 방향의 모든 조합(2^축개수)을 빠짐없이 담습니다 */
+  readonly readings: readonly AxisCombinationReading[];
+}
+
 export interface ResponseOption {
   readonly value: number;
   /** 스크린리더용 라벨. 모든 선택지에 필요합니다 (DEC-018) */
@@ -98,6 +120,8 @@ export interface AssessmentDefinition {
   readonly contentVersion: string;
   readonly scale: ResponseScale;
   readonly axes: readonly AssessmentAxis[];
+  /** 축 조합 해석. 없을 수도 있습니다 */
+  readonly axisCombinations: readonly AxisCombination[];
   readonly sections: readonly AssessmentSection[];
   readonly questions: readonly AssessmentQuestion[];
   readonly scoring: ScoringSpec;
