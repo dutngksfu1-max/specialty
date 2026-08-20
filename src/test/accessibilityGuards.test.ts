@@ -50,6 +50,7 @@ describe("focus 표시를 지우지 않습니다", () => {
 
 describe("척도는 진짜 라디오여야 합니다 (design.md 10.2)", () => {
   const likert = read("features/assessment-runner/LikertScale.tsx");
+  const questionCard = read("features/assessment-runner/QuestionCard.tsx");
 
   it("네이티브 input[type=radio]를 씁니다", () => {
     expect(likert).toContain('type="radio"');
@@ -58,16 +59,19 @@ describe("척도는 진짜 라디오여야 합니다 (design.md 10.2)", () => {
   });
 
   it("radiogroup과 문항 텍스트가 연결되어 있습니다", () => {
-    expect(likert).toContain('role="radiogroup"');
-    expect(likert).toContain("aria-labelledby");
+    expect(questionCard).toContain("<fieldset");
+    expect(questionCard).toContain('role="radiogroup"');
+    expect(questionCard).toContain("<legend");
   });
 
-  it("선택지마다 점수와 뜻을 함께 읽어 줍니다", () => {
-    expect(likert).toMatch(/aria-label=\{`\$\{option\.value\}점, \$\{option\.label\}`\}/);
+  it("선택지마다 input과 label을 명시적으로 연결합니다", () => {
+    expect(likert).toContain("htmlFor={id}");
+    expect(likert).toContain("id={id}");
+    expect(likert).toContain("option.visibleLabel ?? option.label");
   });
 
   it("터치 영역 44px를 유지합니다", () => {
-    expect(likert).toMatch(/h-11 w-11/);
+    expect(likert).toContain("size-11");
   });
 });
 
@@ -113,7 +117,9 @@ describe("상태를 색만으로 전달하지 않습니다", () => {
     const progress = read("features/assessment-runner/AssessmentProgress.tsx");
     expect(progress).toContain('role="progressbar"');
     expect(progress).toContain("aria-valuenow");
-    expect(progress).toMatch(/\{answeredCount\}\s*\/\s*\{totalCount\}/);
+    expect(progress).toContain("{answeredCount}");
+    expect(progress).toContain("{totalCount}");
+    expect(progress).toContain("aria-valuetext");
   });
 
   it("축 시각화를 문장으로도 읽어 줍니다", () => {

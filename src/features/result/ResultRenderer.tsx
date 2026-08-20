@@ -7,6 +7,7 @@ import type { SceneNote } from "@/domain/assessment/result/profile";
 import { resolveAxisCombinations } from "@/domain/assessment/result/axisCombination";
 import { AxisBar } from "@/features/result/AxisBar";
 import { TypeEmblem } from "@/features/result/TypeEmblem";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { DISCLAIMER } from "@/lib/siteCopy";
 
 /**
@@ -20,9 +21,11 @@ import { DISCLAIMER } from "@/lib/siteCopy";
 
 function ResultSection({ title, children }: { readonly title: string; readonly children: ReactNode }) {
   return (
-    <section className="mt-12">
-      <span aria-hidden="true" className="block h-0.5 w-6 bg-accent" />
-      <h2 className="mt-3 text-h2 text-foreground sm:text-h2-lg">{title}</h2>
+    <section className="mt-14 border-t border-border pt-8">
+      <div className="flex items-center gap-3">
+        <span aria-hidden="true" className="block h-0.5 w-7 bg-accent" />
+        <h2 className="text-h2 text-foreground sm:text-h2-lg">{title}</h2>
+      </div>
       <div className="mt-4 text-body text-foreground-body">{children}</div>
     </section>
   );
@@ -33,7 +36,7 @@ function Points({ items }: { readonly items: readonly string[] }) {
     <ul className="flex flex-col gap-3">
       {items.map((item) => (
         <li key={item} className="flex gap-3">
-          <span aria-hidden="true" className="mt-3 h-1 w-1 shrink-0 rounded-full bg-accent" />
+          <Icon name="check" className="mt-1 size-4 shrink-0 text-accent" />
           <span className="max-w-prose">{item}</span>
         </li>
       ))}
@@ -48,14 +51,21 @@ function Points({ items }: { readonly items: readonly string[] }) {
  * 칩은 색만으로 구분하지 않고 글자 자체가 장면 이름이라 색 없이도 뜻이 전달됩니다.
  */
 function ScenePoints({ items }: { readonly items: readonly SceneNote[] }) {
+  const iconForScene = (scene: string): IconName => {
+    if (scene.includes("수업") || scene.includes("교실")) return "book";
+    if (scene.includes("동료") || scene.includes("회의")) return "message";
+    if (scene.includes("업무") || scene.includes("준비")) return "layers";
+    return "compass";
+  };
+
   return (
     <ul className="flex flex-col gap-4">
       {items.map((item) => (
-        <li key={item.text} className="flex flex-col gap-1.5">
-          <span className="w-fit rounded-sm border border-border-strong bg-surface-muted px-2 py-0.5 text-body-sm text-foreground-muted">
-            {item.scene}
+        <li key={item.text} className="border-l-2 border-primary-soft-border pl-4">
+          <span className="inline-flex items-center gap-1.5 rounded-xs bg-primary-soft px-2 py-1 text-body-sm font-medium text-primary-active">
+            <Icon name={iconForScene(item.scene)} className="size-4" /> {item.scene}
           </span>
-          <span className="max-w-prose">{item.text}</span>
+          <p className="mt-2 max-w-prose">{item.text}</p>
         </li>
       ))}
     </ul>
@@ -70,7 +80,7 @@ function NumberedPoints({ items }: { readonly items: readonly string[] }) {
         <li key={item} className="flex gap-3">
           <span
             aria-hidden="true"
-            className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-border-strong text-body-sm text-foreground-muted"
+            className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-xs border border-border-strong bg-surface text-caption font-bold tabular-nums text-primary-active"
           >
             {index + 1}
           </span>
@@ -98,24 +108,26 @@ export function ResultRenderer({
   return (
     <article>
       {/* 1. 닉네임 → 2. 결과 제목 → 3. 한 줄 설명 → 4. 유형 엠블럼 (DEC-039) */}
-      <header className="max-w-[48rem]">
-        <p className="text-caption text-foreground-subtle">{nickname} 님의 결과</p>
-        <h1 className="mt-3 text-display text-foreground sm:text-display-lg">{profile.title}</h1>
-        <p className="mt-4 max-w-prose text-body-lg text-foreground-muted sm:text-body-lg-desktop">
-          {profile.oneLiner}
-        </p>
-        {/* 엠블럼은 결과를 도형으로 옮긴 것입니다. 규격: docs/type-emblem.md */}
-        <div className="mt-8">
+      <header className="relative overflow-hidden rounded-(--radius-hero) border border-border bg-surface p-6 shadow-elev-1 sm:p-9">
+        <span aria-hidden="true" className="absolute top-0 right-0 h-28 w-28 border-b border-l border-primary-soft-border opacity-70" />
+        <div className="relative grid items-center gap-8 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div>
+            <p className="text-caption font-semibold text-primary-active">{nickname} 님의 교직 리듬</p>
+            <h1 className="mt-3 text-display text-foreground sm:text-display-lg">{profile.title}</h1>
+            <p className="mt-4 max-w-prose text-body-lg text-foreground-muted sm:text-body-lg-desktop">
+              {profile.oneLiner}
+            </p>
+          </div>
+          <div className="justify-self-start sm:justify-self-end">
           <TypeEmblem
             axisIds={definition.axes.map((axis) => axis.id)}
             poles={profile.poles}
-            size={96}
+            size={112}
             label={`${profile.title} 유형을 나타내는 상징`}
           />
+          </div>
         </div>
       </header>
-
-      <hr className="mt-10 border-border" />
 
       {/* 4. 나의 교직 리듬 */}
       <ResultSection title="나의 교직 리듬">
@@ -124,7 +136,7 @@ export function ResultRenderer({
 
       {/* 5. 4개 성향 축 */}
       <ResultSection title="네 가지 축으로 본 나">
-        <div className="flex flex-col divide-y divide-border">
+        <div className="flex flex-col divide-y divide-border rounded-lg border border-border bg-surface px-4 sm:px-6">
           {snapshot.score.axisScores.map((score) => {
             const axis = axisById.get(String(score.axisId));
             if (axis === undefined) return null;
@@ -177,9 +189,8 @@ export function ResultRenderer({
         </p>
       </ResultSection>
 
-      <p className="mt-12 max-w-prose text-body-sm text-foreground-muted">
-        <span aria-hidden="true">ℹ </span>
-        {DISCLAIMER}
+      <p className="mt-14 flex max-w-prose gap-3 border-t border-border pt-7 text-body-sm text-foreground-muted">
+        <Icon name="compass" className="mt-0.5 text-primary" /> {DISCLAIMER}
       </p>
     </article>
   );

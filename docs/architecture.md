@@ -83,11 +83,12 @@ infrastructure/
     StaticAssessmentCatalog.ts   번들에 포함된 콘텐츠 패키지 목록
     contentPackageSchema.ts      Zod 스키마 (로드 시 검증)
     packages/
-      teacher-style-v1/          ← 검사 1종 = 폴더 1개
-        definition.ts
-        questions.ts
-        profiles.ts
-        index.ts
+       teacher-style-v1/          ← 검사 1종 = 폴더 1개
+         definition.ts
+         questions.ts
+         profiles.ts
+         presentation.ts          선택형 색·로컬 그림·section 모티프
+         index.ts
 ```
 
 ### 1.4 UI — "어떻게 보이는가"
@@ -586,6 +587,8 @@ resultKey  는 defaultPole을 포함해 정상적으로 16개 중 하나로 확�
 - weight 가 전부 1 인가 (MVP 규칙 — PRD F-4.2)
 - 사용자에게 보이는 문자열(slug·title·summary·description·문항·결과 제목)에
   노출이 금지된 표현이 없는가 (AGENTS.md 1.1)
+- 선택형 presentation의 색이 등록 토큰인가 / 그림이 `/assessments/...` 로컬 경로인가
+- presentation이 있으면 모든 sectionId의 그림이 중복·누락 없이 존재하는가
 실패 시 → INVALID_CONTENT_PACKAGE
 
 - 축별 문항 수가 균등한가 / 축마다 polarity 가 반반인가
@@ -887,6 +890,7 @@ src/infrastructure/content/packages/collaboration-v1/
   ├─ definition.ts    검사 메타 + 축 + 척도 + 섹션
   ├─ questions.ts     문항 배열
   ├─ profiles.ts      결과 프로필 배열
+  ├─ presentation.ts  선택형 palette + hero/section 로컬 그림
   └─ index.ts         조립 + Zod 검증 후 export
 ```
 
@@ -907,6 +911,9 @@ src/components/ui/**  0줄
 ```
 
 > **이 표가 이 아키텍처의 합격 기준입니다.** 하나라도 어긋나면 엔진이 콘텐츠에 오염된 것입니다.
+
+`presentation`은 콘텐츠 패키지 경계에서 검증하고 `StaticAssessmentCatalog`의 구체 API로만 조회합니다.
+Domain의 `AssessmentCatalog` port·채점·세션 버전에는 넣지 않습니다. 프레젠테이션이 없으면 UI가 플랫폼 기본 테마를 사용합니다.
 
 축 개수가 3개거나 5개여도, 문항이 30개거나 60개여도, 척도가 7점이어도 동작해야 합니다.
 (결과 프로필 개수는 `2 ^ 축개수`)

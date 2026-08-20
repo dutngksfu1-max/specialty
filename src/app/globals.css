@@ -147,16 +147,12 @@
   --text-label--line-height: 1.4;
   --text-label--font-weight: 600;
 
-  /* ---------- Radius (design.md 5) ---------------------------------------
-     바깥에서 안쪽으로 갈수록 반경을 줄입니다.
-     패널 40 → 카드 32 → 버튼 18 → 배지 4 */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
-  --radius-2xl: 32px;
-  --radius-3xl: 40px;
+  /* ---------- Radius (design.md 5) --------------------------------------- */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-hero: 28px;
 
   /* ---------- Elevation (design.md 6) — 그림자 색은 웜 뉴트럴 ------------- */
   --shadow-elev-1: 0 1px 2px oklch(0.30 0.02 90 / 0.06);
@@ -166,19 +162,14 @@
   /* ---------- Motion (design.md 14) -------------------------------------- */
   --ease-out-soft: cubic-bezier(0.2, 0, 0, 1);
   --ease-in-out-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-fast: 120ms;
+  --motion-base: 220ms;
+  --motion-scene: 360ms;
 
   /* ---------- Layout 폭 (design.md 13) ----------------------------------- */
   --container-survey: 40rem;
   --container-landing: 72rem;
 
-  /* ---------- 페이지 배경 (design.md 2.6) --------------------------------
-     단색이 아니라 아주 옅은 웜 그라데이션입니다.
-     두 정지점 모두 채도 0.04 이하 — 더 진해지면 본문 대비가 무너집니다. */
-  --gradient-page: linear-gradient(
-    135deg,
-    oklch(0.985 0.015 95) 0%,
-    oklch(0.945 0.035 65) 100%
-  );
 }
 
 /* =============================================================================
@@ -189,11 +180,11 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+    scroll-padding-top: 7rem;
   }
 
   body {
-    background: var(--gradient-page);
-    background-attachment: fixed;
+    background: var(--color-background);
     color: var(--color-foreground-body);
     font-family: var(--font-sans);
     font-size: var(--text-body);
@@ -223,6 +214,86 @@
   }
 }
 
+@layer components {
+  .assessment-theme {
+    --color-background: var(--assessment-canvas);
+    --color-surface: var(--assessment-surface);
+    --color-primary: var(--assessment-primary);
+    --color-primary-hover: color-mix(in oklch, var(--assessment-primary), black 13%);
+    --color-primary-active: color-mix(in oklch, var(--assessment-primary), black 22%);
+    --color-primary-soft: color-mix(in oklch, var(--assessment-primary), white 84%);
+    --color-primary-soft-border: color-mix(in oklch, var(--assessment-primary), white 52%);
+    --color-accent: var(--assessment-accent);
+    --color-accent-soft: color-mix(in oklch, var(--assessment-accent), white 84%);
+    --color-foreground: var(--assessment-ink);
+    --color-focus-ring: var(--assessment-primary);
+    background-color: var(--assessment-canvas);
+  }
+
+  .mobile-safe-action {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .assessment-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .assessment-card-deck {
+    margin-bottom: 0.5rem;
+    box-shadow:
+      var(--shadow-elev-1),
+      0 7px 0 -3px var(--color-primary-soft),
+      0 8px 0 -3px var(--color-primary-soft-border);
+  }
+
+  .assessment-mini-card {
+    min-width: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: color-mix(in oklch, var(--color-surface), var(--color-primary-soft) 12%);
+  }
+
+  .assessment-rule {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent) 0 2.5rem,
+      var(--color-border) 2.5rem 100%
+    );
+  }
+}
+
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ambient-thread {
+  0%,
+  100% {
+    transform: translateX(-1px);
+  }
+  50% {
+    transform: translateX(1px);
+  }
+}
+
+.hero-enter {
+  animation: hero-enter var(--motion-scene) var(--ease-out-soft) both;
+}
+
+.ambient-thread {
+  animation: ambient-thread 6s var(--ease-in-out-soft) infinite;
+}
+
 /* =============================================================================
    prefers-reduced-motion (design.md 14)
    ========================================================================== */
@@ -235,5 +306,11 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .hero-enter,
+  .ambient-thread {
+    animation: none !important;
+    transform: none !important;
   }
 }

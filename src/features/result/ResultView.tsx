@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { getResult } from "@/application/assessment/getResult";
 import { buttonClasses } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
 import type { ResultProfile } from "@/domain/assessment/result/profile";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
@@ -87,7 +88,7 @@ export function ResultView({ slug }: { readonly slug: string }) {
 
   return (
     <>
-      <main id="main" className="mx-auto max-w-(--container-survey) px-5 py-12 sm:px-6">
+      <main id="main" className="mx-auto max-w-(--container-survey) px-4 py-10 sm:px-6 sm:py-14">
         <ResultRenderer
           definition={definition}
           snapshot={snapshot}
@@ -95,15 +96,15 @@ export function ResultView({ slug }: { readonly slug: string }) {
           nickname={nickname}
         />
 
-        <div className="mt-12 border-t border-border pt-8">
+        <div className="mt-14 border-t border-border pt-8">
           <NicknameEditor slug={slug} nickname={nickname} onChanged={setNickname} />
         </div>
 
-        <div className="mt-8 flex flex-col gap-4">
+        <div className="mt-8 flex flex-col items-stretch gap-3 sm:items-start">
           <SaveImageButton targetRef={shareCardRef} nickname={nickname} />
           <RetakeControls slug={slug} />
-          <Link href="/" className={buttonClasses("ghost", "md", "self-start")}>
-            처음으로
+          <Link href="/" className={buttonClasses("ghost", "md", "w-full sm:w-auto")}>
+            <Icon name="home" /> 처음으로
           </Link>
         </div>
       </main>

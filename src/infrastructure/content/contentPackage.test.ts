@@ -6,6 +6,7 @@ import {
 } from "@/infrastructure/content/StaticAssessmentCatalog";
 import {
   collectContentWarnings,
+  parseAssessmentContentPackage,
   parseAssessmentDefinition,
 } from "@/infrastructure/content/contentPackageSchema";
 import { teacherStyleV1Package } from "@/infrastructure/content/packages/teacher-style-v1";
@@ -20,6 +21,14 @@ function broken(mutate: (draft: Record<string, unknown>) => void): unknown {
 
 function expectInvalid(raw: unknown): string {
   const result = parseAssessmentDefinition(raw);
+  expect(result.ok).toBe(false);
+  if (result.ok) throw new Error("검증이 통과해서는 안 됩니다.");
+  expect(result.error.code).toBe("INVALID_CONTENT_PACKAGE");
+  return result.error.detail ?? "";
+}
+
+function expectInvalidPackage(raw: unknown): string {
+  const result = parseAssessmentContentPackage(raw);
   expect(result.ok).toBe(false);
   if (result.ok) throw new Error("검증이 통과해서는 안 됩니다.");
   expect(result.error.code).toBe("INVALID_CONTENT_PACKAGE");
@@ -284,6 +293,23 @@ describe("StaticAssessmentCatalog", () => {
     expect(found.ok).toBe(true);
   });
 
+  it("검사별 프레젠테이션을 구체 카탈로그에서 찾을 수 있습니다", () => {
+    const presentation = staticAssessmentCatalog.findPresentationBySlug("teacher-style");
+    expect(presentation?.version).toBe(1);
+    expect(presentation?.heroArtwork.src).toMatch(/^\/assessments\//);
+    expect(presentation?.sectionArtwork).toHaveLength(4);
+  });
+
+  it("프레젠테이션이 없는 패키지도 기본 테마 대상으로 정상 로드합니다", () => {
+    const withoutPresentation = broken((draft) => {
+      delete draft.presentation;
+    });
+    const catalog = new StaticAssessmentCatalog([withoutPresentation]);
+    expect(catalog.contentErrors).toEqual([]);
+    expect(catalog.listPublished()).toHaveLength(1);
+    expect(catalog.findPresentationBySlug("teacher-style")).toBeUndefined();
+  });
+
   it("망가진 패키지는 목록에서 빠지고 contentErrors에 담깁니다", () => {
     const catalog = new StaticAssessmentCatalog([
       teacherStyleV1Package,
@@ -293,5 +319,43 @@ describe("StaticAssessmentCatalog", () => {
     expect(catalog.listAll()).toHaveLength(1);
     expect(catalog.contentErrors).toHaveLength(1);
     expect(catalog.contentErrors[0]?.code).toBe("INVALID_CONTENT_PACKAGE");
+  });
+});
+
+describe("검사 프레젠테이션 무결성", () => {
+  it("등록되지 않은 색 토큰을 거부합니다", () => {
+    const detail = expectInvalidPackage(
+      broken((draft) => {
+        const presentation = draft.presentation as Record<string, unknown>;
+        const palette = presentation.palette as Record<string, unknown>;
+        palette.primary = "unknown-green";
+      }),
+    );
+    expect(detail).toContain("presentation.palette.primary");
+  });
+
+  it("외부 이미지 URL을 거부합니다", () => {
+    const detail = expectInvalidPackage(
+      broken((draft) => {
+        const presentation = draft.presentation as Record<string, unknown>;
+        const hero = presentation.heroArtwork as Record<string, unknown>;
+        hero.src = "https://example.com/art.webp";
+      }),
+    );
+    expect(detail).toContain("presentation.heroArtwork.src");
+  });
+
+  it("section 그림 참조의 중복과 누락을 거부합니다", () => {
+    const detail = expectInvalidPackage(
+      broken((draft) => {
+        const presentation = draft.presentation as Record<string, unknown>;
+        const sectionArtwork = presentation.sectionArtwork as Record<string, unknown>[];
+        const first = sectionArtwork[0];
+        const second = sectionArtwork[1];
+        if (first !== undefined && second !== undefined) second.sectionId = first.sectionId;
+      }),
+    );
+    expect(detail).toContain("중복");
+    expect(detail).toContain("빠진 sectionId");
   });
 });

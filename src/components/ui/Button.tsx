@@ -19,14 +19,14 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
-  sm: "h-9 px-3 text-body-sm",
-  md: "h-11 px-4 text-body",
-  lg: "h-13 px-6 text-body-lg font-semibold",
+  sm: "min-h-11 px-3 text-body-sm",
+  md: "min-h-12 px-4 text-body",
+  lg: "min-h-13 px-6 text-body-lg font-semibold",
 };
 
 export const BUTTON_BASE =
   "inline-flex items-center justify-center gap-2 rounded-xl font-medium " +
-  "transition-colors duration-[120ms] ease-out-soft " +
+  "transition-[background-color,border-color,color,transform] duration-(--motion-fast) ease-out-soft active:translate-y-px " +
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring " +
   "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-foreground-disabled " +
   "disabled:border-border disabled:hover:bg-surface-muted";

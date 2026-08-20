@@ -8,6 +8,8 @@ import { loadNickname } from "@/application/assessment/nickname";
 import { resumeSession } from "@/application/assessment/resumeSession";
 import { startAssessment } from "@/application/assessment/startAssessment";
 import { Button, buttonClasses } from "@/components/ui/Button";
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
+import { Icon } from "@/components/ui/Icon";
 import { useAssessmentServices } from "@/features/shared/AssessmentRepositoryProvider";
 import { messageFor } from "@/lib/errorMessages";
 
@@ -17,24 +19,16 @@ type Existing =
   | { readonly kind: "inProgress"; readonly nextSectionOrder: number; readonly answered: number }
   | { readonly kind: "outdated" };
 
-/**
- * 검사 시작 / 이어서 하기 (PRD F-1.7, DEC-010)
- *
- * 새로 시작하면 이전 응답이 지워지므로, 진행 중인 기록이 있을 때는 반드시 확인을 받습니다.
- */
 export function StartAssessmentControls({ slug }: { readonly slug: string }) {
   const router = useRouter();
   const services = useAssessmentServices();
-
   const [existing, setExisting] = useState<Existing>({ kind: "unknown" });
   const [busy, setBusy] = useState(false);
-  const [confirmingRestart, setConfirmingRestart] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => {
     if (services === null) return;
     let alive = true;
-
     void resumeSession(services.deps, { slug }).then((result) => {
       if (!alive) return;
       if (result.ok) {
@@ -47,103 +41,88 @@ export function StartAssessmentControls({ slug }: { readonly slug: string }) {
       }
       setExisting(result.error.code === "VERSION_MISMATCH" ? { kind: "outdated" } : { kind: "none" });
     });
-
     return () => {
       alive = false;
     };
   }, [services, slug]);
 
-  async function begin(restart: boolean) {
-    if (services === null) return;
+  async function begin(restart: boolean): Promise<boolean> {
+    if (services === null) return false;
     setBusy(true);
     setFailure(null);
 
     const remembered = await loadNickname(services);
     const nickname = remembered.ok ? remembered.value : "";
-
     const started = await startAssessment(services.deps, { slug, nickname, restart });
+
     if (!started.ok) {
       setFailure(messageFor(started.error).body);
       setBusy(false);
-      return;
+      return false;
     }
 
     const firstSection = [...started.value.definition.sections].sort((a, b) => a.order - b.order)[0];
     router.push(`/assessments/${slug}/run/${firstSection === undefined ? 1 : firstSection.order}`);
+    return true;
   }
 
   const hasProgress = existing.kind === "inProgress" && existing.answered > 0;
 
   return (
-    <div className="mt-8">
-      {existing.kind === "outdated" && (
-        <p className="mb-4 text-body-sm text-foreground-body" aria-live="polite">
-          <span aria-hidden="true">⚠ </span>
-          검사가 새 버전으로 업데이트되었어요. 정확한 결과를 위해 처음부터 다시 진행해 주세요.
-        </p>
-      )}
-
-      {hasProgress && existing.kind === "inProgress" ? (
-        <>
-          <p className="mb-4 text-body-sm text-foreground-muted" aria-live="polite">
-            진행 중인 기록이 있어요. {existing.answered}문항까지 답하셨습니다.
+    <div className="mobile-safe-action fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface px-4 pt-3 shadow-elev-1 md:static md:mt-8 md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+      <div className="mx-auto max-w-5xl">
+        {existing.kind === "outdated" && (
+          <p className="mb-3 flex gap-2 text-body-sm text-foreground-body" aria-live="polite">
+            <Icon name="warning" className="text-status-warning" />
+            새 버전으로 바뀌어 처음부터 진행합니다.
           </p>
+        )}
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              href={`/assessments/${slug}/run/${existing.nextSectionOrder}`}
-              className={buttonClasses("primary", "lg")}
-            >
-              이어서 하기
-            </Link>
-
-            {confirmingRestart ? null : (
-              <Button variant="secondary" size="lg" onClick={() => setConfirmingRestart(true)}>
-                처음부터 다시 하기
-              </Button>
-            )}
-          </div>
-
-          {confirmingRestart && (
-            <div className="mt-4 flex flex-col gap-3 border border-border-strong bg-surface p-4 sm:flex-row sm:items-center">
-              <p className="text-body-sm text-foreground-body">
-                <span aria-hidden="true">⚠ </span>
-                처음부터 다시 하면 지금까지의 응답이 지워져요. 계속할까요?
-              </p>
-              <div className="flex shrink-0 gap-2">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled={busy}
-                  onClick={() => void begin(true)}
-                >
-                  다시 시작
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setConfirmingRestart(false)}>
-                  취소
-                </Button>
-              </div>
+        {hasProgress && existing.kind === "inProgress" ? (
+          <div className="flex flex-col gap-2 md:items-start">
+            <p className="hidden text-body-sm text-foreground-muted md:block" aria-live="polite">
+              {existing.answered}문항까지 이 브라우저에 저장되어 있어요.
+            </p>
+            <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-2 sm:flex sm:gap-3">
+              <Link
+                href={`/assessments/${slug}/run/${existing.nextSectionOrder}`}
+                className={buttonClasses("primary", "lg")}
+              >
+                이어서 하기 <Icon name="arrow-right" />
+              </Link>
+              <ConfirmationDialog
+                triggerLabel="처음부터"
+                triggerIcon="restart"
+                triggerVariant="secondary"
+                triggerSize="lg"
+                title="처음부터 다시 할까요?"
+                description="지금까지 고른 답이 지워지고 첫 묶음부터 시작합니다. 이 작업은 되돌릴 수 없어요."
+                confirmLabel="응답 지우고 다시 시작"
+                disabled={busy}
+                onConfirm={() => begin(true)}
+              />
             </div>
-          )}
-        </>
-      ) : (
-        <Button
-          variant="primary"
-          size="lg"
-          disabled={services === null || busy || existing.kind === "unknown"}
-          aria-busy={busy}
-          onClick={() => void begin(existing.kind === "outdated")}
-        >
-          {busy ? "준비 중이에요…" : "검사 시작하기"}
-        </Button>
-      )}
+          </div>
+        ) : (
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full md:w-auto"
+            disabled={services === null || busy || existing.kind === "unknown"}
+            aria-busy={busy}
+            onClick={() => void begin(existing.kind === "outdated")}
+          >
+            {busy ? "준비 중이에요…" : "검사 시작하기"}
+            {!busy && <Icon name="arrow-right" />}
+          </Button>
+        )}
 
-      {failure !== null && (
-        <p className="mt-4 text-body-sm text-status-danger" aria-live="polite">
-          <span aria-hidden="true">⚠ </span>
-          {failure}
-        </p>
-      )}
+        {failure !== null && (
+          <p className="mt-2 flex gap-2 text-body-sm text-status-danger" aria-live="polite">
+            <Icon name="warning" /> {failure}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { getFontEmbedCSS, toPng } from "html-to-image";
 import { useState, type RefObject } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from "@/features/result/ResultShareCard";
 
 type State = "idle" | "working" | "failed";
@@ -85,8 +86,10 @@ export function SaveImageButton({
         size="lg"
         disabled={state === "working"}
         aria-busy={state === "working"}
+        className="w-full sm:w-auto"
         onClick={() => void save()}
       >
+        {state !== "working" && <Icon name="device" />}
         {state === "working" ? "이미지 만드는 중이에요…" : "결과 이미지 저장"}
       </Button>
 

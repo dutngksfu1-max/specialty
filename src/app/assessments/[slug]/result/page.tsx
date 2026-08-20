@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { AssessmentTheme } from "@/components/ui/AssessmentTheme";
 import { ResultView } from "@/features/result/ResultView";
 import { SiteFooter } from "@/features/shared/SiteFooter";
 import { SiteHeader } from "@/features/shared/SiteHeader";
@@ -22,12 +23,13 @@ export default async function ResultPage({ params }: PageProps<"/assessments/[sl
 
   const found = staticAssessmentCatalog.findBySlug(slug);
   if (!found.ok) notFound();
+  const presentation = staticAssessmentCatalog.findPresentationBySlug(found.value.slug);
 
   return (
-    <>
+    <AssessmentTheme presentation={presentation}>
       <SiteHeader />
       <ResultView slug={found.value.slug} />
       <SiteFooter />
-    </>
+    </AssessmentTheme>
   );
 }

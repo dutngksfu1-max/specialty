@@ -42,8 +42,8 @@ export function NicknameEntry() {
   }
 
   return (
-    <section className="flex flex-col items-center pb-8 w-full">
-      <label htmlFor={inputId} className="block text-label text-foreground-body text-center">
+    <section className="w-full">
+      <label htmlFor={inputId} className="block text-label text-foreground-body">
         어떻게 불러 드릴까요? (선택)
       </label>
 
@@ -69,14 +69,14 @@ export function NicknameEntry() {
             void persist(value);
           }
         }}
-        className="mt-2 h-13 w-full max-w-xs rounded-full border border-border bg-surface px-5 text-body text-foreground-body text-center shadow-sm placeholder:text-foreground-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:bg-surface-muted"
+        className="mt-2 min-h-13 w-full rounded-sm border border-border-strong bg-surface px-4 text-body text-foreground-body shadow-elev-1 placeholder:text-foreground-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:bg-surface-muted"
       />
 
       <p id={helperId} className="mt-2 max-w-prose text-body-sm text-foreground-muted">
         입력하지 않으면 &lsquo;선생님&rsquo;으로 표시돼요. {PRIVACY_NOTE.short}
       </p>
 
-      <p className="mt-1 h-5 text-caption text-status-success" aria-live="polite">
+      <p className="mt-1 min-h-5 text-caption text-status-success" aria-live="polite">
         {saved ? (
           <>
             <span aria-hidden="true">✓ </span>이 브라우저에 저장했어요.

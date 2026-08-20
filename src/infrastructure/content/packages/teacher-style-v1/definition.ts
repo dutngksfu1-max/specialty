@@ -1,5 +1,5 @@
 /**
- * 콘텐츠 패키지 — teacher-style-v1 (contentVersion 3.0.0)
+ * 콘텐츠 패키지 — teacher-style-v1 (contentVersion 3.0.1)
  *
  * 2026-08-20 전면 개정. 검수안: docs/content/teacher-style-v1-revision.md
  *
@@ -179,10 +179,34 @@ const axisCombinations = [
 export const sectionIds = ["part-1", "part-2", "part-3", "part-4"] as const;
 
 const sections = [
-  { id: "part-1", order: 1, title: "Part 1", description: "정답은 없어요. 떠오르는 대로 골라 주세요." },
-  { id: "part-2", order: 2, title: "Part 2", description: "요즘의 나를 기준으로 답해 주세요." },
-  { id: "part-3", order: 3, title: "Part 3", description: "오래 고민하지 말고 첫 느낌대로 골라 주세요." },
-  { id: "part-4", order: 4, title: "Part 4", description: "마지막 묶음이에요. 조금만 더 힘내 주세요." },
+  {
+    id: "part-1",
+    order: 1,
+    title: "평소의 교실 리듬 떠올리기",
+    description:
+      "교실과 교무실에서 자주 보이는 평소 모습을 떠올려 보세요. 가장 바람직한 모습보다 요즘 자연스럽게 하는 쪽에 답하면 됩니다.",
+  },
+  {
+    id: "part-2",
+    order: 2,
+    title: "수업과 관계의 장면 살피기",
+    description:
+      "수업을 준비하고 아이들과 관계를 맺는 장면을 생각해 보세요. 상황에 따라 달랐다면 더 자주 나타나는 쪽을 골라 주세요.",
+  },
+  {
+    id: "part-3",
+    order: 3,
+    title: "결정과 협업 방식 돌아보기",
+    description:
+      "업무를 정리하고 동료와 함께 움직였던 최근 장면을 떠올려 보세요. 오래 분석하기보다 먼저 가까운 쪽을 골라 주세요.",
+  },
+  {
+    id: "part-4",
+    order: 4,
+    title: "마지막 장면까지 연결하기",
+    description:
+      "이제 남은 장면을 이어 봅니다. 앞선 답과 맞추려 하지 말고, 각 문장을 새롭게 읽고 지금의 나에게 답해 주세요.",
+  },
 ];
 
 /** 응답 척도 — docs/content/teacher-style-v1.md 2절에서 확정된 값입니다. */
@@ -191,9 +215,9 @@ const scale = {
   centerValue: 3,
   options: [
     { value: 1, label: "전혀 그렇지 않다", visibleLabel: "전혀 그렇지 않다" },
-    { value: 2, label: "그렇지 않다" },
-    { value: 3, label: "보통이다" },
-    { value: 4, label: "그렇다" },
+    { value: 2, label: "그렇지 않다", visibleLabel: "그렇지 않다" },
+    { value: 3, label: "보통이다", visibleLabel: "보통이다" },
+    { value: 4, label: "그렇다", visibleLabel: "그렇다" },
     { value: 5, label: "매우 그렇다", visibleLabel: "매우 그렇다" },
   ],
 };
@@ -210,7 +234,7 @@ export const teacherStyleV1Base = {
   // 축과 문항이 통째로 바뀌었습니다. 버전을 올려야 예전 응답이 조용히 섞이지 않고
   // "새로 시작" 안내를 받습니다 (architecture 7.3).
   assessmentVersion: 3,
-  contentVersion: "3.0.0",
+  contentVersion: "3.0.1",
   scale,
   axes,
   axisCombinations,

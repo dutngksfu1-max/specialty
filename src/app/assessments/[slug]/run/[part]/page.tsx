@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { AssessmentTheme } from "@/components/ui/AssessmentTheme";
 import { AssessmentRunner } from "@/features/assessment-runner/AssessmentRunner";
 import { StorageNotice } from "@/features/shared/StorageNotice";
 import { staticAssessmentCatalog } from "@/infrastructure/content/StaticAssessmentCatalog";
+import { findSectionArtwork } from "@/lib/assessmentPresentation";
 
 export const metadata: Metadata = {
   title: "검사 진행",
@@ -39,15 +41,19 @@ export default async function RunPartPage({ params }: PageProps<"/assessments/[s
     .filter((question) => question.sectionId === section.id)
     .slice()
     .sort((a, b) => a.order - b.order);
+  const presentation = staticAssessmentCatalog.findPresentationBySlug(definition.slug);
 
   return (
-    <>
+    <AssessmentTheme presentation={presentation}>
       <StorageNotice />
       <Suspense fallback={null}>
         <AssessmentRunner
           slug={definition.slug}
           sectionOrder={section.order}
           sectionCount={sections.length}
+          sectionTitle={section.title}
+          sectionDescription={section.description}
+          sectionArtwork={findSectionArtwork(presentation, section.id)}
           totalCount={definition.questions.length}
           questions={questions}
           options={definition.scale.options}
@@ -57,6 +63,6 @@ export default async function RunPartPage({ params }: PageProps<"/assessments/[s
           }
         />
       </Suspense>
-    </>
+    </AssessmentTheme>
   );
 }

@@ -50,6 +50,19 @@ export const ResultShareCard = forwardRef<
         pointerEvents: "none",
       }}
     >
+      <svg
+        viewBox="0 0 360 180"
+        aria-hidden="true"
+        style={{ position: "absolute", top: 42, right: 42, width: 320, height: 160, opacity: 0.34 }}
+        fill="none"
+        stroke="var(--color-primary)"
+        strokeWidth="2"
+        strokeLinecap="round"
+      >
+        <path d="M15 126c48-8 68-42 111-34 38 7 53 38 93 27 34-9 56-44 126-67" />
+        <circle cx="126" cy="92" r="9" fill="var(--color-accent-soft)" />
+        <path d="M242 103V46h64v57M274 46v57" />
+      </svg>
       <p style={{ fontSize: 24, color: "var(--color-foreground-subtle)", margin: 0 }}>
         {BRAND_NAME}
       </p>

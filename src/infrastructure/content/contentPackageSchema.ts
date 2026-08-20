@@ -13,6 +13,10 @@ import {
   toSectionId,
 } from "@/domain/shared/ids";
 import { err, ok, type Result } from "@/domain/shared/result";
+import {
+  PRESENTATION_COLOR_TOKENS,
+  type AssessmentPresentation,
+} from "@/lib/assessmentPresentation";
 
 /**
  * 콘텐츠 패키지 검증 (docs/architecture.md 5.4, docs/content/teacher-style-v1.md 8절)
@@ -136,6 +140,34 @@ const baseDefinitionSchema = z.object({
   questions: z.array(questionSchema).min(1),
   scoring: scoringSpecSchema,
   resultProfiles: z.array(resultProfileSchema).min(1),
+});
+
+const localArtworkSchema = z.object({
+  src: z
+    .string()
+    .startsWith("/assessments/")
+    .refine((src) => !src.includes("..") && !src.includes("://"), "로컬 검사 에셋 경로만 허용합니다."),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  alt: z.literal(""),
+});
+
+const presentationSchema = z.object({
+  version: z.literal(1),
+  palette: z.object({
+    canvas: z.enum(PRESENTATION_COLOR_TOKENS),
+    surface: z.enum(PRESENTATION_COLOR_TOKENS),
+    primary: z.enum(PRESENTATION_COLOR_TOKENS),
+    accent: z.enum(PRESENTATION_COLOR_TOKENS),
+    ink: z.enum(PRESENTATION_COLOR_TOKENS),
+  }),
+  heroArtwork: localArtworkSchema,
+  sectionArtwork: z.array(
+    z.object({
+      sectionId: z.string().min(1).transform(toSectionId),
+      artwork: localArtworkSchema,
+    }),
+  ),
 });
 
 /**
@@ -406,6 +438,55 @@ export function parseAssessmentDefinition(
   }
 
   return ok(parsed.data);
+}
+
+export interface ParsedAssessmentContentPackage {
+  readonly definition: AssessmentDefinition;
+  readonly presentation?: AssessmentPresentation;
+}
+
+/**
+ * 도메인 정의와 선택형 프레젠테이션을 함께 검증합니다.
+ * 프레젠테이션은 콘텐츠 경계에만 머물고 채점 모델에는 들어가지 않습니다.
+ */
+export function parseAssessmentContentPackage(
+  raw: unknown,
+): Result<ParsedAssessmentContentPackage, AssessmentError> {
+  const definition = parseAssessmentDefinition(raw);
+  if (!definition.ok) return err(definition.error);
+
+  const packageShape = z.object({ presentation: presentationSchema.optional() }).passthrough();
+  const parsedPackage = packageShape.safeParse(raw);
+  if (!parsedPackage.success) {
+    const detail = parsedPackage.error.issues
+      .map((current) => `${current.path.join(".") || "(root)"}: ${current.message}`)
+      .join(" / ");
+    return err(assessmentError("INVALID_CONTENT_PACKAGE", detail, parsedPackage.error));
+  }
+
+  const presentation = parsedPackage.data.presentation;
+  if (presentation === undefined) return ok({ definition: definition.value });
+
+  const expectedSectionIds = definition.value.sections.map((section) => String(section.id));
+  const artworkSectionIds = presentation.sectionArtwork.map((item) => String(item.sectionId));
+  const duplicates = findDuplicates(artworkSectionIds);
+  const missing = expectedSectionIds.filter((id) => !artworkSectionIds.includes(id));
+  const unknown = artworkSectionIds.filter((id) => !expectedSectionIds.includes(id));
+
+  const issues = [
+    duplicates.length > 0 ? `presentation sectionId가 중복됩니다: ${duplicates.join(", ")}` : "",
+    missing.length > 0 ? `presentation에 빠진 sectionId가 있습니다: ${missing.join(", ")}` : "",
+    unknown.length > 0 ? `presentation이 없는 sectionId를 가리킵니다: ${unknown.join(", ")}` : "",
+  ].filter(Boolean);
+
+  if (issues.length > 0) {
+    return err(assessmentError("INVALID_CONTENT_PACKAGE", issues.join(" / ")));
+  }
+
+  return ok({
+    definition: definition.value,
+    presentation: presentation as AssessmentPresentation,
+  });
 }
 
 /**

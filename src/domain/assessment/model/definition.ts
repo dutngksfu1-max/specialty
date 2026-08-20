@@ -70,9 +70,9 @@ export interface AxisCombination {
 
 export interface ResponseOption {
   readonly value: number;
-  /** 스크린리더용 라벨. 모든 선택지에 필요합니다 (DEC-018) */
+  /** 접근성 라벨. 모든 선택지에 필요합니다 */
   readonly label: string;
-  /** 화면에 보이는 라벨. 양 끝에만 존재합니다 */
+  /** 화면에 보이는 라벨. 검사별 프레젠테이션 규칙에 따라 선택적으로 존재합니다 */
   readonly visibleLabel?: string;
 }
 

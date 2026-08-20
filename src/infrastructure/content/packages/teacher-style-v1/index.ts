@@ -1,6 +1,7 @@
 import { teacherStyleV1Base } from "./definition";
 import { questions } from "./questions";
 import { resultProfiles } from "./profiles";
+import { teacherStylePresentation } from "./presentation";
 
 /**
  * 콘텐츠 패키지 = 폴더 하나. (docs/architecture.md 10장)
@@ -12,4 +13,5 @@ export const teacherStyleV1Package = {
   ...teacherStyleV1Base,
   questions,
   resultProfiles,
+  presentation: teacherStylePresentation,
 };

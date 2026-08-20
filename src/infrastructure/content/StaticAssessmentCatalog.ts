@@ -8,9 +8,10 @@ import type { AssessmentId } from "@/domain/shared/ids";
 import { err, ok, type Result } from "@/domain/shared/result";
 import {
   collectContentWarnings,
-  parseAssessmentDefinition,
+  parseAssessmentContentPackage,
 } from "@/infrastructure/content/contentPackageSchema";
 import { teacherStyleV1Package } from "@/infrastructure/content/packages/teacher-style-v1";
+import type { AssessmentPresentation } from "@/lib/assessmentPresentation";
 
 /**
  * 번들에 포함된 콘텐츠 패키지 목록.
@@ -23,6 +24,7 @@ export const CONTENT_PACKAGES: readonly unknown[] = [teacherStyleV1Package];
 
 export class StaticAssessmentCatalog implements AssessmentCatalog {
   private readonly definitions: readonly AssessmentDefinition[];
+  private readonly presentationsBySlug: ReadonlyMap<string, AssessmentPresentation>;
 
   /** 검증에 실패한 패키지의 오류입니다. UI는 이것을 보고 안내 문구를 띄웁니다. */
   readonly contentErrors: readonly AssessmentError[];
@@ -34,18 +36,23 @@ export class StaticAssessmentCatalog implements AssessmentCatalog {
     const definitions: AssessmentDefinition[] = [];
     const errors: AssessmentError[] = [];
     const warnings: string[] = [];
+    const presentations = new Map<string, AssessmentPresentation>();
 
     for (const rawPackage of rawPackages) {
-      const parsed = parseAssessmentDefinition(rawPackage);
+      const parsed = parseAssessmentContentPackage(rawPackage);
       if (!parsed.ok) {
         errors.push(parsed.error);
         continue;
       }
-      definitions.push(parsed.value);
-      warnings.push(...collectContentWarnings(parsed.value));
+      definitions.push(parsed.value.definition);
+      warnings.push(...collectContentWarnings(parsed.value.definition));
+      if (parsed.value.presentation !== undefined) {
+        presentations.set(parsed.value.definition.slug, parsed.value.presentation);
+      }
     }
 
     this.definitions = definitions;
+    this.presentationsBySlug = presentations;
     this.contentErrors = errors;
     this.contentWarnings = warnings;
   }
@@ -74,6 +81,11 @@ export class StaticAssessmentCatalog implements AssessmentCatalog {
     return found === undefined
       ? err(assessmentError("ASSESSMENT_NOT_FOUND", `id: ${String(id)}`))
       : ok(found);
+  }
+
+  /** UI 조립 지점에서만 쓰는 구체 구현 API입니다. Domain port는 변경하지 않습니다. */
+  findPresentationBySlug(slug: string): AssessmentPresentation | undefined {
+    return this.presentationsBySlug.get(slug);
   }
 }
 

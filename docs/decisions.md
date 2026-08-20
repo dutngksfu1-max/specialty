@@ -1,7 +1,7 @@
 # Decisions — 서치티쳐마인드
 
-> 문서 상태: v0.1 (Phase 0 / Foundation)
-> 최종 수정: 2026-08-19
+> 문서 상태: v0.2
+> 최종 수정: 2026-08-20
 > 이 문서는 **모든 중요 결정의 기록**입니다. 결정이 바뀌면 새 DEC를 추가하고 이전 항목에 `SUPERSEDED`를 표시합니다.
 
 ## 이 문서를 쓰는 이유
@@ -50,7 +50,7 @@
 | DEC-015 | 데이터 보존 기간 | `DEFAULT` | 무기한 + 수동 삭제 |
 | DEC-016 | 패키지 매니저 | `DEFAULT` | pnpm |
 | DEC-017 | 테스트 도구 | `DEFAULT` | Vitest |
-| DEC-018 | 척도 라벨 | `DEFAULT` | 양 끝만 |
+| DEC-018 | 척도 라벨 | `SUPERSEDED` | DEC-043으로 대체 |
 | DEC-019 | Analytics | `DEFAULT` | MVP 없음 |
 | DEC-020 | MVP 검사 제목 | `CONFIRMED` | "나의 교직 스타일 탐색" 확정 |
 | DEC-021 | 다크 모드 | `WAITING` | Phase 6 이후 검토 |
@@ -66,13 +66,16 @@
 | DEC-031 | PWA 아이콘 · 파비콘 제작 | `CONFIRMED` | 도형 마크를 코드로 생성 |
 | DEC-032 | Application의 시각·ID 생성 | `CONFIRMED` | Clock / IdGenerator port 주입 |
 | DEC-033 | `intensityBands` 타입 | `DEFAULT` | 비어 있지 않은 배열로 타입 고정 |
-| DEC-034 | UI primitive 조달 | `DEFAULT` | shadcn/ui 미도입, 직접 작성 |
+| DEC-034 | UI primitive 조달 | `SUPERSEDED` | DEC-042로 대체 |
 | DEC-035 | 폰트 로딩 방식(`font-display`) | `CONFIRMED` | `block` — 대체 폰트를 보여 주지 않음 |
 | DEC-037 | 기존 검사 명칭·유형 코드 노출 | `CONFIRMED` | **A — 명칭도 코드도 노출하지 않음** |
 | DEC-038 | 결과 화면 구성 확장 | `CONFIRMED` | 축 조합 해석 · 장면 태그 · 내일 해 볼 것 · 나눌 질문 추가 |
 | DEC-039 | 유형 상징 표현 | `CONFIRMED` | 마스코트 캐릭터가 아니라 **코드로 생성하는 추상 엠블럼** |
 | DEC-040 | 폰트 원본 위치 | `CONFIRMED` | `src/assets/`로 이동 — `public/`에 두면 SW가 2MB를 헛프리캐시 |
-| DEC-036 | 랜딩 구성 · 시각 방향 | `CONFIRMED` | 단일 패널 집중형 + 웜 그라데이션 |
+| DEC-036 | 랜딩 구성 · 시각 방향 | `SUPERSEDED` | DEC-041로 대체 |
+| DEC-041 | 검사별 프레젠테이션 · 랜딩 아트 디렉션 | `CONFIRMED` | 선택형 presentation + 성인 대상 에디토리얼 드로잉 |
+| DEC-042 | 접근성 UI primitive | `CONFIRMED` | `@base-ui/react`의 Accordion·Menu·Dialog만 선택 도입 |
+| DEC-043 | 진행 묶음·척도 라벨 | `CONFIRMED` | 10문항 스크롤 유지 + 이 검사에서 5개 라벨 모두 표시 |
 
 ---
 
@@ -1246,6 +1249,56 @@ Pretendard Variable 전체 파일은 여전히 **2MB**입니다.
 
 ---
 
+## DEC-041
+
+**검사별 시각 경험을 어디까지 데이터로 분리할 것인가**
+
+`CONFIRMED` — 선택형 `presentation` 계약과 검사 전용 에디토리얼 드로잉. 2026-08-20 사용자 승인.
+
+- Domain의 채점 모델과 `AssessmentCatalog` port는 변경하지 않습니다.
+- 콘텐츠 패키지 경계에 palette, hero artwork, section artwork만 선택형으로 추가합니다.
+- 색은 `design.md` 등록 토큰, 그림은 `/assessments/...` 로컬 경로만 허용합니다.
+- 잘못된 토큰·외부 URL·중복/누락 section 참조는 콘텐츠 로딩 단계에서 거부합니다.
+- 프레젠테이션이 없는 검사는 플랫폼 기본 테마로 렌더링합니다.
+- 「나의 교직 스타일 탐색」은 웜 아이보리·세이지·클레이와 성인 대상 에디토리얼 드로잉을 사용합니다.
+- 랜딩은 대표 드로잉을 쓰는 표지 카드로 유지하고, 검사 소개 상단은 같은 그림을 반복하지 않은 채 축·pole·척도 데이터로 만든 `교직 리듬 탐색 지도`를 사용합니다.
+- 기존 텍스트 워드마크와 결과 엠블럼은 유지합니다.
+
+이 결정은 단일 거대 패널과 전 화면 동일 시각 언어를 정한 DEC-036을 대체합니다. 공통 문법은 공유하되 검사별 시각 어휘는 달라질 수 있습니다.
+
+---
+
+## DEC-042
+
+**상태가 복잡한 접근성 UI primitive를 어떻게 조달할 것인가**
+
+`CONFIRMED` — `@base-ui/react ^1.7.0`을 선택 도입. 2026-08-20 사용자 승인.
+
+- Accordion·Menu·Dialog만 하위 경로에서 가져옵니다.
+- RadioGroup은 네이티브 `<input type="radio">`를 유지합니다.
+- 전체 컴포넌트 초기화나 전역 상태 라이브러리를 도입하지 않습니다.
+- Tailwind와 디자인 토큰으로 외형을 소유하고, focus·키보드·Esc·초점 복귀는 primitive의 접근성 동작을 활용합니다.
+
+이 결정은 모든 primitive를 직접 작성하던 DEC-034를 대체합니다.
+
+---
+
+## DEC-043
+
+**검사 묶음과 척도 라벨을 어떻게 보여 줄 것인가**
+
+`CONFIRMED` — 10문항 스크롤형 묶음을 유지하고 이 검사에서 다섯 척도 라벨을 모두 표시. 2026-08-20 사용자 승인.
+
+- 한 문항 자동 이동은 사용하지 않습니다. 빠른 연속 응답과 키보드 radio 이동을 방해하지 않기 때문입니다.
+- 각 묶음은 콘텐츠 section 제목·설명·전용 선화로 구분합니다.
+- 360px에서도 다섯 선택지는 한 줄에 유지하고 라벨은 두 줄 줄바꿈을 허용합니다.
+- 모든 터치 타깃은 44×44px 이상입니다.
+- iOS·Android 스마트폰과 노트북을 모두 1급 환경으로 검증합니다.
+
+이 결정은 양 끝 라벨만 표시하던 DEC-018을 이 검사 범위에서 대체합니다.
+
+---
+
 ## 변경 이력
 
 | 날짜 | 내용 |
@@ -1263,3 +1316,5 @@ Pretendard Variable 전체 파일은 여전히 **2MB**입니다.
 | 2026-08-20 | DEC-037(명칭·유형 코드 비노출 유지) · DEC-038(결과 화면 확장) · DEC-039(유형 엠블럼) 승인. `assessmentVersion` 2→3 |
 | 2026-08-20 | 유형 엠블럼 구현 확정. 규격서 `docs/type-emblem.md` 신설(교체용), 가드 테스트 7개 |
 | 2026-08-20 | Phase 6 착수. DEC-022 확정(`specialty-nu.vercel.app`), 메타데이터(metadataBase·canonical·OG 이미지·sitemap·robots) 정비, DEC-040(폰트 위치)로 프리캐시 −65% |
+| 2026-08-20 | 디자인 고도화 승인. DEC-041~043 확정, PRD v0.2·design.md v0.3으로 개정. 모바일을 iOS·Android·노트북의 1급 환경으로 명시 |
+| 2026-08-20 | 랜딩은 표지 카드 1개로 단순화하고 검사 소개는 4축·5단계 척도의 탐색 지도 카드로 차별화. 문항 legend·척도 겹침 방지 규칙 강화 |
