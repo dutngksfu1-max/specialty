@@ -36,80 +36,80 @@ export const axisIds = ["axis-energy", "axis-lens", "axis-decision", "axis-rhyth
 const axes = [
   {
     id: "axis-energy",
-    name: "힘을 얻는 방향",
+    name: "동료와 생각을 정리하는 방식",
     positive: {
       side: "positive",
-      label: "함께 있을 때 채워지는 교류형",
+      label: "대화하며 정리하는 교류형",
       shortLabel: "교류형",
       description:
-        "사람들 사이에 있을 때 생각이 정리되고 힘이 납니다. 옆 반 선생님과 나눈 짧은 대화가 다음 수업을 가볍게 만들어 줘요.",
+        "동료와 이야기를 주고받을 때 생각이 정리되는 편입니다. 짧은 대화에서도 필요한 실마리를 찾고 다음 일을 이어 갑니다.",
     },
     negative: {
       side: "negative",
-      label: "혼자 있을 때 채워지는 몰입형",
+      label: "혼자 정리하는 몰입형",
       shortLabel: "몰입형",
       description:
-        "혼자 있는 시간에 힘이 채워집니다. 방해받지 않는 시간이 확보되면 그날 할 일이 훨씬 깊게 들어가요.",
+        "혼자 생각할 시간이 있을 때 머릿속이 정리되는 편입니다. 방해받지 않는 시간에 필요한 내용을 차분히 검토합니다.",
     },
     defaultPole: "positive",
     intensityBands,
   },
   {
     id: "axis-lens",
-    name: "먼저 눈에 들어오는 것",
+    name: "아이와 수업을 이해하는 방식",
     positive: {
       side: "positive",
-      label: "눈앞의 사실부터 챙기는 실제형",
+      label: "구체적인 사실을 보는 실제형",
       shortLabel: "실제형",
       description:
-        "지금 눈앞에 있는 사실과 구체적인 장면이 먼저 잡힙니다. 관찰한 것과 아이가 실제로 해낸 결과를 근거로 삼아요.",
+        "관찰한 장면과 구체적인 자료를 바탕으로 아이와 수업을 이해합니다. 실제로 확인한 변화와 결과를 중요한 근거로 삼습니다.",
     },
     negative: {
       side: "negative",
-      label: "흐름과 가능성부터 보는 가능성형",
+      label: "가능성과 흐름을 보는 가능성형",
       shortLabel: "가능성형",
       description:
-        "지금 모습보다 이것이 어디로 이어질지가 먼저 그려집니다. 세부보다 전체가 어떤 이야기인지를 먼저 보게 돼요.",
+        "현재 장면이 앞으로 어떻게 이어질지를 그리며 아이와 수업을 이해합니다. 개별 장면을 전체 흐름과 연결해 살핍니다.",
     },
     defaultPole: "positive",
     intensityBands,
   },
   {
     id: "axis-decision",
-    name: "판단할 때 먼저 살피는 것",
+    name: "결정을 내리는 방식",
     positive: {
       side: "positive",
-      label: "기준을 먼저 세우는 원칙형",
+      label: "공통 기준을 세우는 원칙형",
       shortLabel: "원칙형",
       description:
-        "누구에게나 같은 기준을 적용해, 아이들이 예외 없이 존중받는다고 느끼게 합니다. 기준이 흔들리지 않아 설명하기도 쉬워요.",
+        "여럿이 함께 이해하고 적용할 수 있는 기준을 먼저 세웁니다. 결정의 근거를 분명하게 설명하는 것을 중요하게 여깁니다.",
     },
     negative: {
       side: "negative",
-      label: "사정을 먼저 살피는 맥락형",
+      label: "개별 상황을 살피는 맥락형",
       shortLabel: "맥락형",
       description:
-        "같은 행동도 그 아이가 놓인 사정에 따라 다르게 봅니다. 지금 이 아이에게 무엇이 필요한지를 먼저 물어요.",
+        "같은 일이라도 아이와 상황에 따라 필요한 판단이 다를 수 있다고 봅니다. 현재의 사정과 필요를 먼저 살핍니다.",
     },
     defaultPole: "positive",
     intensityBands,
   },
   {
     id: "axis-rhythm",
-    name: "일을 굴리는 리듬",
+    name: "업무와 수업을 진행하는 방식",
     positive: {
       side: "positive",
-      label: "미리 정해 두는 계획형",
+      label: "미리 계획하는 계획형",
       shortLabel: "계획형",
       description:
-        "앞을 미리 정해 두어야 마음이 놓입니다. 다음에 무엇이 오는지 알기 때문에 교실이 예측 가능해져요.",
+        "순서와 준비를 미리 정한 뒤 업무와 수업을 진행합니다. 다음 단계를 예측할 수 있도록 계획을 구체화합니다.",
     },
     negative: {
       side: "negative",
-      label: "열어 두고 맞추는 유연형",
+      label: "현장에서 조정하는 유연형",
       shortLabel: "유연형",
       description:
-        "열어 두고 그때그때 맞춰 갑니다. 계획에 매이지 않기 때문에 마침 찾아온 좋은 순간을 놓치지 않아요.",
+        "큰 방향을 세운 뒤 현장 상황에 맞춰 방법을 조정합니다. 새로 확인한 정보와 반응을 진행 과정에 반영합니다.",
     },
     defaultPole: "positive",
     intensityBands,

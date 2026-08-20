@@ -401,8 +401,10 @@ export interface ResultProfile {
 - `ResultProfile`은 기존 세션 호환과 장면·협업 콘텐츠를 위해 유지합니다.
 - 결과 상단의 제목·한 줄 설명·교직 리듬은 `resultNarrative`가 있으면 축 점수의
   `intensityBandId`와 방향을 함께 읽어 조립합니다.
-- `directional: false`인 강도 구간은 rawScore 부호와 무관하게 `balanced` 문장을 사용합니다.
-- 현재 검사의 교직 리듬은 네 축 설명에 회복 방식의 맥락 경계 한 문장을 더한 다섯 문장으로 구성합니다.
+- `directional: false`인 강도 구간은 프로필 방향으로 확정하지 않습니다. 다만 rawScore가 0이 아니면
+  균형 범위 안에서 어느 쪽에 조금 더 가까운지는 축 배지와 문장에 함께 표시합니다.
+- 현재 검사의 교직 리듬은 네 축을 한 문장씩 설명하는 네 문장으로 구성합니다.
+- 학생과 나누는 말의 양·마감 습관처럼 측정하지 않는 내용은 본문에 반복하지 않고 `scopeNote`로 한 번만 분리해 알립니다.
 - 균형 축이 하나라도 있으면 부호로 선택된 `ResultProfile`의 장면·협업·행동 문구도 사용하지 않고,
   `resultNarrative.balancedGuidance`의 중립 안내를 사용합니다.
 - `resultNarrative`가 없는 다른 검사에서는 기존 프로필 문구를 안전한 fallback으로 사용합니다.
@@ -488,7 +490,7 @@ export interface ResultSnapshot {
 6) 결과 키        4개 축 방향 조합으로 ResultProfile 1개를 찾음
                   연속 점수(rawScore)는 결과 스냅샷에 그대로 저장
 
-7) 화면 서술      directional=false 구간은 방향을 숨기고 balanced 문장을 사용
+7) 화면 서술      directional=false 구간은 균형으로 표시하되 0이 아니면 작은 기울기도 설명
                   directional=true 구간은 방향 + 강도에 맞는 문장을 사용
 ```
 

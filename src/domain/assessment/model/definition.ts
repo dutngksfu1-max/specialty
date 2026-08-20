@@ -75,9 +75,9 @@ export type NarrativeDirection = PoleSide | "balanced";
 /**
  * 축 점수의 방향과 강도를 함께 읽는 결과 문장입니다.
  *
- * `balanced`는 rawScore가 정확히 0일 때만이 아니라, 콘텐츠가 정한
- * 비방향 구간 전체에 사용합니다. 그래서 경계에 가까운 점수를 억지로
- * 어느 한쪽 설명에 넣지 않습니다.
+ * 비방향 구간도 rawScore가 0이 아니면 positive/negative 읽기를 사용해
+ * 작은 기울기를 설명할 수 있습니다. 이때 방향 읽기는 프로필 확정이 아니라
+ * 균형 범위 안의 차이를 보여 주기 위한 것입니다.
  */
 export interface AxisNarrativeReading {
   readonly intensityBandId: string;
@@ -100,6 +100,8 @@ export interface ResultNarrativeSpec {
   readonly balancedTitle: string;
   readonly balancedOneLiner: string;
   readonly balancedAxisNote: string;
+  /** 본문 흐름을 끊지 않고 해석 범위만 짧게 알리는 문구 */
+  readonly scopeNote: string;
   /** 균형 축이 하나라도 있을 때 부호 기반 16개 프로필 대신 보여 줄 중립 안내 */
   readonly balancedGuidance: Pick<
     ResultProfile,

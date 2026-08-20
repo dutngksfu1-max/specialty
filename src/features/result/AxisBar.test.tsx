@@ -27,14 +27,24 @@ function score(rawScore: number, intensityBandId: string): AxisScore {
 }
 
 describe("축 막대의 균형·강도 표현", () => {
-  it("균형 구간에서는 rawScore 부호가 있어도 한쪽 방향을 배지에 쓰지 않습니다", () => {
+  it("균형 구간에서도 점수가 향한 교직 스타일을 표시합니다", () => {
     const markup = renderToStaticMarkup(
       <AxisBar axis={loadAxis()} score={score(-3, "balanced")} />,
     );
 
+    expect(markup).toContain("몰입형 · 균형 구간");
+    expect(markup).not.toContain("조금 가까움");
+    expect(markup).toContain("혼자 정리하는 몰입형 방향의 균형 구간입니다");
+  });
+
+  it("정확히 0점이면 어느 쪽으로도 기울이지 않습니다", () => {
+    const markup = renderToStaticMarkup(
+      <AxisBar axis={loadAxis()} score={score(0, "balanced")} />,
+    );
+
     expect(markup).toContain(">균형<");
-    expect(markup).not.toContain("쪽 · 균형");
-    expect(markup).toContain("현재 점수로 어느 한쪽을 단정하기 어려운 균형 구간입니다");
+    expect(markup).not.toContain("쪽에 조금 가까움");
+    expect(markup).toContain("두 방향의 점수가 같은 균형 구간입니다");
   });
 
   it("방향 구간에서는 방향과 강도를 함께 읽습니다", () => {
@@ -42,6 +52,6 @@ describe("축 막대의 균형·강도 표현", () => {
       <AxisBar axis={loadAxis()} score={score(-8, "clear")} />,
     );
 
-    expect(markup).toContain("혼자 있을 때 채워지는 몰입형 쪽 · 뚜렷");
+    expect(markup).toContain("혼자 정리하는 몰입형 쪽 · 뚜렷");
   });
 });

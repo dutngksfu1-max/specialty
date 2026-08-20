@@ -51,8 +51,12 @@ export function AxisBar({
   const showsDirection = band?.directional ?? !score.isBalanced;
   const negativeColor = !showsDirection ? neutral : score.direction === "negative" ? emphasized : quiet;
   const positiveColor = !showsDirection ? neutral : score.direction === "positive" ? emphasized : quiet;
+  const balancedLeanLabel =
+    score.rawScore === 0
+      ? (band?.label ?? "균형")
+      : `${score.direction === "positive" ? axis.positive.shortLabel : axis.negative.shortLabel} · ${band?.label ?? "균형"} 구간`;
   const leaningLabel = !showsDirection
-    ? (band?.label ?? "균형")
+    ? balancedLeanLabel
     : `${score.direction === "positive" ? axis.positive.label : axis.negative.label} 쪽`;
   const summaryLabel = band === undefined || !showsDirection ? leaningLabel : `${leaningLabel} · ${band.label}`;
 
@@ -61,24 +65,26 @@ export function AxisBar({
       style={{ paddingBlock: variant === "share" ? size.gapPx : undefined }}
       className={variant === "screen" ? "py-5" : undefined}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="relative flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
         <p
           style={{ fontSize: size.labelPx, color: "var(--color-foreground)" }}
-          className="font-semibold"
+          className="font-semibold text-center"
         >
           {axis.name}
         </p>
-        <span
-          style={{
-            fontSize: size.badgePx,
-            background: badgeBackground,
-            paddingInline: variant === "share" ? 12 : 8,
-            paddingBlock: variant === "share" ? 4 : 2,
-          }}
-          className="inline-block rounded-xs font-medium text-foreground-body"
-        >
-          {summaryLabel}
-        </span>
+        <div className="flex w-full justify-end sm:absolute sm:right-0 sm:w-auto">
+          <span
+            style={{
+              fontSize: size.badgePx,
+              background: badgeBackground,
+              paddingInline: variant === "share" ? 12 : 8,
+              paddingBlock: variant === "share" ? 4 : 2,
+            }}
+            className="inline-block rounded-xs font-medium text-foreground-body"
+          >
+            {summaryLabel}
+          </span>
+        </div>
       </div>
 
       <div style={{ marginTop: size.gapPx }} className="flex items-baseline justify-between gap-4">
@@ -118,7 +124,9 @@ export function AxisBar({
       {/* 화면에는 막대로 보이지만, 스크린리더에는 문장으로 읽어 줍니다. */}
       <span className="sr-only">
         {axis.name}: {!showsDirection
-          ? "현재 점수로 어느 한쪽을 단정하기 어려운 균형 구간입니다."
+          ? score.rawScore === 0
+            ? "두 방향의 점수가 같은 균형 구간입니다."
+            : `${score.direction === "positive" ? axis.positive.label : axis.negative.label} 방향의 균형 구간입니다.`
           : `${score.direction === "positive" ? axis.positive.label : axis.negative.label} 쪽입니다. ${band?.label ?? ""}`}
       </span>
     </div>

@@ -148,6 +148,7 @@ const resultNarrativeSchema = z.object({
   balancedTitle: z.string().min(1),
   balancedOneLiner: z.string().min(1),
   balancedAxisNote: z.string().min(1),
+  scopeNote: z.string().min(1),
   balancedGuidance: resultGuidanceSchema,
   axes: z.array(axisResultNarrativeSchema).min(1),
 });
@@ -422,7 +423,7 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
         const directions = readings.map((reading) => reading.direction);
         const expectedDirections: readonly NarrativeDirection[] = band.directional
           ? ["positive", "negative"]
-          : ["balanced"];
+          : ["balanced", "positive", "negative"];
 
         if (
           directions.length !== expectedDirections.length ||
@@ -499,6 +500,7 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
           ["resultNarrative.balancedTitle", definition.resultNarrative.balancedTitle] as const,
           ["resultNarrative.balancedOneLiner", definition.resultNarrative.balancedOneLiner] as const,
           ["resultNarrative.balancedAxisNote", definition.resultNarrative.balancedAxisNote] as const,
+          ["resultNarrative.scopeNote", definition.resultNarrative.scopeNote] as const,
           ...definition.resultNarrative.balancedGuidance.shiningMoments.map(
             (note, index) =>
               [`resultNarrative.balancedGuidance.shiningMoments.${index}`, note.text] as const,

@@ -97,15 +97,16 @@ describe("결과 페이지 정보 구조", () => {
     }
   });
 
-  it("균형 구간이 있으면 고정 프로필 제목과 방향 엠블럼으로 단정하지 않습니다", () => {
+  it("균형 구간이 있어도 산출된 교직 스타일을 끝까지 전달합니다", () => {
     const markup = renderBalancedResult();
 
-    expect(markup).toContain("한쪽 경향으로 단정하기 어려운 교직 리듬");
-    expect(markup).toContain("균형 구간 포함");
-    expect(markup).not.toContain("함께 정하고 미리 챙겨 두는 교실");
-    expect(markup).not.toContain("결과를 나타내는 상징");
-    expect(markup).toContain("두 방식 가운데 어느 쪽을 선택했는지 실제 장면");
-    expect(markup).not.toContain("다음 주에 필요한 것을 미리 확인해");
+    expect(markup).toContain("함께 정하고 꼼꼼히 준비하는 교실");
+    expect(markup).not.toContain("한쪽 모습으로 단정하지 않고");
+    expect(markup).toContain("결과를 나타내는 상징");
+    expect(markup).not.toContain("두 방식 가운데 어느 쪽을 선택했는지 실제 장면");
+    expect(markup).toContain("다음 주에 필요한 것을 미리 확인해");
+    expect(markup).toContain("몰입형 동료와는 혼자 정리할 시간을");
+    expect(markup).not.toContain("몰입형과는,");
   });
 
   it("고정된 결과 콘텐츠 순서를 유지합니다", () => {

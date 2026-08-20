@@ -88,7 +88,9 @@ function Points({ items, icon = "check" }: { readonly items: readonly string[]; 
           <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-sm bg-primary-soft text-primary-active">
             <Icon name={icon} className="size-4" />
           </span>
-          <span className="max-w-prose">{item}</span>
+          <span className="max-w-prose">
+            {item.replace(/([가-힣]+형)과는,\s*/u, "$1 동료와는 ")}
+          </span>
         </li>
       ))}
     </ul>
@@ -197,11 +199,7 @@ export function ResultRenderer({
 }) {
   const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
   const narrative = resolveResultNarrative(definition, snapshot.score.axisScores, profile);
-  const hasBalancedAxes = narrative.balancedAxisIds.size > 0;
-  const guidance =
-    hasBalancedAxes && definition.resultNarrative !== undefined
-      ? definition.resultNarrative.balancedGuidance
-      : profile;
+  const guidance = profile;
   const combinationReadings = resolveAxisCombinations(
     definition.axisCombinations,
     profile.poles,
@@ -227,29 +225,25 @@ export function ResultRenderer({
             </p>
           </div>
 
-          {!hasBalancedAxes ? (
-            <div className="relative z-10 justify-self-start rounded-lg border border-primary-soft-border bg-surface p-4 shadow-elev-1 md:justify-self-end">
-              <TypeEmblem
-                axisIds={definition.axes.map((axis) => axis.id)}
-                poles={profile.poles}
-                size={168}
-                label={`${narrative.title} 결과를 나타내는 상징`}
-              />
-            </div>
-          ) : (
-            <div className="relative z-10 max-w-56 justify-self-start rounded-lg border border-primary-soft-border bg-surface p-5 shadow-elev-1 md:justify-self-end">
-              <p className="text-label text-primary-active">균형 구간 포함</p>
-              <p className="mt-2 text-body-sm text-foreground-muted">
-                한쪽 모양으로 단정하지 않고, 아래 네 가지 결과를 중심으로 읽어 주세요.
-              </p>
-            </div>
-          )}
+          <div className="relative z-10 justify-self-start rounded-lg border border-primary-soft-border bg-surface p-4 shadow-elev-1 md:justify-self-end">
+            <TypeEmblem
+              axisIds={definition.axes.map((axis) => axis.id)}
+              poles={profile.poles}
+              size={168}
+              label={`${narrative.title} 결과를 나타내는 상징`}
+            />
+          </div>
         </div>
 
         <div className="relative mt-8 grid gap-3 border-t border-primary-soft-border pt-6 md:grid-cols-[auto_minmax(0,1fr)] md:gap-7">
           <p className="text-label text-primary-active">나의 교직 리듬</p>
           <p className="max-w-prose text-body-lg text-foreground-body sm:text-body-lg-desktop">
             {narrative.rhythm}
+            {definition.resultNarrative !== undefined && (
+              <span className="mt-3 block text-body-sm text-foreground-muted">
+                참고: {definition.resultNarrative.scopeNote}
+              </span>
+            )}
           </p>
         </div>
       </header>
@@ -269,7 +263,7 @@ export function ResultRenderer({
                 <>
                   네 관점이 어느 쪽에 얼마나 가까운지 살펴보세요.
                   <br />
-                  어느 한쪽이 더 좋은 것은 아니며, 균형 구간은 현재 점수만으로 어느 쪽이 더 자연스러운지 단정하기 어렵다는 뜻입니다.
+                  어느 한쪽이 더 좋은 것을 뜻하지는 않습니다.
                 </>
               }
             />
@@ -315,20 +309,12 @@ export function ResultRenderer({
             <ChapterHeading
               number="02"
               title="교실에서 드러나는 모습"
-              description={
-                hasBalancedAxes
-                  ? "균형으로 나온 관점을 한쪽 모습으로 단정하지 않고, 실제 장면에서 선택이 달라지는 조건을 살펴봅니다."
-                  : "아래 내용은 네 가지 결과를 함께 읽을 때 나타날 수 있는 예시입니다. 모든 상황에서 늘 같은 모습이 나타난다는 뜻은 아닙니다."
-              }
+              description="네 가지 결과를 함께 읽어, 수업과 업무에서 자연스럽게 드러나는 모습을 정리했습니다."
             />
             <div className="mt-6 divide-y divide-border rounded-lg border border-border bg-surface">
               <SceneGroup
-                title={hasBalancedAxes ? "먼저 살펴볼 장면" : "강점이 드러날 수 있는 장면"}
-                description={
-                  hasBalancedAxes
-                    ? "어떤 조건에서 선택이 달라졌는지 확인해 보세요."
-                    : "현재 경향이 도움이 될 수 있는 장면이에요."
-                }
+                title="강점이 드러날 수 있는 장면"
+                description="현재 교직 스타일이 힘을 발휘하는 장면이에요."
                 icon="check"
                 items={guidance.shiningMoments}
               />

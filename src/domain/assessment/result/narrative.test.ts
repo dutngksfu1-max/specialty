@@ -37,29 +37,31 @@ function scores(rawScores: readonly number[]): readonly AxisScore[] {
 }
 
 describe("강도·균형을 반영한 결과 서술", () => {
-  it("모든 축이 균형 구간이면 어느 한쪽 프로필 제목을 쓰지 않습니다", () => {
+  it("모든 축이 균형 구간이어도 산출된 종합 교직 스타일을 전달합니다", () => {
     const { definition, profile } = loadDefinition();
     const result = resolveResultNarrative(definition, scores([0, 1, -2, 4]), profile);
 
-    expect(result.title).toBe(definition.resultNarrative?.balancedTitle);
+    expect(result.title).toBe(profile.title);
     expect(result.balancedAxisIds.size).toBe(4);
-    expect(result.title).not.toBe(profile.title);
+    expect(result.oneLiner).not.toContain("차이");
+    expect(result.rhythm).not.toContain("차이");
   });
 
-  it("같은 방향이어도 뚜렷과 매우 뚜렷 문장을 다르게 고릅니다", () => {
+  it("강도별 축 해석은 구분하되 핵심 카드는 종합 프로필을 유지합니다", () => {
     const { definition, profile } = loadDefinition();
     const clear = resolveResultNarrative(definition, scores([-8, 0, 0, 0]), profile);
     const strong = resolveResultNarrative(definition, scores([-16, 0, 0, 0]), profile);
 
-    expect(clear.title).not.toBe(strong.title);
-    expect(clear.rhythm).not.toBe(strong.rhythm);
+    expect(clear.title).toBe(profile.title);
+    expect(strong.title).toBe(profile.title);
+    expect(clear.axes[0]?.reading.rhythm).not.toBe(strong.axes[0]?.reading.rhythm);
   });
 
-  it("교직 리듬은 네 축 설명과 에너지 맥락 경계를 합쳐 다섯 문장입니다", () => {
+  it("교직 리듬은 네 축을 종합한 세 문장 이상의 설명입니다", () => {
     const { definition, profile } = loadDefinition();
     const result = resolveResultNarrative(definition, scores([-8, 9, 14, -15]), profile);
 
     expect(result.axes).toHaveLength(definition.axes.length);
-    expect(result.rhythm.match(/\./g)).toHaveLength(definition.axes.length + 1);
+    expect(result.rhythm.match(/\./g)?.length).toBeGreaterThanOrEqual(3);
   });
 });

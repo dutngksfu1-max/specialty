@@ -5,11 +5,12 @@
  * 문장은 해당 축이 실제로 물은 맥락 안에서만 설명합니다.
  */
 export const resultNarrative = {
-  balancedTitle: "한쪽 경향으로 단정하기 어려운 교직 리듬",
+  balancedTitle: "상황에 맞춰 폭넓게 움직이는 교직 리듬",
   balancedOneLiner:
-    "네 가지 관점 모두 응답이 한쪽으로 충분히 기울지 않아, 실제 장면을 더 살펴봐야 하는 결과예요.",
+    "네 가지 관점에서 서로 다른 방식을 고르게 활용하는 모습이 나타납니다.",
   balancedAxisNote:
-    "균형으로 나온 관점은 현재 응답만으로 어느 쪽이 더 자연스러운지 단정하기 어려워요.",
+    "상황에 따라 두 방식을 폭넓게 활용하는 관점도 함께 나타납니다.",
+  scopeNote: "이 검사는 학생과 나누는 말의 양이나 마감을 지키는 습관을 평가하지 않습니다.",
   balancedGuidance: {
     shiningMoments: [
       {
@@ -73,42 +74,51 @@ export const resultNarrative = {
         {
           intensityBandId: "balanced",
           direction: "balanced",
-          headline: "대화와 혼자 정리하기 중 한쪽으로 단정하기 어려운 편",
-          summary: "대화와 혼자 정리하기에 대한 응답 차이가 크지 않았어요.",
-          rhythm:
-            "동료와 대화하기와 혼자 정리하기에 대한 응답 차이가 크지 않아 어느 한쪽으로 단정하기 어렵습니다. 이는 학생들과 얼마나 자주 말하는지를 나타내는 결과가 아닙니다.",
+          headline: "대화 속에서 생각을 정리하는 편",
+          summary: "동료와 이야기를 나누며 생각과 힘을 정리하는 편이에요.",
+          rhythm: "동료와 의견을 주고받으며 생각과 힘을 정리하는 편입니다.",
+        },
+        {
+          intensityBandId: "balanced",
+          direction: "positive",
+          headline: "대화 속에서 생각을 정리하는 편",
+          summary: "동료와 이야기를 나누며 생각과 힘을 정리하는 편이에요.",
+          rhythm: "동료와 의견을 주고받으며 생각과 힘을 정리하는 편입니다.",
+        },
+        {
+          intensityBandId: "balanced",
+          direction: "negative",
+          headline: "혼자 정리하며 힘을 회복하는 편",
+          summary: "혼자 집중하고 정리하며 생각과 힘을 모으는 편이에요.",
+          rhythm: "방해받지 않고 혼자 정리하며 생각과 힘을 모으는 편입니다.",
         },
         {
           intensityBandId: "clear",
           direction: "positive",
           headline: "대화 속에서 생각을 정리하는 편",
           summary: "동료와 이야기를 나눌 때 생각과 힘이 정리되는 경향이 보여요.",
-          rhythm:
-            "동료와 의견을 주고받을 때 생각과 힘이 정리되는 편입니다. 이는 학생들과 얼마나 자주 말하는지를 뜻하지는 않습니다.",
+          rhythm: "동료와 의견을 주고받을 때 생각과 힘이 정리되는 편입니다.",
         },
         {
           intensityBandId: "clear",
           direction: "negative",
           headline: "혼자 정리하며 힘을 회복하는 편",
           summary: "방해받지 않고 혼자 정리할 때 생각과 힘이 모이는 경향이 보여요.",
-          rhythm:
-            "방해받지 않고 혼자 정리할 때 생각과 힘이 모이는 편입니다. 이는 학생들과 얼마나 자주 말하는지를 뜻하지는 않습니다.",
+          rhythm: "방해받지 않고 혼자 정리할 때 생각과 힘이 모이는 편입니다.",
         },
         {
           intensityBandId: "strong",
           direction: "positive",
           headline: "동료와 나눌 때 힘이 또렷해지는 편",
           summary: "동료와 의견을 주고받는 과정에서 생각과 힘을 얻는 경향이 매우 뚜렷해요.",
-          rhythm:
-            "동료와 의견을 주고받는 과정에서 생각과 힘을 얻는 경향이 매우 뚜렷합니다. 학생들과 얼마나 자주 말하는지는 이 결과로 판단할 수 없습니다.",
+          rhythm: "특히 동료와 의견을 주고받는 과정에서 생각과 힘이 또렷해집니다.",
         },
         {
           intensityBandId: "strong",
           direction: "negative",
           headline: "혼자 몰입할 때 힘이 또렷해지는 편",
           summary: "혼자 집중하고 정리하는 시간에서 힘을 얻는 경향이 매우 뚜렷해요.",
-          rhythm:
-            "혼자 집중하고 정리하는 시간에서 힘을 얻는 경향이 매우 뚜렷합니다. 학생들과 얼마나 자주 말하는지는 이 결과로 판단할 수 없습니다.",
+          rhythm: "특히 혼자 집중하고 정리하는 시간에서 생각과 힘이 또렷해집니다.",
         },
       ],
     },
@@ -118,42 +128,51 @@ export const resultNarrative = {
         {
           intensityBandId: "balanced",
           direction: "balanced",
-          headline: "사실과 가능성 중 한쪽으로 단정하기 어려운 편",
-          summary: "구체적인 사실과 앞으로의 가능성에 대한 응답 차이가 크지 않았어요.",
-          rhythm:
-            "아이와 수업을 살필 때 사실과 가능성 가운데 어느 쪽을 먼저 보는지 현재 응답만으로 단정하기 어렵습니다.",
+          headline: "관찰한 사실에서 출발하는 편",
+          summary: "관찰한 장면과 구체적인 자료를 먼저 살피는 편이에요.",
+          rhythm: "아이와 수업을 볼 때 관찰한 장면과 구체적인 자료에서 출발합니다.",
+        },
+        {
+          intensityBandId: "balanced",
+          direction: "positive",
+          headline: "관찰한 사실에서 출발하는 편",
+          summary: "관찰한 장면과 구체적인 자료를 먼저 살피는 편이에요.",
+          rhythm: "아이와 수업을 볼 때 관찰한 장면과 구체적인 자료에서 출발합니다.",
+        },
+        {
+          intensityBandId: "balanced",
+          direction: "negative",
+          headline: "앞으로 이어질 가능성을 먼저 보는 편",
+          summary: "현재 장면이 앞으로 어디로 이어질지를 먼저 그리는 편이에요.",
+          rhythm: "아이와 수업을 볼 때 현재 장면이 앞으로 어디로 이어질지 먼저 그려 봅니다.",
         },
         {
           intensityBandId: "clear",
           direction: "positive",
           headline: "관찰한 사실에서 출발하는 편",
           summary: "관찰한 장면과 구체적인 자료를 먼저 살피는 경향이 보여요.",
-          rhythm:
-            "아이와 수업을 이해할 때 관찰한 장면과 구체적인 자료부터 살피는 편입니다.",
+          rhythm: "아이와 수업을 볼 때는 관찰한 장면과 구체적인 자료에서 출발합니다.",
         },
         {
           intensityBandId: "clear",
           direction: "negative",
           headline: "앞으로 이어질 가능성을 먼저 보는 편",
           summary: "현재 장면이 앞으로 어디로 이어질지를 먼저 그리는 경향이 보여요.",
-          rhythm:
-            "아이와 수업을 이해할 때 현재 장면이 앞으로 어디로 이어질지를 먼저 그리는 편입니다.",
+          rhythm: "아이와 수업을 볼 때는 현재 장면이 앞으로 어디로 이어질지 먼저 그려 봅니다.",
         },
         {
           intensityBandId: "strong",
           direction: "positive",
           headline: "구체적인 장면을 근거로 삼는 경향이 뚜렷한 편",
           summary: "관찰한 사실과 구체적인 자료를 먼저 살피는 경향이 매우 뚜렷해요.",
-          rhythm:
-            "아이와 수업을 이해할 때 관찰한 사실과 구체적인 자료를 우선해 살피는 경향이 매우 뚜렷합니다.",
+          rhythm: "아이와 수업을 볼 때 구체적인 장면과 자료를 우선하는 모습이 선명합니다.",
         },
         {
           intensityBandId: "strong",
           direction: "negative",
           headline: "앞으로 이어질 흐름을 그리는 경향이 뚜렷한 편",
           summary: "현재보다 앞으로 이어질 흐름과 가능성을 먼저 보는 경향이 매우 뚜렷해요.",
-          rhythm:
-            "아이와 수업을 이해할 때 현재보다 앞으로 이어질 흐름과 가능성을 우선해 보는 경향이 매우 뚜렷합니다.",
+          rhythm: "아이와 수업을 볼 때 앞으로 이어질 흐름과 가능성을 우선하는 모습이 선명합니다.",
         },
       ],
     },
@@ -163,42 +182,51 @@ export const resultNarrative = {
         {
           intensityBandId: "balanced",
           direction: "balanced",
-          headline: "기준과 상황 중 한쪽으로 단정하기 어려운 편",
-          summary: "정한 기준과 각자가 놓인 상황에 대한 응답 차이가 크지 않았어요.",
-          rhythm:
-            "결정할 때 기준과 각자의 상황 가운데 어느 쪽을 먼저 살피는지 현재 응답만으로 단정하기 어렵습니다.",
+          headline: "정한 기준을 바탕으로 판단하는 편",
+          summary: "여럿이 함께 이해할 수 있는 기준을 먼저 확인하는 편이에요.",
+          rhythm: "결정에서는 여럿이 함께 이해할 수 있는 기준에 먼저 무게를 둡니다.",
+        },
+        {
+          intensityBandId: "balanced",
+          direction: "positive",
+          headline: "정한 기준을 바탕으로 판단하는 편",
+          summary: "여럿이 함께 이해할 수 있는 기준을 먼저 확인하는 편이에요.",
+          rhythm: "결정에서는 여럿이 함께 이해할 수 있는 기준에 먼저 무게를 둡니다.",
+        },
+        {
+          intensityBandId: "balanced",
+          direction: "negative",
+          headline: "상황과 사정을 살펴 판단하는 편",
+          summary: "같은 일도 각자가 놓인 상황과 사정을 먼저 살피는 편이에요.",
+          rhythm: "결정에서는 같은 일이라도 각자가 놓인 상황과 사정을 먼저 살핍니다.",
         },
         {
           intensityBandId: "clear",
           direction: "positive",
           headline: "정한 기준을 바탕으로 판단하는 편",
           summary: "여럿이 함께 이해할 수 있는 기준을 먼저 확인하는 경향이 보여요.",
-          rhythm:
-            "결정이 필요할 때 여럿이 함께 이해할 수 있는 기준을 먼저 확인하는 편입니다.",
+          rhythm: "결정에서는 여럿이 함께 이해할 수 있는 기준에 먼저 무게를 둡니다.",
         },
         {
           intensityBandId: "clear",
           direction: "negative",
           headline: "상황과 사정을 살펴 판단하는 편",
           summary: "같은 일도 각자가 놓인 상황과 사정을 먼저 살피는 경향이 보여요.",
-          rhythm:
-            "결정이 필요할 때 같은 일도 각자가 놓인 상황과 사정을 먼저 살피는 편입니다.",
+          rhythm: "결정에서는 같은 일이라도 각자가 놓인 상황과 사정을 먼저 살핍니다.",
         },
         {
           intensityBandId: "strong",
           direction: "positive",
           headline: "일관된 기준으로 판단하는 경향이 뚜렷한 편",
           summary: "여럿에게 설명할 수 있는 일관된 기준을 우선하는 경향이 매우 뚜렷해요.",
-          rhythm:
-            "결정이 필요할 때 여럿에게 설명할 수 있는 일관된 기준을 우선하는 경향이 매우 뚜렷합니다.",
+          rhythm: "결정에서는 여럿에게 설명할 수 있는 일관된 기준에 무게를 두는 쪽이 분명합니다.",
         },
         {
           intensityBandId: "strong",
           direction: "negative",
           headline: "각자의 상황을 반영하는 경향이 뚜렷한 편",
           summary: "같은 일도 각자가 놓인 상황과 사정을 우선하는 경향이 매우 뚜렷해요.",
-          rhythm:
-            "결정이 필요할 때 같은 일도 각자가 놓인 상황과 사정을 우선하는 경향이 매우 뚜렷합니다.",
+          rhythm: "결정에서는 같은 일도 각자가 놓인 상황과 사정에 무게를 두는 쪽이 분명합니다.",
         },
       ],
     },
@@ -208,42 +236,51 @@ export const resultNarrative = {
         {
           intensityBandId: "balanced",
           direction: "balanced",
-          headline: "계획과 현장 조정 중 한쪽으로 단정하기 어려운 편",
-          summary: "미리 정하기와 현장에서 조정하기에 대한 응답 차이가 크지 않았어요.",
-          rhythm:
-            "일을 진행할 때 미리 정하기와 현장에서 조정하기 가운데 어느 쪽이 더 자연스러운지 현재 응답만으로 단정하기 어렵습니다.",
+          headline: "미리 정해 두어 흐름을 만드는 편",
+          summary: "순서와 준비를 미리 정해 두고 일을 이어 가는 편이에요.",
+          rhythm: "업무와 수업은 순서와 준비를 미리 정해 두고 시작하는 편입니다.",
+        },
+        {
+          intensityBandId: "balanced",
+          direction: "positive",
+          headline: "미리 정해 두어 흐름을 만드는 편",
+          summary: "순서와 준비를 미리 정해 두고 일을 이어 가는 편이에요.",
+          rhythm: "업무와 수업은 순서와 준비를 미리 정해 두고 시작하는 편입니다.",
+        },
+        {
+          intensityBandId: "balanced",
+          direction: "negative",
+          headline: "상황에 맞춰 방법을 조정하는 편",
+          summary: "큰 방향을 두고 현장에서 방법을 조정하는 편이에요.",
+          rhythm: "업무와 수업은 큰 방향을 두되 현장에서 방법을 조정하며 이어 갑니다.",
         },
         {
           intensityBandId: "clear",
           direction: "positive",
           headline: "미리 정해 두어 흐름을 만드는 편",
           summary: "순서와 준비를 미리 정해 두고 일을 이어 가는 경향이 보여요.",
-          rhythm:
-            "업무와 수업을 진행할 때 순서와 준비를 미리 정해 두는 편입니다.",
+          rhythm: "업무와 수업은 순서와 준비를 미리 정해 두고 시작하는 편입니다.",
         },
         {
           intensityBandId: "clear",
           direction: "negative",
           headline: "상황에 맞춰 방법을 조정하는 편",
           summary: "큰 방향을 두고 현장에서 방법을 조정하는 경향이 보여요.",
-          rhythm:
-            "업무와 수업을 진행할 때 큰 방향을 두고 현장에서 방법을 조정하는 편이며, 마감을 미루는 습관을 뜻하지는 않습니다.",
+          rhythm: "업무와 수업은 큰 방향을 두되 현장에서 방법을 조정하며 이어 갑니다.",
         },
         {
           intensityBandId: "strong",
           direction: "positive",
           headline: "미리 정한 흐름을 따르는 경향이 뚜렷한 편",
           summary: "순서와 준비를 미리 정한 뒤 일을 이어 가는 경향이 매우 뚜렷해요.",
-          rhythm:
-            "업무와 수업을 진행할 때 순서와 준비를 미리 정한 뒤 움직이는 경향이 매우 뚜렷합니다.",
+          rhythm: "업무와 수업은 순서와 준비를 미리 정한 뒤 움직이는 흐름이 강하게 나타납니다.",
         },
         {
           intensityBandId: "strong",
           direction: "negative",
           headline: "현장에서 방법을 조정하는 경향이 뚜렷한 편",
           summary: "큰 방향을 두고 현장에서 방법을 조정하는 경향이 매우 뚜렷해요.",
-          rhythm:
-            "업무와 수업을 진행할 때 큰 방향을 두고 현장에서 방법을 조정하는 경향이 매우 뚜렷하며, 마감을 미루는 습관을 뜻하지는 않습니다.",
+          rhythm: "업무와 수업은 큰 방향을 두고 현장에서 방법을 조정하는 흐름이 강하게 나타납니다.",
         },
       ],
     },

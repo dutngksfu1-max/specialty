@@ -48,6 +48,7 @@ function allVisibleText(): readonly string[] {
           definition.resultNarrative.balancedTitle,
           definition.resultNarrative.balancedOneLiner,
           definition.resultNarrative.balancedAxisNote,
+          definition.resultNarrative.scopeNote,
           ...definition.resultNarrative.balancedGuidance.shiningMoments.flatMap((note) => [
             note.scene,
             note.text,
@@ -297,22 +298,21 @@ describe("강도·균형 결과 서술 (DEC-046)", () => {
           (reading) => reading.intensityBandId === band.id,
         );
         expect(readings.map((reading) => reading.direction).sort()).toEqual(
-          band.directional ? ["negative", "positive"] : ["balanced"],
+          band.directional
+            ? ["negative", "positive"]
+            : ["balanced", "negative", "positive"],
         );
       }
     }
   });
 
-  it("교직 리듬은 에너지 맥락 경계를 덧붙여 전체 설명을 한 문장 더 제공합니다", () => {
+  it("교직 리듬은 축마다 한 문장으로 읽힙니다", () => {
     const narrative = definition.resultNarrative;
     if (narrative === undefined) throw new Error("결과 서술이 없습니다.");
 
     for (const axis of narrative.axes) {
       for (const reading of axis.readings) {
-        const expectedSentenceCount = String(axis.axisId) === "axis-energy" ? 2 : 1;
-        expect(reading.rhythm.match(/[.!?]/g), reading.rhythm).toHaveLength(
-          expectedSentenceCount,
-        );
+        expect(reading.rhythm.match(/[.!?]/g), reading.rhythm).toHaveLength(1);
       }
     }
   });
@@ -328,14 +328,12 @@ describe("강도·균형 결과 서술 (DEC-046)", () => {
 
     for (const reading of energy?.readings ?? []) {
       expect(reading.rhythm).not.toMatch(/말수가 적|말없이|떠들썩|큰소리/);
-      expect(reading.rhythm).toMatch(/뜻하지|별개|판단할 수 없|결과가 아닙니다/);
     }
-
-    for (const reading of rhythm?.readings.filter(
-      (reading) => reading.direction === "negative",
-    ) ?? []) {
-      expect(reading.rhythm).toContain("마감을 미루는 습관을 뜻하지는 않습니다");
+    for (const reading of rhythm?.readings ?? []) {
+      expect(reading.rhythm).not.toMatch(/미루는 습관|마감을 못|마감이 밀/);
     }
+    expect(narrative.scopeNote).toMatch(/말의 양/);
+    expect(narrative.scopeNote).toMatch(/마감/);
   });
 });
 
@@ -352,6 +350,7 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
       expect(length, profile.title).toBeGreaterThanOrEqual(12);
       expect(length, profile.title).toBeLessThanOrEqual(20);
       expect(profile.title, profile.title).not.toMatch(/(형|타입)$/);
+      expect(profile.title, profile.title).toMatch(/교실$/);
     }
   });
 
@@ -466,6 +465,23 @@ describe("전체 문구 금지 표현", () => {
   it("낙인이 되는 표현이 없습니다", () => {
     for (const text of allVisibleText()) {
       expect(text, text).not.toMatch(/게으[르른]|우유부단|무책임|산만한|예민한 성격/);
+    }
+  });
+
+  it("핵심 결과카드는 축 이름과 유형 라벨을 그대로 옮겨 적지 않습니다", () => {
+    const axisTerms = definition.axes.flatMap((axis) => [
+      axis.name,
+      axis.positive.label,
+      axis.positive.shortLabel,
+      axis.negative.label,
+      axis.negative.shortLabel,
+    ]);
+
+    for (const profile of definition.resultProfiles) {
+      const core = `${profile.title} ${profile.oneLiner} ${profile.rhythm}`;
+      for (const term of axisTerms) {
+        expect(core, `${profile.title}: ${term}`).not.toContain(term);
+      }
     }
   });
 

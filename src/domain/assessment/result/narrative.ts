@@ -9,6 +9,7 @@ import type { AxisId } from "@/domain/shared/ids";
 export interface ResolvedAxisNarrative {
   readonly axisId: AxisId;
   readonly rawScore: number;
+  readonly isDirectional: boolean;
   readonly reading: AxisNarrativeReading;
 }
 
@@ -35,9 +36,9 @@ function fallbackNarrative(
 /**
  * 연속 점수의 강도 구간까지 반영해 결과 상단 서술을 고릅니다.
  *
- * - 비방향 구간은 rawScore의 부호와 무관하게 `balanced` 문장을 씁니다.
- * - 제목은 한쪽 경향이 확인된 축 중 절대 점수가 가장 큰 축에서 가져옵니다.
- * - 교직 리듬은 축별 설명을 이어 붙이며, 콘텐츠가 둔 맥락 경계 문장도 보존합니다.
+ * - 균형 표시는 보존하되, 결과 문장은 점수가 가리키는 방향의 문장을 씁니다.
+ * - 핵심 카드는 네 축을 종합한 결과 프로필의 제목과 서술을 사용합니다.
+ * - 강도별 축 문장은 축 시각화와 세부 해석을 위해 함께 보존합니다.
  *
  * 문구는 모두 콘텐츠가 소유하며 이 함수는 선택과 조립만 담당합니다.
  */
@@ -62,7 +63,7 @@ export function resolveResultNarrative(
     );
     if (band === undefined) return fallbackNarrative(profile);
 
-    const direction = band.directional ? score.direction : "balanced";
+    const direction = score.direction;
     const reading = narrativeAxis.readings.find(
       (candidate) =>
         candidate.intensityBandId === score.intensityBandId &&
@@ -70,42 +71,24 @@ export function resolveResultNarrative(
     );
     if (reading === undefined) return fallbackNarrative(profile);
 
-    resolved.push({ axisId: axis.id, rawScore: score.rawScore, reading });
+    resolved.push({
+      axisId: axis.id,
+      rawScore: score.rawScore,
+      isDirectional: band.directional,
+      reading,
+    });
   }
 
-  const directional = resolved
-    .filter((item) => item.reading.direction !== "balanced")
-    .sort((left, right) => Math.abs(right.rawScore) - Math.abs(left.rawScore));
   const balancedAxisIds = new Set(
     resolved
-      .filter((item) => item.reading.direction === "balanced")
+      .filter((item) => !item.isDirectional)
       .map((item) => item.axisId),
   );
 
-  if (directional.length === 0) {
-    return {
-      title: spec.balancedTitle,
-      oneLiner: spec.balancedOneLiner,
-      rhythm: resolved.map((item) => item.reading.rhythm).join(" "),
-      axes: resolved,
-      balancedAxisIds,
-    };
-  }
-
-  const primary = directional[0];
-  if (primary === undefined) return fallbackNarrative(profile);
-
-  const summaries = directional
-    .slice(0, 2)
-    .map((item) => item.reading.summary)
-    .join(" ");
-  const oneLiner =
-    balancedAxisIds.size > 0 ? `${summaries} ${spec.balancedAxisNote}` : summaries;
-
   return {
-    title: primary.reading.headline,
-    oneLiner,
-    rhythm: resolved.map((item) => item.reading.rhythm).join(" "),
+    title: profile.title,
+    oneLiner: profile.oneLiner,
+    rhythm: profile.rhythm,
     axes: resolved,
     balancedAxisIds,
   };
