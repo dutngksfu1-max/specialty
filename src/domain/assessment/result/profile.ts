@@ -3,9 +3,9 @@ import type { PoleSide } from "@/domain/assessment/model/definition";
 
 /** docs/architecture.md 4.3 */
 export interface CollaborationProfile {
-  /** 호흡이 자연스러운 스타일 */
+  /** 함께할 때 잘 이어지는 점 */
   readonly naturalFit: readonly string[];
-  /** 조율하면 더 편한 스타일 */
+  /** 미리 맞춰 두면 좋은 점 */
   readonly needsTuning: readonly string[];
 }
 
@@ -30,7 +30,7 @@ export interface ResultProfile {
   readonly oneLiner: string;
   /** 나의 교직 리듬 */
   readonly rhythm: string;
-  /** 교실에서 빛나는 순간 */
+  /** 강점이 드러날 수 있는 장면 */
   readonly shiningMoments: readonly SceneNote[];
   /** 바쁠 때 나타날 수 있는 모습 */
   readonly underPressure: readonly SceneNote[];

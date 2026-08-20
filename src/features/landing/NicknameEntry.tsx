@@ -5,7 +5,6 @@ import { useEffect, useId, useState } from "react";
 import { loadNickname, saveNickname } from "@/application/assessment/nickname";
 import { NICKNAME_MAX_LENGTH } from "@/domain/assessment/session/nickname";
 import { useAssessmentServices } from "@/features/shared/AssessmentRepositoryProvider";
-import { PRIVACY_NOTE } from "@/lib/siteCopy";
 
 /**
  * 닉네임 입력 (DEC-009, docs/design.md 9장)
@@ -16,7 +15,6 @@ import { PRIVACY_NOTE } from "@/lib/siteCopy";
 export function NicknameEntry() {
   const services = useAssessmentServices();
   const inputId = useId();
-  const helperId = useId();
 
   const [value, setValue] = useState("");
   const [saved, setSaved] = useState(false);

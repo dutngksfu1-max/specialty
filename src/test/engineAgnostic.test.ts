@@ -38,9 +38,9 @@ const CENTER_VALUE = 4;
 const AXIS_MAX = 18;
 
 const bands = [
-  { id: "balanced", label: "[fixture] 균형", minAbsScore: 0, maxAbsScore: 3 },
-  { id: "clear", label: "[fixture] 뚜렷", minAbsScore: 4, maxAbsScore: 11 },
-  { id: "strong", label: "[fixture] 매우 뚜렷", minAbsScore: 12, maxAbsScore: AXIS_MAX },
+  { id: "balanced", label: "[fixture] 균형", minAbsScore: 0, maxAbsScore: 3, directional: false },
+  { id: "clear", label: "[fixture] 뚜렷", minAbsScore: 4, maxAbsScore: 11, directional: true },
+  { id: "strong", label: "[fixture] 매우 뚜렷", minAbsScore: 12, maxAbsScore: AXIS_MAX, directional: true },
 ];
 
 const takenPerAxis = new Map<string, number>();

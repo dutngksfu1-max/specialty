@@ -4,7 +4,10 @@ import {
   assessmentError,
   type AssessmentError,
 } from "@/domain/assessment/errors/assessmentError";
-import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
+import type {
+  AssessmentDefinition,
+  NarrativeDirection,
+} from "@/domain/assessment/model/definition";
 import {
   toAssessmentId,
   toAxisId,
@@ -39,6 +42,7 @@ const intensityBandSchema = z.object({
   label: z.string().min(1),
   minAbsScore: z.number().int().min(0),
   maxAbsScore: z.number().int().min(0),
+  directional: z.boolean().default(true),
 });
 
 const axisSchema = z.object({
@@ -96,18 +100,22 @@ const sceneNoteSchema = z.object({
   text: z.string().min(1),
 });
 
-const resultProfileSchema = z.object({
-  key: z.string().min(1).transform(toResultKey),
-  poles: z.record(z.string().min(1), poleSideSchema),
-  title: z.string().min(1),
-  oneLiner: z.string().min(1),
-  rhythm: z.string().min(1),
+const resultGuidanceSchema = z.object({
   shiningMoments: z.array(sceneNoteSchema).min(1),
   underPressure: z.array(sceneNoteSchema).min(1),
   withColleagues: z.array(sceneNoteSchema).min(1),
   collaboration: collaborationProfileSchema,
   nextSteps: z.array(z.string().min(1)).min(1),
   talkingPoints: z.array(z.string().min(1)).min(1),
+});
+
+const resultProfileSchema = z.object({
+  key: z.string().min(1).transform(toResultKey),
+  poles: z.record(z.string().min(1), poleSideSchema),
+  title: z.string().min(1),
+  oneLiner: z.string().min(1),
+  rhythm: z.string().min(1),
+  ...resultGuidanceSchema.shape,
 });
 
 /** 축 조합 해석 (contentVersion 3.0.0) */
@@ -123,6 +131,27 @@ const axisCombinationSchema = z.object({
   readings: z.array(axisCombinationReadingSchema).min(2),
 });
 
+const axisNarrativeReadingSchema = z.object({
+  intensityBandId: z.string().min(1),
+  direction: z.enum(["balanced", "positive", "negative"]),
+  headline: z.string().min(1),
+  summary: z.string().min(1),
+  rhythm: z.string().min(1),
+});
+
+const axisResultNarrativeSchema = z.object({
+  axisId: z.string().min(1).transform(toAxisId),
+  readings: z.array(axisNarrativeReadingSchema).min(1),
+});
+
+const resultNarrativeSchema = z.object({
+  balancedTitle: z.string().min(1),
+  balancedOneLiner: z.string().min(1),
+  balancedAxisNote: z.string().min(1),
+  balancedGuidance: resultGuidanceSchema,
+  axes: z.array(axisResultNarrativeSchema).min(1),
+});
+
 const baseDefinitionSchema = z.object({
   id: z.string().min(1).transform(toAssessmentId),
   slug: z.string().min(1),
@@ -135,6 +164,7 @@ const baseDefinitionSchema = z.object({
   contentVersion: z.string().min(1),
   scale: responseScaleSchema,
   axes: z.array(axisSchema).min(1),
+  resultNarrative: resultNarrativeSchema.optional(),
   axisCombinations: z.array(axisCombinationSchema).default([]),
   sections: z.array(sectionSchema).min(1),
   questions: z.array(questionSchema).min(1),
@@ -350,6 +380,63 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
     issue("pole 조합에 누락이 있습니다.", ["resultProfiles"]);
   }
 
+  // --- 방향·강도 결과 서술이 모든 축과 구간을 정확히 덮는가 ----------------
+  if (definition.resultNarrative !== undefined) {
+    const narrativeAxisIds = definition.resultNarrative.axes.map((axis) => String(axis.axisId));
+    const duplicateNarrativeAxes = findDuplicates(narrativeAxisIds);
+    const missingNarrativeAxes = orderedAxisIds.filter((axisId) => !narrativeAxisIds.includes(axisId));
+    const unknownNarrativeAxes = narrativeAxisIds.filter((axisId) => !axisIds.has(axisId));
+
+    if (duplicateNarrativeAxes.length > 0) {
+      issue(`결과 서술의 축이 중복됩니다: ${duplicateNarrativeAxes.join(", ")}`, ["resultNarrative", "axes"]);
+    }
+    if (missingNarrativeAxes.length > 0) {
+      issue(`결과 서술에 빠진 축이 있습니다: ${missingNarrativeAxes.join(", ")}`, ["resultNarrative", "axes"]);
+    }
+    if (unknownNarrativeAxes.length > 0) {
+      issue(`결과 서술이 없는 축을 가리킵니다: ${unknownNarrativeAxes.join(", ")}`, ["resultNarrative", "axes"]);
+    }
+
+    definition.resultNarrative.axes.forEach((narrativeAxis, narrativeAxisIndex) => {
+      const axis = definition.axes.find((candidate) => candidate.id === narrativeAxis.axisId);
+      if (axis === undefined) return;
+
+      const knownBandIds = new Set(axis.intensityBands.map((band) => band.id));
+      narrativeAxis.readings.forEach((reading, readingIndex) => {
+        if (!knownBandIds.has(reading.intensityBandId)) {
+          issue(`결과 서술이 없는 강도 구간을 가리킵니다: ${reading.intensityBandId}`, [
+            "resultNarrative",
+            "axes",
+            narrativeAxisIndex,
+            "readings",
+            readingIndex,
+            "intensityBandId",
+          ]);
+        }
+      });
+
+      axis.intensityBands.forEach((band) => {
+        const readings = narrativeAxis.readings.filter(
+          (reading) => reading.intensityBandId === band.id,
+        );
+        const directions = readings.map((reading) => reading.direction);
+        const expectedDirections: readonly NarrativeDirection[] = band.directional
+          ? ["positive", "negative"]
+          : ["balanced"];
+
+        if (
+          directions.length !== expectedDirections.length ||
+          expectedDirections.some((direction) => !directions.includes(direction))
+        ) {
+          issue(
+            `축 ${String(axis.id)}의 ${band.id} 결과 서술은 ${expectedDirections.join("/")} 방향을 정확히 한 번씩 가져야 합니다.`,
+            ["resultNarrative", "axes", narrativeAxisIndex, "readings"],
+          );
+        }
+      });
+    });
+  }
+
   // --- 축 조합 해석이 모든 방향 조합을 빠짐없이 담고 있는가 ----------------
   definition.axisCombinations.forEach((combination, index) => {
     const path = ["axisCombinations", index] as const;
@@ -406,6 +493,47 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
     ["description", definition.description],
     ...definition.questions.map((question) => [`questions.${question.order}.text`, question.text] as const),
     ...definition.resultProfiles.map((profile) => [`resultProfiles.${profile.key}.title`, profile.title] as const),
+    ...(definition.resultNarrative === undefined
+      ? []
+      : [
+          ["resultNarrative.balancedTitle", definition.resultNarrative.balancedTitle] as const,
+          ["resultNarrative.balancedOneLiner", definition.resultNarrative.balancedOneLiner] as const,
+          ["resultNarrative.balancedAxisNote", definition.resultNarrative.balancedAxisNote] as const,
+          ...definition.resultNarrative.balancedGuidance.shiningMoments.map(
+            (note, index) =>
+              [`resultNarrative.balancedGuidance.shiningMoments.${index}`, note.text] as const,
+          ),
+          ...definition.resultNarrative.balancedGuidance.underPressure.map(
+            (note, index) =>
+              [`resultNarrative.balancedGuidance.underPressure.${index}`, note.text] as const,
+          ),
+          ...definition.resultNarrative.balancedGuidance.withColleagues.map(
+            (note, index) =>
+              [`resultNarrative.balancedGuidance.withColleagues.${index}`, note.text] as const,
+          ),
+          ...definition.resultNarrative.balancedGuidance.collaboration.naturalFit.map(
+            (text, index) =>
+              [`resultNarrative.balancedGuidance.naturalFit.${index}`, text] as const,
+          ),
+          ...definition.resultNarrative.balancedGuidance.collaboration.needsTuning.map(
+            (text, index) =>
+              [`resultNarrative.balancedGuidance.needsTuning.${index}`, text] as const,
+          ),
+          ...definition.resultNarrative.balancedGuidance.nextSteps.map(
+            (text, index) => [`resultNarrative.balancedGuidance.nextSteps.${index}`, text] as const,
+          ),
+          ...definition.resultNarrative.balancedGuidance.talkingPoints.map(
+            (text, index) =>
+              [`resultNarrative.balancedGuidance.talkingPoints.${index}`, text] as const,
+          ),
+          ...definition.resultNarrative.axes.flatMap((axis) =>
+            axis.readings.flatMap((reading, index) => [
+              [`resultNarrative.${String(axis.axisId)}.${index}.headline`, reading.headline] as const,
+              [`resultNarrative.${String(axis.axisId)}.${index}.summary`, reading.summary] as const,
+              [`resultNarrative.${String(axis.axisId)}.${index}.rhythm`, reading.rhythm] as const,
+            ]),
+          ),
+        ]),
     ...definition.axisCombinations.flatMap((combination) => [
       [`axisCombinations.${combination.id}.title`, combination.title] as const,
       ...combination.readings.map(

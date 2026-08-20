@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 
 import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
+import { resolveResultNarrative } from "@/domain/assessment/result/narrative";
 import type { ResultProfile } from "@/domain/assessment/result/profile";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 import { AxisBar } from "@/features/result/AxisBar";
@@ -29,6 +30,7 @@ export const ResultShareCard = forwardRef<
   }
 >(function ResultShareCard({ definition, snapshot, profile, nickname }, ref) {
   const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
+  const narrative = resolveResultNarrative(definition, snapshot.score.axisScores, profile);
 
   return (
     <div
@@ -68,14 +70,16 @@ export const ResultShareCard = forwardRef<
       </p>
 
       {/* 유형 엠블럼 — 카드 전체가 aria-hidden이므로 decorative로 넘깁니다 */}
-      <div style={{ marginTop: 40 }}>
-        <TypeEmblem
-          axisIds={definition.axes.map((axis) => axis.id)}
-          poles={profile.poles}
-          size={132}
-          decorative
-        />
-      </div>
+      {narrative.balancedAxisIds.size === 0 && (
+        <div style={{ marginTop: 40 }}>
+          <TypeEmblem
+            axisIds={definition.axes.map((axis) => axis.id)}
+            poles={profile.poles}
+            size={132}
+            decorative
+          />
+        </div>
+      )}
 
       <p style={{ marginTop: 32, fontSize: 26, color: "var(--color-foreground-subtle)" }}>
         {nickname} 님의 결과
@@ -92,7 +96,7 @@ export const ResultShareCard = forwardRef<
           wordBreak: "keep-all",
         }}
       >
-        {profile.title}
+        {narrative.title}
       </h2>
 
       <p
@@ -104,7 +108,7 @@ export const ResultShareCard = forwardRef<
           wordBreak: "keep-all",
         }}
       >
-        {profile.oneLiner}
+        {narrative.oneLiner}
       </p>
 
       <div

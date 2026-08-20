@@ -42,6 +42,36 @@ function allVisibleText(): readonly string[] {
       axis.negative.description,
       ...axis.intensityBands.map((band) => band.label),
     ]),
+    ...(definition.resultNarrative === undefined
+      ? []
+      : [
+          definition.resultNarrative.balancedTitle,
+          definition.resultNarrative.balancedOneLiner,
+          definition.resultNarrative.balancedAxisNote,
+          ...definition.resultNarrative.balancedGuidance.shiningMoments.flatMap((note) => [
+            note.scene,
+            note.text,
+          ]),
+          ...definition.resultNarrative.balancedGuidance.underPressure.flatMap((note) => [
+            note.scene,
+            note.text,
+          ]),
+          ...definition.resultNarrative.balancedGuidance.withColleagues.flatMap((note) => [
+            note.scene,
+            note.text,
+          ]),
+          ...definition.resultNarrative.balancedGuidance.collaboration.naturalFit,
+          ...definition.resultNarrative.balancedGuidance.collaboration.needsTuning,
+          ...definition.resultNarrative.balancedGuidance.nextSteps,
+          ...definition.resultNarrative.balancedGuidance.talkingPoints,
+          ...definition.resultNarrative.axes.flatMap((axis) =>
+            axis.readings.flatMap((reading) => [
+              reading.headline,
+              reading.summary,
+              reading.rhythm,
+            ]),
+          ),
+        ]),
     ...definition.axisCombinations.flatMap((combination) => [
       combination.title,
       ...combination.readings.map((reading) => reading.text),
@@ -250,6 +280,65 @@ describe("축 조합 해석 (3.0.0 신규)", () => {
   });
 });
 
+describe("강도·균형 결과 서술 (DEC-046)", () => {
+  it("모든 축과 강도 구간을 방향성에 맞게 빠짐없이 설명합니다", () => {
+    const narrative = definition.resultNarrative;
+    expect(narrative).toBeDefined();
+    if (narrative === undefined) return;
+
+    expect(narrative.axes).toHaveLength(definition.axes.length);
+    for (const axis of definition.axes) {
+      const narrativeAxis = narrative.axes.find((candidate) => candidate.axisId === axis.id);
+      expect(narrativeAxis).toBeDefined();
+      if (narrativeAxis === undefined) continue;
+
+      for (const band of axis.intensityBands) {
+        const readings = narrativeAxis.readings.filter(
+          (reading) => reading.intensityBandId === band.id,
+        );
+        expect(readings.map((reading) => reading.direction).sort()).toEqual(
+          band.directional ? ["negative", "positive"] : ["balanced"],
+        );
+      }
+    }
+  });
+
+  it("교직 리듬은 에너지 맥락 경계를 덧붙여 전체 설명을 한 문장 더 제공합니다", () => {
+    const narrative = definition.resultNarrative;
+    if (narrative === undefined) throw new Error("결과 서술이 없습니다.");
+
+    for (const axis of narrative.axes) {
+      for (const reading of axis.readings) {
+        const expectedSentenceCount = String(axis.axisId) === "axis-energy" ? 2 : 1;
+        expect(reading.rhythm.match(/[.!?]/g), reading.rhythm).toHaveLength(
+          expectedSentenceCount,
+        );
+      }
+    }
+  });
+
+  it("회복 방식은 학생 대상 말수로, 유연성은 미루는 습관으로 확대하지 않습니다", () => {
+    const narrative = definition.resultNarrative;
+    if (narrative === undefined) throw new Error("결과 서술이 없습니다.");
+
+    const energy = narrative.axes.find((axis) => String(axis.axisId) === "axis-energy");
+    const rhythm = narrative.axes.find((axis) => String(axis.axisId) === "axis-rhythm");
+    expect(energy).toBeDefined();
+    expect(rhythm).toBeDefined();
+
+    for (const reading of energy?.readings ?? []) {
+      expect(reading.rhythm).not.toMatch(/말수가 적|말없이|떠들썩|큰소리/);
+      expect(reading.rhythm).toMatch(/뜻하지|별개|판단할 수 없|결과가 아닙니다/);
+    }
+
+    for (const reading of rhythm?.readings.filter(
+      (reading) => reading.direction === "negative",
+    ) ?? []) {
+      expect(reading.rhythm).toContain("마감을 미루는 습관을 뜻하지는 않습니다");
+    }
+  });
+});
+
 describe("결과 프로필 작성 규칙 (6.3)", () => {
   it("16개 조합이 모두 있고 제목이 서로 다릅니다", () => {
     expect(definition.resultProfiles).toHaveLength(16);
@@ -340,7 +429,7 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
     }
   });
 
-  it("'조율하면 더 편한 스타일'에 구체적인 조율 방법이 들어 있습니다", () => {
+  it("'미리 맞춰 두면 좋은 점'에 구체적인 조율 방법이 들어 있습니다", () => {
     for (const profile of definition.resultProfiles) {
       for (const item of profile.collaboration.needsTuning) {
         // 어떤 스타일과의 이야기인지 밝히고("~형과는"),
@@ -352,7 +441,7 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
     }
   });
 
-  it("'호흡이 자연스러운 스타일'도 어떤 스타일인지 밝힙니다", () => {
+  it("'함께할 때 잘 이어지는 점'도 어떤 스타일인지 밝힙니다", () => {
     for (const profile of definition.resultProfiles) {
       for (const item of profile.collaboration.naturalFit) {
         expect(item, item).toMatch(/형과는/);
@@ -377,6 +466,14 @@ describe("전체 문구 금지 표현", () => {
   it("낙인이 되는 표현이 없습니다", () => {
     for (const text of allVisibleText()) {
       expect(text, text).not.toMatch(/게으[르른]|우유부단|무책임|산만한|예민한 성격/);
+    }
+  });
+
+  it("측정하지 않은 긍정적 결과를 보장하지 않습니다", () => {
+    for (const text of allVisibleText()) {
+      expect(text, text).not.toMatch(
+        /억울한 아이가 생기지|상담에서 신뢰를 얻|상담이 희망적으로 끝|아이들이 .*오래 기억|교실이 흔들리지/,
+      );
     }
   });
 

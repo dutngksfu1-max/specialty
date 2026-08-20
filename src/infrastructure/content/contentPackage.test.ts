@@ -94,6 +94,11 @@ describe("fixture 콘텐츠 패키지", () => {
     expect(new Set(combinations).size).toBe(16);
   });
 
+  it("강도·균형 결과 서술이 모든 축에 있습니다", () => {
+    if (!parsed.ok) throw new Error("검증 실패");
+    expect(parsed.value.resultNarrative?.axes).toHaveLength(parsed.value.axes.length);
+  });
+
   it("경고 항목이 없습니다 (축별 문항 수·polarity 균등)", () => {
     if (!parsed.ok) throw new Error("검증 실패");
     expect(collectContentWarnings(parsed.value)).toEqual([]);
@@ -173,6 +178,32 @@ describe("무결성 검증 실패 (INVALID_CONTENT_PACKAGE)", () => {
       }),
     );
     expect(detail).toContain("중복");
+  });
+
+  it("비방향 구간의 균형 결과 서술이 빠짐", () => {
+    const detail = expectInvalid(
+      broken((draft) => {
+        const narrative = draft.resultNarrative as Record<string, unknown>;
+        const axes = narrative.axes as Record<string, unknown>[];
+        const first = axes[0];
+        if (first === undefined) return;
+        const readings = first.readings as Record<string, unknown>[];
+        first.readings = readings.filter(
+          (reading) => reading.intensityBandId !== "balanced",
+        );
+      }),
+    );
+    expect(detail).toContain("balanced 결과 서술");
+  });
+
+  it("균형 결과 전용 안내가 빠짐", () => {
+    const detail = expectInvalid(
+      broken((draft) => {
+        const narrative = draft.resultNarrative as Record<string, unknown>;
+        delete narrative.balancedGuidance;
+      }),
+    );
+    expect(detail).toContain("balancedGuidance");
   });
 
   it("강도 구간에 빈틈이 있음", () => {

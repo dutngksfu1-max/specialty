@@ -1,6 +1,7 @@
 import { teacherStyleV1Base } from "./definition";
 import { questions } from "./questions";
 import { resultProfiles } from "./profiles";
+import { resultNarrative } from "./resultNarrative";
 import { teacherStylePresentation } from "./presentation";
 
 /**
@@ -13,5 +14,6 @@ export const teacherStyleV1Package = {
   ...teacherStyleV1Base,
   questions,
   resultProfiles,
+  resultNarrative,
   presentation: teacherStylePresentation,
 };

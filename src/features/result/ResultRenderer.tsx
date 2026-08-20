@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
 import { resolveAxisCombinations } from "@/domain/assessment/result/axisCombination";
+import { resolveResultNarrative } from "@/domain/assessment/result/narrative";
 import type { ResultProfile, SceneNote } from "@/domain/assessment/result/profile";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 import { AxisBar } from "@/features/result/AxisBar";
@@ -61,7 +62,7 @@ function ChapterHeading({
 }: {
   readonly number: string;
   readonly title: string;
-  readonly description: string;
+  readonly description: React.ReactNode;
 }) {
   return (
     <header className="border-b border-border pb-5">
@@ -195,7 +196,17 @@ export function ResultRenderer({
   readonly nickname: string;
 }) {
   const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
-  const combinationReadings = resolveAxisCombinations(definition.axisCombinations, profile.poles);
+  const narrative = resolveResultNarrative(definition, snapshot.score.axisScores, profile);
+  const hasBalancedAxes = narrative.balancedAxisIds.size > 0;
+  const guidance =
+    hasBalancedAxes && definition.resultNarrative !== undefined
+      ? definition.resultNarrative.balancedGuidance
+      : profile;
+  const combinationReadings = resolveAxisCombinations(
+    definition.axisCombinations,
+    profile.poles,
+    narrative.balancedAxisIds,
+  );
 
   return (
     <article>
@@ -209,27 +220,36 @@ export function ResultRenderer({
           <div>
             <p className="text-caption font-semibold text-primary-active">검사 결과 · {nickname} 님</p>
             <h1 className="mt-3 max-w-prose text-display text-foreground sm:text-display-lg">
-              {profile.title}
+              {narrative.title}
             </h1>
             <p className="mt-5 max-w-prose text-h3 font-medium text-foreground-body">
-              {profile.oneLiner}
+              {narrative.oneLiner}
             </p>
           </div>
 
-          <div className="relative z-10 justify-self-start rounded-lg border border-primary-soft-border bg-surface p-4 shadow-elev-1 md:justify-self-end">
-            <TypeEmblem
-              axisIds={definition.axes.map((axis) => axis.id)}
-              poles={profile.poles}
-              size={168}
-              label={`${profile.title} 결과를 나타내는 상징`}
-            />
-          </div>
+          {!hasBalancedAxes ? (
+            <div className="relative z-10 justify-self-start rounded-lg border border-primary-soft-border bg-surface p-4 shadow-elev-1 md:justify-self-end">
+              <TypeEmblem
+                axisIds={definition.axes.map((axis) => axis.id)}
+                poles={profile.poles}
+                size={168}
+                label={`${narrative.title} 결과를 나타내는 상징`}
+              />
+            </div>
+          ) : (
+            <div className="relative z-10 max-w-56 justify-self-start rounded-lg border border-primary-soft-border bg-surface p-5 shadow-elev-1 md:justify-self-end">
+              <p className="text-label text-primary-active">균형 구간 포함</p>
+              <p className="mt-2 text-body-sm text-foreground-muted">
+                한쪽 모양으로 단정하지 않고, 아래 네 가지 결과를 중심으로 읽어 주세요.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="relative mt-8 grid gap-3 border-t border-primary-soft-border pt-6 md:grid-cols-[auto_minmax(0,1fr)] md:gap-7">
           <p className="text-label text-primary-active">나의 교직 리듬</p>
           <p className="max-w-prose text-body-lg text-foreground-body sm:text-body-lg-desktop">
-            {profile.rhythm}
+            {narrative.rhythm}
           </p>
         </div>
       </header>
@@ -245,7 +265,13 @@ export function ResultRenderer({
             <ChapterHeading
               number="01"
               title="한눈에 보는 나"
-              description="네 축의 위치와 축들이 함께 만들어 내는 흐름을 먼저 살펴보세요. 어느 한쪽이 더 좋은 것은 아니며, 가운데에 가까울수록 두 방식이 비슷하게 나타납니다."
+              description={
+                <>
+                  네 관점이 어느 쪽에 얼마나 가까운지 살펴보세요.
+                  <br />
+                  어느 한쪽이 더 좋은 것은 아니며, 균형 구간은 현재 점수만으로 어느 쪽이 더 자연스러운지 단정하기 어렵다는 뜻입니다.
+                </>
+              }
             />
 
             <div className="mt-6 overflow-hidden rounded-lg border border-border bg-surface px-5 sm:px-7">
@@ -260,14 +286,14 @@ export function ResultRenderer({
               })}
             </div>
             <p className="mt-4 max-w-prose text-body-sm text-foreground-subtle">
-              강도 표시는 통계 규준이나 등급이 아니라, 결과를 이야기하기 쉽게 나눈 구분이에요.
+              이 표시는 어느 쪽에 얼마나 가까운지 보여 주는 참고 구간이며, 등급이나 우열을 뜻하지 않아요.
             </p>
 
             {combinationReadings.length > 0 && (
               <div className="mt-10">
-                <h3 className="text-h3 text-foreground sm:text-h3-lg">축이 함께 움직일 때</h3>
+                <h3 className="text-h3 text-foreground sm:text-h3-lg">두 관점이 함께 드러나는 장면</h3>
                 <p className="mt-2 max-w-prose text-body text-foreground-muted">
-                  한 축씩 볼 때보다 두 관점이 만나는 지점에서 실제 업무 방식이 더 또렷하게 드러납니다.
+                  방향이 비교적 분명한 두 관점이 실제 수업과 업무에서 어떻게 이어질 수 있는지 살펴보세요.
                 </p>
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   {combinationReadings.map((combination) => (
@@ -284,36 +310,44 @@ export function ResultRenderer({
             )}
           </section>
 
-          {/* 교실에서 빛나는 순간 → 바쁠 때 → 동료와 함께 일할 때 */}
+          {/* 강점이 드러날 수 있는 장면 → 바쁠 때 → 동료와 함께 일할 때 */}
           <section id="result-scenes" className="mt-16 scroll-mt-28">
             <ChapterHeading
               number="02"
               title="교실에서 드러나는 모습"
-              description="결과를 추상적인 설명으로만 읽지 않고, 수업·생활지도·업무처럼 실제 장면에 놓아 보았습니다."
+              description={
+                hasBalancedAxes
+                  ? "균형으로 나온 관점을 한쪽 모습으로 단정하지 않고, 실제 장면에서 선택이 달라지는 조건을 살펴봅니다."
+                  : "아래 내용은 네 가지 결과를 함께 읽을 때 나타날 수 있는 예시입니다. 모든 상황에서 늘 같은 모습이 나타난다는 뜻은 아닙니다."
+              }
             />
             <div className="mt-6 divide-y divide-border rounded-lg border border-border bg-surface">
               <SceneGroup
-                title="교실에서 빛나는 순간"
-                description="자연스럽게 강점이 드러나는 장면이에요."
+                title={hasBalancedAxes ? "먼저 살펴볼 장면" : "강점이 드러날 수 있는 장면"}
+                description={
+                  hasBalancedAxes
+                    ? "어떤 조건에서 선택이 달라졌는지 확인해 보세요."
+                    : "현재 경향이 도움이 될 수 있는 장면이에요."
+                }
                 icon="check"
-                items={profile.shiningMoments}
+                items={guidance.shiningMoments}
               />
               <SceneGroup
                 title="바쁠 때 나타날 수 있는 모습"
                 description="단점이라기보다 여유가 줄었을 때 먼저 살펴볼 신호예요."
                 icon="warning"
-                items={profile.underPressure}
+                items={guidance.underPressure}
               />
               <SceneGroup
                 title="동료와 함께 일할 때"
-                description="학년과 학교 안에서 이 리듬이 보이는 방식이에요."
+                description="학년과 학교 안에서 현재 경향이 드러날 수 있는 방식이에요."
                 icon="message"
-                items={profile.withColleagues}
+                items={guidance.withColleagues}
               />
             </div>
           </section>
 
-          {/* 호흡이 자연스러운 스타일 → 조율하면 더 편한 스타일 */}
+          {/* 함께할 때 잘 이어지는 점 → 미리 맞춰 두면 좋은 점 */}
           <section id="result-collaboration" className="mt-16 scroll-mt-28">
             <ChapterHeading
               number="03"
@@ -322,17 +356,17 @@ export function ResultRenderer({
             />
             <div className="mt-6 grid overflow-hidden rounded-lg border border-border bg-surface md:grid-cols-2 md:divide-x md:divide-border">
               <section className="border-b border-border p-5 md:border-b-0 sm:p-7">
-                <p className="text-caption font-semibold text-primary-active">자연스럽게 이어지는 지점</p>
-                <h3 className="mt-2 text-h3 text-foreground">호흡이 자연스러운 스타일</h3>
+                <p className="text-caption font-semibold text-primary-active">함께할 때 이어지기 쉬운 부분</p>
+                <h3 className="mt-2 text-h3 text-foreground">함께할 때 잘 이어지는 점</h3>
                 <div className="mt-5 text-body text-foreground-body">
-                  <Points items={profile.collaboration.naturalFit} />
+                  <Points items={guidance.collaboration.naturalFit} />
                 </div>
               </section>
               <section className="p-5 sm:p-7">
-                <p className="text-caption font-semibold text-accent">먼저 말해 두면 좋은 지점</p>
-                <h3 className="mt-2 text-h3 text-foreground">조율하면 더 편한 스타일</h3>
+                <p className="text-caption font-semibold text-accent">먼저 말해 두면 좋은 부분</p>
+                <h3 className="mt-2 text-h3 text-foreground">미리 맞춰 두면 좋은 점</h3>
                 <div className="mt-5 text-body text-foreground-body">
-                  <Points items={profile.collaboration.needsTuning} icon="message" />
+                  <Points items={guidance.collaboration.needsTuning} icon="message" />
                 </div>
               </section>
             </div>
@@ -351,14 +385,14 @@ export function ResultRenderer({
                 description="부담 없이 하나만 골라도 충분해요."
                 icon="compass"
               >
-                <NumberedPoints items={profile.nextSteps} />
+                <NumberedPoints items={guidance.nextSteps} />
               </ActionPanel>
               <ActionPanel
                 title="동료와 나눌 질문"
                 description="답을 맞히기보다 서로의 다름을 발견하는 질문이에요."
                 icon="message"
               >
-                <NumberedPoints items={profile.talkingPoints} />
+                <NumberedPoints items={guidance.talkingPoints} />
               </ActionPanel>
             </div>
 

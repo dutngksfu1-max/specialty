@@ -301,6 +301,7 @@ export interface IntensityBand {
   readonly label: string;        // "균형" | "뚜렷" | "매우 뚜렷"
   readonly minAbsScore: number;  // 이상
   readonly maxAbsScore: number;  // 이하
+  readonly directional: boolean;// false면 이 구간은 한쪽 방향으로 서술하지 않음
 }
 
 // 축에는 강도 구간이 최소 1개 있어야 합니다 (DEC-033).
@@ -362,6 +363,7 @@ export interface AssessmentDefinition {
   readonly contentVersion: string;       // "1.0.0"
   readonly scale: ResponseScale;
   readonly axes: readonly AssessmentAxis[];
+  readonly resultNarrative?: ResultNarrativeSpec; // 방향·강도·균형 결과 서술
   readonly sections: readonly AssessmentSection[];
   readonly questions: readonly AssessmentQuestion[];
   readonly scoring: ScoringSpec;
@@ -377,8 +379,8 @@ export interface AssessmentDefinition {
 ```ts
 // domain/assessment/result/profile.ts
 export interface CollaborationProfile {
-  readonly naturalFit: readonly string[];   // "호흡이 자연스러운 스타일"
-  readonly needsTuning: readonly string[];  // "조율하면 더 편한 스타일"
+  readonly naturalFit: readonly string[];   // "함께할 때 잘 이어지는 점"
+  readonly needsTuning: readonly string[];  // "미리 맞춰 두면 좋은 점"
 }
 
 export interface ResultProfile {
@@ -387,12 +389,23 @@ export interface ResultProfile {
   readonly title: string;                   // "차분하게 리듬을 만드는 교실 운영자"
   readonly oneLiner: string;
   readonly rhythm: string;                  // "나의 교직 리듬"
-  readonly shiningMoments: readonly string[];  // "교실에서 빛나는 순간"
+  readonly shiningMoments: readonly string[];  // "강점이 드러날 수 있는 장면"
   readonly underPressure: readonly string[];   // "바쁠 때 나타날 수 있는 모습"
   readonly withColleagues: readonly string[];  // "동료와 함께 일할 때"
   readonly collaboration: CollaborationProfile;
 }
 ```
+
+### 4.3a 방향·강도 결과 서술 (DEC-046)
+
+- `ResultProfile`은 기존 세션 호환과 장면·협업 콘텐츠를 위해 유지합니다.
+- 결과 상단의 제목·한 줄 설명·교직 리듬은 `resultNarrative`가 있으면 축 점수의
+  `intensityBandId`와 방향을 함께 읽어 조립합니다.
+- `directional: false`인 강도 구간은 rawScore 부호와 무관하게 `balanced` 문장을 사용합니다.
+- 현재 검사의 교직 리듬은 네 축 설명에 회복 방식의 맥락 경계 한 문장을 더한 다섯 문장으로 구성합니다.
+- 균형 축이 하나라도 있으면 부호로 선택된 `ResultProfile`의 장면·협업·행동 문구도 사용하지 않고,
+  `resultNarrative.balancedGuidance`의 중립 안내를 사용합니다.
+- `resultNarrative`가 없는 다른 검사에서는 기존 프로필 문구를 안전한 fallback으로 사용합니다.
 
 ### 4.4 세션 · 응답 · 점수
 
@@ -474,6 +487,9 @@ export interface ResultSnapshot {
 
 6) 결과 키        4개 축 방향 조합으로 ResultProfile 1개를 찾음
                   연속 점수(rawScore)는 결과 스냅샷에 그대로 저장
+
+7) 화면 서술      directional=false 구간은 방향을 숨기고 balanced 문장을 사용
+                  directional=true 구간은 방향 + 강도에 맞는 문장을 사용
 ```
 
 ### 5.2 순수 함수 시그니처
@@ -565,11 +581,11 @@ rawScore   = 0
 direction  = axis.defaultPole      ← 콘텐츠가 미리 정해 둔 방향
 isBalanced = true                  ← 화면에 '균형' 배지, 양쪽 라벨 동등 표시
 normalized = (0 + 20) / 40 = 0.50  → 막대 마커 정중앙
-resultKey  는 defaultPole을 포함해 정상적으로 16개 중 하나로 확정됩니다
+resultKey  는 저장 호환을 위해 defaultPole을 포함해 정상적으로 16개 중 하나로 확정됩니다
 ```
 
-> **핵심**: 동점이어도 결과는 반드시 하나로 확정됩니다. 대신 화면에서는
-> "이 축은 균형에 가까워요"라고 정직하게 알려 줍니다. 연속 점수 0은 그대로 저장됩니다.
+> **핵심**: 내부 결과 키는 하나로 확정되지만, 화면 서술은 0~4의 균형 구간 전체를
+> 어느 한쪽 성향으로 단정하지 않습니다. 연속 점수 0은 그대로 저장됩니다.
 
 ### 5.4 콘텐츠 무결성 검증 (로드 시 1회)
 

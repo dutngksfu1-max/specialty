@@ -44,16 +44,17 @@ export function AxisBar({
 
   const markerPercent = Math.min(Math.max(score.normalized, 0), 1) * 100;
 
-  // 강조 규칙: 기운 쪽만 진하게. 균형이면 양쪽을 같은 톤으로 둡니다.
+  // 비방향 구간에서는 rawScore 부호와 무관하게 양쪽을 같은 톤으로 둡니다.
   const emphasized = "var(--color-foreground)";
   const quiet = "var(--color-foreground-subtle)";
   const neutral = "var(--color-foreground-muted)";
-  const negativeColor = score.isBalanced ? neutral : score.direction === "negative" ? emphasized : quiet;
-  const positiveColor = score.isBalanced ? neutral : score.direction === "positive" ? emphasized : quiet;
-  const leaningLabel = score.isBalanced
-    ? "균형"
+  const showsDirection = band?.directional ?? !score.isBalanced;
+  const negativeColor = !showsDirection ? neutral : score.direction === "negative" ? emphasized : quiet;
+  const positiveColor = !showsDirection ? neutral : score.direction === "positive" ? emphasized : quiet;
+  const leaningLabel = !showsDirection
+    ? (band?.label ?? "균형")
     : `${score.direction === "positive" ? axis.positive.label : axis.negative.label} 쪽`;
-  const summaryLabel = band === undefined ? leaningLabel : `${leaningLabel} · ${band.label}`;
+  const summaryLabel = band === undefined || !showsDirection ? leaningLabel : `${leaningLabel} · ${band.label}`;
 
   return (
     <div
@@ -61,7 +62,10 @@ export function AxisBar({
       className={variant === "screen" ? "py-5" : undefined}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p style={{ fontSize: size.labelPx, color: "var(--color-foreground)" }} className="font-semibold">
+        <p
+          style={{ fontSize: size.labelPx, color: "var(--color-foreground)" }}
+          className="font-semibold"
+        >
           {axis.name}
         </p>
         <span
@@ -113,8 +117,8 @@ export function AxisBar({
 
       {/* 화면에는 막대로 보이지만, 스크린리더에는 문장으로 읽어 줍니다. */}
       <span className="sr-only">
-        {axis.name}: {score.isBalanced
-          ? `양쪽이 비슷한 균형 상태입니다. ${band?.label ?? ""}`
+        {axis.name}: {!showsDirection
+          ? "현재 점수로 어느 한쪽을 단정하기 어려운 균형 구간입니다."
           : `${score.direction === "positive" ? axis.positive.label : axis.negative.label} 쪽입니다. ${band?.label ?? ""}`}
       </span>
     </div>

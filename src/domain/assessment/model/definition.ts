@@ -27,6 +27,8 @@ export interface IntensityBand {
   readonly minAbsScore: number;
   /** 이 값 이하 */
   readonly maxAbsScore: number;
+  /** false면 이 구간에서는 어느 한쪽 방향으로 해석하지 않습니다. */
+  readonly directional: boolean;
 }
 
 /**
@@ -66,6 +68,49 @@ export interface AxisCombination {
   readonly axisIds: readonly AxisId[];
   /** 축 방향의 모든 조합(2^축개수)을 빠짐없이 담습니다 */
   readonly readings: readonly AxisCombinationReading[];
+}
+
+export type NarrativeDirection = PoleSide | "balanced";
+
+/**
+ * 축 점수의 방향과 강도를 함께 읽는 결과 문장입니다.
+ *
+ * `balanced`는 rawScore가 정확히 0일 때만이 아니라, 콘텐츠가 정한
+ * 비방향 구간 전체에 사용합니다. 그래서 경계에 가까운 점수를 억지로
+ * 어느 한쪽 설명에 넣지 않습니다.
+ */
+export interface AxisNarrativeReading {
+  readonly intensityBandId: string;
+  readonly direction: NarrativeDirection;
+  /** 결과 상단 제목으로 쓸 수 있는 짧은 문장 */
+  readonly headline: string;
+  /** 결과 상단 한 줄 설명에 쓰는 문장 */
+  readonly summary: string;
+  /** '나의 교직 리듬'에서 이 축을 설명하는 한 문장 */
+  readonly rhythm: string;
+}
+
+export interface AxisResultNarrative {
+  readonly axisId: AxisId;
+  readonly readings: readonly AxisNarrativeReading[];
+}
+
+/** 검사별 결과 서술 규격. 채점 엔진은 이 문구를 알지 못합니다. */
+export interface ResultNarrativeSpec {
+  readonly balancedTitle: string;
+  readonly balancedOneLiner: string;
+  readonly balancedAxisNote: string;
+  /** 균형 축이 하나라도 있을 때 부호 기반 16개 프로필 대신 보여 줄 중립 안내 */
+  readonly balancedGuidance: Pick<
+    ResultProfile,
+    | "shiningMoments"
+    | "underPressure"
+    | "withColleagues"
+    | "collaboration"
+    | "nextSteps"
+    | "talkingPoints"
+  >;
+  readonly axes: readonly AxisResultNarrative[];
 }
 
 export interface ResponseOption {
@@ -120,6 +165,8 @@ export interface AssessmentDefinition {
   readonly contentVersion: string;
   readonly scale: ResponseScale;
   readonly axes: readonly AssessmentAxis[];
+  /** 방향·강도·균형을 함께 반영하는 결과 서술. 없으면 기존 프로필 문구를 사용합니다. */
+  readonly resultNarrative?: ResultNarrativeSpec;
   /** 축 조합 해석. 없을 수도 있습니다 */
   readonly axisCombinations: readonly AxisCombination[];
   readonly sections: readonly AssessmentSection[];

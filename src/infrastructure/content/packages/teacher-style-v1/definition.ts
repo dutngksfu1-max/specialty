@@ -1,5 +1,5 @@
 /**
- * 콘텐츠 패키지 — teacher-style-v1 (contentVersion 3.0.1)
+ * 콘텐츠 패키지 — teacher-style-v1 (contentVersion 3.1.0)
  *
  * 2026-08-20 전면 개정. 검수안: docs/content/teacher-style-v1-revision.md
  *
@@ -22,9 +22,9 @@
 
 /** 강도 구간 — DEC-002b 확정값. 축당 10문항 × 최대 편차 2 = 최대 20점 */
 const intensityBands = [
-  { id: "balanced", label: "균형", minAbsScore: 0, maxAbsScore: 4 },
-  { id: "clear", label: "뚜렷", minAbsScore: 5, maxAbsScore: 12 },
-  { id: "strong", label: "매우 뚜렷", minAbsScore: 13, maxAbsScore: 20 },
+  { id: "balanced", label: "균형", minAbsScore: 0, maxAbsScore: 4, directional: false },
+  { id: "clear", label: "뚜렷", minAbsScore: 5, maxAbsScore: 12, directional: true },
+  { id: "strong", label: "매우 뚜렷", minAbsScore: 13, maxAbsScore: 20, directional: true },
 ];
 
 /**
@@ -76,7 +76,7 @@ const axes = [
   },
   {
     id: "axis-decision",
-    name: "결정할 때 딛는 발판",
+    name: "판단할 때 먼저 살피는 것",
     positive: {
       side: "positive",
       label: "기준을 먼저 세우는 원칙형",
@@ -126,47 +126,24 @@ const axes = [
 const axisCombinations = [
   {
     id: "combo-novelty",
-    title: "새로운 것을 대하는 태도",
+    title: "새로운 방법을 수업에 옮기는 방식",
     axisIds: ["axis-lens", "axis-rhythm"],
     readings: [
       {
         poles: { "axis-lens": "positive", "axis-rhythm": "positive" },
-        text: "새 방법을 들여올 때 먼저 준비물과 절차부터 확인하고, 언제 어디에 넣을지 정해 둔 다음 시작해요. 그래서 시도한 것이 흐지부지되는 일이 적고, 한 번 자리 잡으면 다음 해에도 그대로 쓸 수 있는 형태로 남습니다.",
+        text: "새 방법이 눈에 들어오면 필요한 준비물과 순서를 먼저 확인하고, 어느 수업에서 시도할지 정한 뒤 시작하는 편이에요. 구체적인 실행 조건이 갖춰졌을 때 움직이기 편할 수 있습니다.",
       },
       {
         poles: { "axis-lens": "positive", "axis-rhythm": "negative" },
-        text: "괜찮아 보이는 방법이 있으면 다음 수업에서 바로 한번 해 봅니다. 해 보고 남는 것으로 판단하기 때문에 결정이 빠르고, 아이들 반응이 시원찮으면 미련 없이 접는 편이에요.",
+        text: "바로 써 볼 수 있는 방법이 눈에 들어오면 작은 범위에서 먼저 시도하고, 아이들 반응을 보며 다음 방법을 정하는 편이에요. 시도 뒤에 짧게 기록해 두면 판단 근거를 남기기 좋습니다.",
       },
       {
         poles: { "axis-lens": "negative", "axis-rhythm": "positive" },
-        text: "새로운 것을 들여올 때 '이게 우리 반을 어디로 데려갈까'를 먼저 그려 보고, 그림이 그려지면 학기 계획 안에 자리를 만들어 둡니다. 시작은 느려 보여도 한번 시작하면 오래 갑니다.",
+        text: "새로운 방법이 우리 반의 배움과 어디로 이어질지를 먼저 그려 보고, 의미가 분명해지면 학기 흐름 안에 자리를 마련하는 편이에요. 방향과 첫 실행 단계를 함께 적어 두면 생각을 옮기기 편합니다.",
       },
       {
         poles: { "axis-lens": "negative", "axis-rhythm": "negative" },
-        text: "떠오른 생각을 그 자리에서 시도해 보는 편이라 교실에 새로운 장면이 자주 생깁니다. 벌여 놓은 것이 여럿일 때가 있어서, 학기 중간에 한 번 정리하는 시간을 두면 훨씬 편해져요.",
-      },
-    ],
-  },
-  {
-    id: "combo-friction",
-    title: "부딪힘을 다루는 방식",
-    axisIds: ["axis-energy", "axis-decision"],
-    readings: [
-      {
-        poles: { "axis-energy": "positive", "axis-decision": "positive" },
-        text: "문제가 생기면 관련된 사람을 모아 놓고 무엇이 어긋났는지를 그 자리에서 정리하는 편이에요. 논의가 빨리 끝나는 대신, 아직 말할 준비가 안 된 사람에게는 속도가 빠르게 느껴질 수 있습니다.",
-      },
-      {
-        poles: { "axis-energy": "positive", "axis-decision": "negative" },
-        text: "부딪힘이 생기면 먼저 사람을 찾아가 이야기를 들어 봅니다. 서로의 사정이 풀리면서 문제가 저절로 가라앉을 때가 많고, 대신 매듭을 언제 지을지는 스스로 정해 두는 편이 좋습니다.",
-      },
-      {
-        poles: { "axis-energy": "negative", "axis-decision": "positive" },
-        text: "곧바로 반응하기보다 혼자 상황을 정리한 뒤에 기준을 들고 이야기하는 편이에요. 말이 정확한 대신 시간이 걸려서, 상대에게 '생각 정리하고 내일 이야기하자'고 한마디 해 두면 오해가 줄어듭니다.",
-      },
-      {
-        poles: { "axis-energy": "negative", "axis-decision": "negative" },
-        text: "부딪힘을 안으로 오래 품는 편이라, 겉으로는 조용해 보여도 안에서는 그 사람의 사정을 계속 헤아리고 있어요. 혼자 삭이는 시간이 길어지면 지치니, 믿는 동료 한 명에게 털어놓는 통로를 만들어 두면 좋습니다.",
+        text: "수업의 새로운 가능성이 떠오르면 큰 방향을 두고 작은 시도를 시작하는 편이에요. 시도한 뒤 무엇을 이어 가고 무엇을 멈출지 정리하면 다음 선택이 더 분명해질 수 있습니다.",
       },
     ],
   },
@@ -228,13 +205,13 @@ export const teacherStyleV1Base = {
   title: "나의 교직 스타일 탐색",
   summary: "질문으로 살펴보는 나의 교실 운영 스타일",
   description:
-    "어디에서 힘을 얻고, 무엇이 먼저 눈에 들어오고, 무엇을 딛고 결정하고, 어떤 리듬으로 일을 굴리는지 네 가지 축으로 살펴봅니다. 맞고 틀린 답은 없고, 어느 쪽이 더 좋은 스타일인 것도 아니에요. 나와 동료가 서로 어떻게 다른지를 이야기해 보는 데 쓰시면 좋습니다.",
+    "어디에서 힘을 얻고, 무엇이 먼저 눈에 들어오며, 판단할 때 무엇을 먼저 살피고, 일을 어떤 순서와 방식으로 이어 가는지 네 가지 관점으로 살펴봅니다. 맞고 틀린 답은 없고, 어느 쪽이 더 좋은 스타일인 것도 아니에요. 나와 동료가 서로 어떻게 다른지를 이야기해 보는 데 쓰시면 좋습니다.",
   estimatedMinutes: 5,
   status: "published",
   // 축과 문항이 통째로 바뀌었습니다. 버전을 올려야 예전 응답이 조용히 섞이지 않고
   // "새로 시작" 안내를 받습니다 (architecture 7.3).
   assessmentVersion: 3,
-  contentVersion: "3.0.1",
+  contentVersion: "3.1.0",
   scale,
   axes,
   axisCombinations,
