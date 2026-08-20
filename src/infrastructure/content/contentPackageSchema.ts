@@ -75,6 +75,7 @@ const questionSchema = z.object({
   axisId: z.string().min(1).transform(toAxisId),
   polarity: z.union([z.literal(1), z.literal(-1)]),
   weight: z.number().positive(),
+  context: z.string().min(1),
 });
 
 const sectionSchema = z.object({
@@ -142,6 +143,7 @@ const axisNarrativeReadingSchema = z.object({
 const axisResultNarrativeSchema = z.object({
   axisId: z.string().min(1).transform(toAxisId),
   readings: z.array(axisNarrativeReadingSchema).min(1),
+  counterEvidence: z.string().min(1),
 });
 
 const resultNarrativeSchema = z.object({
@@ -183,6 +185,11 @@ const localArtworkSchema = z.object({
   alt: z.literal(""),
 });
 
+const responseScaleGuideItemSchema = z.object({
+  value: z.number().int(),
+  criterion: z.string().min(1),
+});
+
 const presentationSchema = z.object({
   version: z.literal(1),
   palette: z.object({
@@ -199,6 +206,7 @@ const presentationSchema = z.object({
       artwork: localArtworkSchema,
     }),
   ),
+  responseScaleGuide: z.array(responseScaleGuideItemSchema).optional(),
 });
 
 /**
@@ -528,13 +536,17 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
             (text, index) =>
               [`resultNarrative.balancedGuidance.talkingPoints.${index}`, text] as const,
           ),
-          ...definition.resultNarrative.axes.flatMap((axis) =>
-            axis.readings.flatMap((reading, index) => [
+          ...definition.resultNarrative.axes.flatMap((axis) => [
+            [
+              `resultNarrative.${String(axis.axisId)}.counterEvidence`,
+              axis.counterEvidence,
+            ] as const,
+            ...axis.readings.flatMap((reading, index) => [
               [`resultNarrative.${String(axis.axisId)}.${index}.headline`, reading.headline] as const,
               [`resultNarrative.${String(axis.axisId)}.${index}.summary`, reading.summary] as const,
               [`resultNarrative.${String(axis.axisId)}.${index}.rhythm`, reading.rhythm] as const,
             ]),
-          ),
+          ]),
         ]),
     ...definition.axisCombinations.flatMap((combination) => [
       [`axisCombinations.${combination.id}.title`, combination.title] as const,
@@ -599,14 +611,38 @@ export function parseAssessmentContentPackage(
 
   const expectedSectionIds = definition.value.sections.map((section) => String(section.id));
   const artworkSectionIds = presentation.sectionArtwork.map((item) => String(item.sectionId));
+  const responseScaleGuide = presentation.responseScaleGuide;
   const duplicates = findDuplicates(artworkSectionIds);
   const missing = expectedSectionIds.filter((id) => !artworkSectionIds.includes(id));
   const unknown = artworkSectionIds.filter((id) => !expectedSectionIds.includes(id));
+
+  const responseValues = definition.value.scale.options.map((option) => option.value);
+  const guideValues = responseScaleGuide?.map((item) => item.value) ?? [];
+  const duplicateGuideValues = findDuplicates(guideValues.map(String));
+  const missingGuideValues = responseScaleGuide === undefined
+    ? []
+    : responseValues.filter((value) => !guideValues.includes(value));
+  const unknownGuideValues = responseScaleGuide === undefined
+    ? []
+    : guideValues.filter((value) => !responseValues.includes(value));
+  const forbiddenGuide = responseScaleGuide?.find((item) => hasForbiddenTerm(item.criterion));
 
   const issues = [
     duplicates.length > 0 ? `presentation sectionId가 중복됩니다: ${duplicates.join(", ")}` : "",
     missing.length > 0 ? `presentation에 빠진 sectionId가 있습니다: ${missing.join(", ")}` : "",
     unknown.length > 0 ? `presentation이 없는 sectionId를 가리킵니다: ${unknown.join(", ")}` : "",
+    duplicateGuideValues.length > 0
+      ? `presentation.responseScaleGuide value가 중복됩니다: ${duplicateGuideValues.join(", ")}`
+      : "",
+    missingGuideValues.length > 0
+      ? `presentation.responseScaleGuide에 빠진 응답값이 있습니다: ${missingGuideValues.join(", ")}`
+      : "",
+    unknownGuideValues.length > 0
+      ? `presentation.responseScaleGuide가 없는 응답값을 가리킵니다: ${unknownGuideValues.join(", ")}`
+      : "",
+    forbiddenGuide === undefined
+      ? ""
+      : `presentation.responseScaleGuide.${forbiddenGuide.value}에 노출 금지 표현이 있습니다.`,
   ].filter(Boolean);
 
   if (issues.length > 0) {

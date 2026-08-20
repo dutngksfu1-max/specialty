@@ -32,6 +32,12 @@ export interface LocalArtwork {
   readonly alt: "";
 }
 
+/** 검사 소개에서만 쓰는 척도별 판단 기준입니다. 채점·세션 모델에는 포함하지 않습니다. */
+export interface ResponseScaleGuideItem {
+  readonly value: number;
+  readonly criterion: string;
+}
+
 export interface AssessmentPresentation {
   readonly version: 1;
   readonly palette: AssessmentPalette;
@@ -40,6 +46,8 @@ export interface AssessmentPresentation {
     readonly sectionId: SectionId;
     readonly artwork: LocalArtwork;
   }[];
+  /** 제공하면 소개 화면에서 각 응답 라벨과 함께 표시합니다. */
+  readonly responseScaleGuide?: readonly ResponseScaleGuideItem[];
 }
 
 export const DEFAULT_ASSESSMENT_PALETTE: AssessmentPalette = {

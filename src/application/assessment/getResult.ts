@@ -4,6 +4,10 @@ import {
 } from "@/domain/assessment/errors/assessmentError";
 import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
 import type { ResultProfile } from "@/domain/assessment/result/profile";
+import {
+  computeSignals,
+  type AssessmentSignals,
+} from "@/domain/assessment/result/signals";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 import { err, ok, type Result } from "@/domain/shared/result";
 
@@ -17,6 +21,14 @@ export interface GetResultOutput {
   readonly definition: AssessmentDefinition;
   readonly snapshot: ResultSnapshot;
   readonly profile: ResultProfile;
+  /**
+   * 응답에서 뽑은 신호 (docs/PRD-result-v2.md 4장).
+   *
+   * 스냅샷에 저장하지 않고 **읽을 때마다 원본 응답에서 다시 계산**합니다.
+   * 계산 방법을 개선하면 예전 결과도 함께 좋아지고, 스냅샷 형식을 바꿀 일이 없습니다.
+   * 응답이 지워졌으면 `undefined`입니다 — 신호 없이도 결과는 보여야 합니다.
+   */
+  readonly signals?: AssessmentSignals;
 }
 
 /**
@@ -61,5 +73,10 @@ export async function getResult(
     );
   }
 
-  return ok({ definition, snapshot, profile });
+  // 응답은 검사를 마친 뒤에도 남아 있습니다 (재검사할 때만 지웁니다 — DEC-010).
+  // 불러오지 못하더라도 결과 자체는 보여 줘야 하므로 오류로 만들지 않습니다.
+  const responses = await deps.repository.loadResponses(snapshot.sessionId);
+  const signals = responses.ok ? computeSignals(definition, responses.value) : undefined;
+
+  return ok({ definition, snapshot, profile, signals });
 }

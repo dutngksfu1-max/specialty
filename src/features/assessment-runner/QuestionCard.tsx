@@ -31,8 +31,8 @@ export function QuestionCard({
           isMissing && "border-status-warning",
         )}
       >
-        <legend className="float-left w-full px-4 pt-5 sm:px-6 sm:pt-6">
-          <span className="flex w-full min-w-0 items-start gap-3 border-b border-border pb-5 text-body-lg text-foreground-body sm:text-body-lg-desktop">
+        <legend className="float-left w-full px-5 pt-3.5 sm:px-6 sm:pt-4">
+          <span className="flex w-full min-w-0 items-start gap-3 border-b border-border pb-4 text-body-lg text-foreground-body sm:text-body-lg-desktop">
             <span className="inline-flex min-w-8 shrink-0 items-center justify-center rounded-xs border border-primary-soft-border bg-primary-soft px-1.5 py-1 text-caption font-bold tabular-nums text-primary-active">
               {String(question.order).padStart(2, "0")}
             </span>
@@ -40,7 +40,7 @@ export function QuestionCard({
           </span>
         </legend>
 
-        <div className="clear-both px-2 pt-4 pb-5 sm:px-6 sm:pt-5 sm:pb-6">
+        <div className="clear-both px-3 pt-3 pb-3.5 sm:px-6 sm:pt-4 sm:pb-4">
           {isMissing && (
             <p id={errorId} className="mb-3 flex items-center gap-2 text-caption font-semibold text-status-danger">
               <span aria-hidden="true" className="size-1.5 rounded-full bg-status-danger" />

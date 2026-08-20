@@ -607,6 +607,7 @@ resultKey  는 저장 호환을 위해 defaultPole을 포함해 정상적으로 
   노출이 금지된 표현이 없는가 (AGENTS.md 1.1)
 - 선택형 presentation의 색이 등록 토큰인가 / 그림이 `/assessments/...` 로컬 경로인가
 - presentation이 있으면 모든 sectionId의 그림이 중복·누락 없이 존재하는가
+- presentation의 선택형 `responseScaleGuide`가 있으면 모든 응답 value를 중복·누락 없이 한 번씩 참조하는가
 실패 시 → INVALID_CONTENT_PACKAGE
 
 - 축별 문항 수가 균등한가 / 축마다 polarity 가 반반인가

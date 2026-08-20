@@ -31,6 +31,8 @@ export const ResultShareCard = forwardRef<
 >(function ResultShareCard({ definition, snapshot, profile, nickname }, ref) {
   const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
   const narrative = resolveResultNarrative(definition, snapshot.score.axisScores, profile);
+  const narrativeById = new Map(narrative.axes.map((item) => [String(item.axisId), item]));
+  const resultOwner = nickname.trim().endsWith("님") ? nickname.trim() : `${nickname.trim()} 님`;
 
   return (
     <div
@@ -82,7 +84,7 @@ export const ResultShareCard = forwardRef<
       )}
 
       <p style={{ marginTop: 32, fontSize: 26, color: "var(--color-foreground-subtle)" }}>
-        {nickname} 님의 결과
+        {resultOwner}의 결과
       </p>
 
       <h2
@@ -127,7 +129,12 @@ export const ResultShareCard = forwardRef<
               key={String(score.axisId)}
               style={{ borderBottom: "1px solid var(--color-border)" }}
             >
-              <AxisBar axis={axis} score={score} variant="share" />
+              <AxisBar
+                axis={axis}
+                score={score}
+                intensityBandId={narrativeById.get(String(score.axisId))?.reading.intensityBandId}
+                variant="share"
+              />
             </div>
           );
         })}

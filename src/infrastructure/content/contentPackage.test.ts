@@ -49,12 +49,12 @@ describe("fixture 콘텐츠 패키지", () => {
     if (!parsed.ok) throw new Error("검증 실패");
     const definition = parsed.value;
 
-    expect(definition.questions).toHaveLength(40);
+    expect(definition.questions).toHaveLength(48);
     expect(definition.axes).toHaveLength(4);
 
     for (const axis of definition.axes) {
       const axisQuestions = definition.questions.filter((q) => q.axisId === axis.id);
-      expect(axisQuestions).toHaveLength(10);
+      expect(axisQuestions).toHaveLength(12);
     }
   });
 
@@ -64,8 +64,8 @@ describe("fixture 콘텐츠 패키지", () => {
 
     for (const axis of definition.axes) {
       const axisQuestions = definition.questions.filter((q) => q.axisId === axis.id);
-      expect(axisQuestions.filter((q) => q.polarity === 1)).toHaveLength(5);
-      expect(axisQuestions.filter((q) => q.polarity === -1)).toHaveLength(5);
+      expect(axisQuestions.filter((q) => q.polarity === 1)).toHaveLength(6);
+      expect(axisQuestions.filter((q) => q.polarity === -1)).toHaveLength(6);
     }
   });
 
@@ -75,7 +75,7 @@ describe("fixture 콘텐츠 패키지", () => {
 
     for (const section of definition.sections) {
       const sectionQuestions = definition.questions.filter((q) => q.sectionId === section.id);
-      expect(sectionQuestions).toHaveLength(10);
+      expect(sectionQuestions).toHaveLength(12);
       const axesInSection = new Set(sectionQuestions.map((q) => String(q.axisId)));
       expect(axesInSection.size).toBeGreaterThan(1);
     }
@@ -329,6 +329,7 @@ describe("StaticAssessmentCatalog", () => {
     expect(presentation?.version).toBe(1);
     expect(presentation?.heroArtwork.src).toMatch(/^\/assessments\//);
     expect(presentation?.sectionArtwork).toHaveLength(4);
+    expect(presentation?.responseScaleGuide).toHaveLength(5);
   });
 
   it("프레젠테이션이 없는 패키지도 기본 테마 대상으로 정상 로드합니다", () => {
@@ -388,5 +389,18 @@ describe("검사 프레젠테이션 무결성", () => {
     );
     expect(detail).toContain("중복");
     expect(detail).toContain("빠진 sectionId");
+  });
+
+  it("응답 척도 판단 기준의 중복·누락을 거부합니다", () => {
+    const detail = expectInvalidPackage(
+      broken((draft) => {
+        const presentation = draft.presentation as Record<string, unknown>;
+        const guide = presentation.responseScaleGuide as Record<string, unknown>[];
+        const first = guide[0];
+        const second = guide[1];
+        if (first !== undefined && second !== undefined) second.value = first.value;
+      }),
+    );
+    expect(detail).toContain("responseScaleGuide");
   });
 });

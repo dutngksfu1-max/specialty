@@ -33,7 +33,7 @@ export const SITE_URL =
 /** DEC-027 초안 — Hero */
 export const HERO = {
   title: "나를 닮은 교직 스타일을 찾아보세요",
-  subtitle: "40문항 · 약 10분 · 가입 없이 브라우저에서 바로 참여할 수 있어요.",
+  subtitle: "48문항 · 약 12분 · 가입 없이 브라우저에서 바로 참여할 수 있어요.",
 } as const;
 
 /**
@@ -63,7 +63,7 @@ export const UPCOMING_ASSESSMENTS = [
 export const FAQ = [
   {
     question: "얼마나 걸리나요?",
-    answer: "40문항이고 보통 10분 안팎이 걸려요. 4개 챕터로 나뉘어 있어 중간에 쉬어 가도 됩니다.",
+    answer: "48문항이고 보통 12분 안팎이 걸려요. 4개 챕터로 나뉘어 있어 중간에 쉬어 가도 됩니다.",
   },
   {
     question: "제 응답이 서버에 저장되나요?",

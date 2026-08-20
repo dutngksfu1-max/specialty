@@ -1,5 +1,5 @@
 /**
- * 콘텐츠 패키지 — teacher-style-v1 (contentVersion 3.1.0)
+ * 콘텐츠 패키지 — teacher-style-v1 (contentVersion 4.0.0)
  *
  * 2026-08-20 전면 개정. 검수안: docs/content/teacher-style-v1-revision.md
  *
@@ -20,11 +20,31 @@
  *   - 기존 성격유형 검사의 명칭·유형 코드·축 이름을 쓰지 않는다 (AGENTS.md 1.1)
  */
 
-/** 강도 구간 — DEC-002b 확정값. 축당 10문항 × 최대 편차 2 = 최대 20점 */
+/**
+ * 강도 구간 — 5구간 (DEC-047 · DEC-048)
+ *
+ * 축당 12문항 × 최대 편차 2 = 최대 24점입니다.
+ *
+ * **균형 구간 0~5는 방향을 단정할지 말지를 가르는 안전장치입니다**(DEC-046).
+ * 그래서 이 경계만은 범위 대비 비율(0~20%)을 그대로 유지하고, 방향이 정해진
+ * 나머지 구간만 넷으로 쪼갭니다. 안전성은 그대로 두고 해상도만 올리는 방식입니다.
+ *
+ * **구간이 올라가면 확신이 아니라 구체성이 올라갑니다** (docs/PRD-result-v2.md 6.3).
+ * "확실히 그렇습니다"가 아니라 "몇 개의 장면에서 나타나는가"가 달라집니다.
+ * 검증 데이터 없이 5구간을 쓰는 것을 정당화하는 규율이므로, 문구를 고칠 때 반드시 지킵니다.
+ *
+ *   균형       0 ~ 5     방향을 정하지 않음
+ *   조금 뚜렷   6 ~ 10    한 장면에서 보임
+ *   뚜렷      11 ~ 14    여러 장면에서 비슷하게
+ *   강함      15 ~ 19    장면이 바뀌어도 같은 선택
+ *   매우 뚜렷  20 ~ 24    거의 모든 장면에서
+ */
 const intensityBands = [
-  { id: "balanced", label: "균형", minAbsScore: 0, maxAbsScore: 4, directional: false },
-  { id: "clear", label: "뚜렷", minAbsScore: 5, maxAbsScore: 12, directional: true },
-  { id: "strong", label: "매우 뚜렷", minAbsScore: 13, maxAbsScore: 20, directional: true },
+  { id: "balanced", label: "균형", minAbsScore: 0, maxAbsScore: 5, directional: false },
+  { id: "leaning", label: "조금 뚜렷", minAbsScore: 6, maxAbsScore: 10, directional: true },
+  { id: "clear", label: "뚜렷", minAbsScore: 11, maxAbsScore: 14, directional: true },
+  { id: "strong", label: "강함", minAbsScore: 15, maxAbsScore: 19, directional: true },
+  { id: "defining", label: "매우 뚜렷", minAbsScore: 20, maxAbsScore: 24, directional: true },
 ];
 
 /**
@@ -147,6 +167,121 @@ const axisCombinations = [
       },
     ],
   },
+  {
+    id: "combo-energy-decision",
+    title: "판단을 정리하는 자리",
+    axisIds: ["axis-energy", "axis-decision"],
+    readings: [
+      {
+        poles: { "axis-energy": "positive", "axis-decision": "positive" },
+        text: "결정할 일이 생기면 동료와 이야기하며 기준을 다듬어 가는 편이에요. 이야기 중에 정리된 기준은 회의 뒤 한 줄로 남겨 두면 다음에 같은 논의를 되풀이하지 않게 됩니다.",
+      },
+      {
+        poles: { "axis-energy": "positive", "axis-decision": "negative" },
+        text: "결정할 일이 생기면 관련된 사람들의 사정을 먼저 듣고 이야기 속에서 답을 찾아 가는 편이에요. 들은 이야기 가운데 무엇이 결정에 영향을 줬는지 남겨 두면 나중에 설명하기 쉬워집니다.",
+      },
+      {
+        poles: { "axis-energy": "negative", "axis-decision": "positive" },
+        text: "결정할 일이 생기면 혼자 기준을 정리한 뒤 꺼내 놓는 편이에요. 정리된 결론만 전하면 과정이 보이지 않을 수 있으니, 어떤 기준으로 판단했는지 함께 말해 두면 좋습니다.",
+      },
+      {
+        poles: { "axis-energy": "negative", "axis-decision": "negative" },
+        text: "결정할 일이 생기면 혼자 각자의 상황을 헤아려 본 뒤 답을 정하는 편이에요. 살펴본 사정이 밖에서는 보이지 않으므로, 왜 그렇게 정했는지 한마디 덧붙이면 오해가 줄어듭니다.",
+      },
+    ],
+  },
+  {
+    id: "combo-energy-lens",
+    title: "정보를 모으는 자리",
+    axisIds: ["axis-energy", "axis-lens"],
+    readings: [
+      {
+        poles: { "axis-energy": "positive", "axis-lens": "positive" },
+        text: "동료와 이야기를 나누며 구체적인 사실을 모으는 편이에요. 다만 들은 이야기와 직접 확인한 것이 섞이기 쉬우니, 중요한 판단 앞에서는 어디서 온 정보인지 한 번 갈라 두면 좋습니다.",
+      },
+      {
+        poles: { "axis-energy": "positive", "axis-lens": "negative" },
+        text: "동료와 이야기하다가 앞으로의 가능성이 떠오르는 편이에요. 떠오른 생각 옆에 '무엇부터 해 볼지'를 한 줄 붙여 두면 이야기로만 끝나지 않습니다.",
+      },
+      {
+        poles: { "axis-energy": "negative", "axis-lens": "positive" },
+        text: "혼자 자료와 기록을 살피며 사실을 확인하는 편이에요. 확인이 꼼꼼한 만큼 어디까지 보면 충분한지 정하기 어려울 때가 있으니, 시작 전에 확인의 범위를 정해 두면 수월합니다.",
+      },
+      {
+        poles: { "axis-energy": "negative", "axis-lens": "negative" },
+        text: "혼자 생각을 이어 가며 앞으로의 그림을 그리는 편이에요. 그린 그림을 중간에 한 번 꺼내 보면, 혼자 멀리 간 부분을 일찍 확인할 수 있습니다.",
+      },
+    ],
+  },
+  {
+    id: "combo-energy-rhythm",
+    title: "일을 시작하는 자리",
+    axisIds: ["axis-energy", "axis-rhythm"],
+    readings: [
+      {
+        poles: { "axis-energy": "positive", "axis-rhythm": "positive" },
+        text: "동료와 먼저 이야기해 순서를 맞춘 뒤 시작하는 편이에요. 맞춘 순서를 짧게 적어 두면 서로 기억이 다를 때 확인할 곳이 생깁니다.",
+      },
+      {
+        poles: { "axis-energy": "positive", "axis-rhythm": "negative" },
+        text: "동료와 이야기하며 그때그때 방법을 맞춰 가는 편이에요. 바뀐 내용을 한 곳에 모아 두면 나중에 합류한 사람도 흐름을 따라올 수 있습니다.",
+      },
+      {
+        poles: { "axis-energy": "negative", "axis-rhythm": "positive" },
+        text: "혼자 순서를 정리해 두고 시작하는 편이에요. 정리한 순서를 미리 나누면 동료가 자기 일정을 맞추기 쉬워집니다.",
+      },
+      {
+        poles: { "axis-energy": "negative", "axis-rhythm": "negative" },
+        text: "혼자 큰 방향만 잡고 상황에 맞춰 움직이는 편이에요. 지금 어디까지 왔는지 가끔 알리면, 함께 일하는 사람이 기다릴지 도울지 판단할 수 있습니다.",
+      },
+    ],
+  },
+  {
+    id: "combo-lens-decision",
+    title: "본 것을 판단으로 옮기는 자리",
+    axisIds: ["axis-lens", "axis-decision"],
+    readings: [
+      {
+        poles: { "axis-lens": "positive", "axis-decision": "positive" },
+        text: "확인한 사실을 정해 둔 기준에 비추어 판단하는 편이에요. 근거와 기준이 함께 있으면 설명이 분명해지지만, 기록에 남지 않은 사정이 빠질 수 있다는 점은 살펴볼 만합니다.",
+      },
+      {
+        poles: { "axis-lens": "positive", "axis-decision": "negative" },
+        text: "확인한 사실을 보되 그 아이가 놓인 상황을 함께 헤아리는 편이에요. 같은 사실에도 다르게 판단한 이유를 적어 두면, 나중에 스스로도 되짚어 보기 좋습니다.",
+      },
+      {
+        poles: { "axis-lens": "negative", "axis-decision": "positive" },
+        text: "앞으로의 흐름을 그린 뒤 기준에 맞춰 정리하는 편이에요. 그림과 기준 사이가 벌어질 때가 있으니, 지금 확인할 수 있는 사실을 한 번 짚어 보면 도움이 됩니다.",
+      },
+      {
+        poles: { "axis-lens": "negative", "axis-decision": "negative" },
+        text: "앞으로의 가능성과 각자의 사정을 함께 보며 판단하는 편이에요. 두 가지 모두 겉으로 잘 드러나지 않으므로, 판단의 이유를 말로 옮겨 두면 전달이 쉬워집니다.",
+      },
+    ],
+  },
+  {
+    id: "combo-decision-rhythm",
+    title: "정한 것을 실행으로 옮기는 자리",
+    axisIds: ["axis-decision", "axis-rhythm"],
+    readings: [
+      {
+        poles: { "axis-decision": "positive", "axis-rhythm": "positive" },
+        text: "기준을 세우고 순서를 정한 뒤 움직이는 편이에요. 준비가 갖춰졌을 때 힘이 나는 만큼, 예상 밖의 일이 생겼을 때 어디까지 조정할 수 있는지 미리 정해 두면 편합니다.",
+      },
+      {
+        poles: { "axis-decision": "positive", "axis-rhythm": "negative" },
+        text: "기준은 분명히 하되 방법은 상황에 맞춰 바꾸는 편이에요. 무엇이 바뀌지 않는 기준이고 무엇이 조정 가능한지 나눠 말하면 동료가 따라오기 쉽습니다.",
+      },
+      {
+        poles: { "axis-decision": "negative", "axis-rhythm": "positive" },
+        text: "각자의 사정을 살피되 진행은 정한 순서대로 이어 가는 편이에요. 사정을 반영해 순서를 바꿨다면 그 사실을 알려 두면 혼선이 줄어듭니다.",
+      },
+      {
+        poles: { "axis-decision": "negative", "axis-rhythm": "negative" },
+        text: "상황을 보며 판단도 방법도 함께 조정하는 편이에요. 두 가지가 동시에 움직이면 밖에서는 흐름이 보이지 않으므로, 다시 확인할 시점을 정해 두면 좋습니다.",
+      },
+    ],
+  },
 ];
 
 /**
@@ -206,12 +341,13 @@ export const teacherStyleV1Base = {
   summary: "질문으로 살펴보는 나의 교실 운영 스타일",
   description:
     "어디에서 힘을 얻고, 무엇이 먼저 눈에 들어오며, 판단할 때 무엇을 먼저 살피고, 일을 어떤 순서와 방식으로 이어 가는지 네 가지 관점으로 살펴봅니다. 맞고 틀린 답은 없고, 어느 쪽이 더 좋은 스타일인 것도 아니에요. 나와 동료가 서로 어떻게 다른지를 이야기해 보는 데 쓰시면 좋습니다.",
-  estimatedMinutes: 5,
+  // 48문항 기준. 이전에는 이 값(5)과 안내 문구(10분)가 서로 어긋나 있어 함께 맞췄습니다.
+  estimatedMinutes: 12,
   status: "published",
   // 축과 문항이 통째로 바뀌었습니다. 버전을 올려야 예전 응답이 조용히 섞이지 않고
   // "새로 시작" 안내를 받습니다 (architecture 7.3).
-  assessmentVersion: 3,
-  contentVersion: "3.1.0",
+  assessmentVersion: 4,
+  contentVersion: "4.0.0",
   scale,
   axes,
   axisCombinations,

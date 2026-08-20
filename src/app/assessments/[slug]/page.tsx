@@ -84,7 +84,11 @@ export default async function AssessmentIntroPage({ params }: PageProps<"/assess
             <StartAssessmentControls slug={definition.slug} />
           </div>
 
-          <AssessmentMapPanel axes={definition.axes} options={definition.scale.options} />
+          <AssessmentMapPanel
+            axes={definition.axes}
+            options={definition.scale.options}
+            responseScaleGuide={presentation?.responseScaleGuide}
+          />
         </section>
 
         <AnswerGuide />

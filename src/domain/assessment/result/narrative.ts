@@ -1,9 +1,11 @@
 import type {
   AssessmentDefinition,
   AxisNarrativeReading,
+  NarrativeDirection,
 } from "@/domain/assessment/model/definition";
 import type { ResultProfile } from "@/domain/assessment/result/profile";
 import type { AxisScore } from "@/domain/assessment/scoring/score";
+import { resolveIntensity } from "@/domain/assessment/scoring/scoring";
 import type { AxisId } from "@/domain/shared/ids";
 
 export interface ResolvedAxisNarrative {
@@ -11,6 +13,8 @@ export interface ResolvedAxisNarrative {
   readonly rawScore: number;
   readonly isDirectional: boolean;
   readonly reading: AxisNarrativeReading;
+  /** T3 반증 문구 — "이 설명이 안 맞는다면" (docs/PRD-result-v2.md 5장) */
+  readonly counterEvidence: string;
 }
 
 export interface ResolvedResultNarrative {
@@ -58,16 +62,17 @@ export function resolveResultNarrative(
     const narrativeAxis = spec.axes.find((candidate) => candidate.axisId === axis.id);
     if (score === undefined || narrativeAxis === undefined) return fallbackNarrative(profile);
 
-    const band = axis.intensityBands.find(
-      (candidate) => candidate.id === score.intensityBandId,
-    );
-    if (band === undefined) return fallbackNarrative(profile);
+    // 저장된 intensityBandId를 그대로 믿지 않고 rawScore로 다시 찾습니다.
+    // 구간 경계가 바뀐 뒤에도 예전 결과가 조용히 fallback으로 떨어지지 않게 하는 안전장치입니다.
+    // (docs/PRD-result-v2.md 6.4 — rawScore는 스냅샷에 그대로 보존됩니다)
+    const band = resolveIntensity(Math.abs(score.rawScore), axis.intensityBands);
 
-    const direction = score.direction;
+    // 정확히 0점이면 어느 쪽으로도 기울지 않았습니다. `direction`은 이때 axis.defaultPole이
+    // 되므로 그대로 쓰면 "한쪽에 조금 더 가깝다"고 잘못 말하게 됩니다 (DEC-046).
+    const direction: NarrativeDirection = score.isBalanced ? "balanced" : score.direction;
     const reading = narrativeAxis.readings.find(
       (candidate) =>
-        candidate.intensityBandId === score.intensityBandId &&
-        candidate.direction === direction,
+        candidate.intensityBandId === band.id && candidate.direction === direction,
     );
     if (reading === undefined) return fallbackNarrative(profile);
 
@@ -76,6 +81,7 @@ export function resolveResultNarrative(
       rawScore: score.rawScore,
       isDirectional: band.directional,
       reading,
+      counterEvidence: narrativeAxis.counterEvidence,
     });
   }
 

@@ -79,21 +79,23 @@ export function ActiveAssessmentCard({
     <section
       style={assessmentThemeVariables(assessment.presentation) as CSSProperties}
       className={cn(
-        "assessment-theme hero-enter min-w-0 max-w-full transition-all duration-300 hover:-translate-y-1 hover:shadow-elev-2",
+        "assessment-theme hero-enter min-w-0 max-w-full",
         featured
-          ? "assessment-card assessment-card-deck grid grid-cols-1 items-center gap-8 overflow-hidden p-4 sm:p-7 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:gap-14 lg:p-8"
+          ? "assessment-card assessment-card-deck grid grid-cols-1 items-center gap-7 overflow-hidden p-4 sm:p-7 lg:grid-cols-[minmax(0,1.06fr)_minmax(20rem,0.94fr)] lg:gap-10 lg:p-8"
           : "assessment-card flex h-full flex-col p-5",
       )}
     >
       <div className={cn("min-w-0", featured ? "order-2 lg:order-1" : "order-2 flex flex-1 flex-col pt-5")}>
-        <p className="flex items-center gap-2 text-label text-primary-active">
-          <span aria-hidden="true" className="h-px w-8 bg-accent" />
-          교직 스타일을 가볍게 발견하는 시간
-        </p>
+        <div className="flex items-center gap-3 text-primary-active">
+          <span aria-hidden="true" className="h-px w-8 shrink-0 bg-accent" />
+          <p className="text-label">교직 스타일을 가볍게 발견하는 시간</p>
+        </div>
         <h2
           className={cn(
             "mt-4 text-foreground",
-            featured ? "text-[2rem] leading-[1.18] font-bold tracking-[-0.025em] sm:text-[2.75rem]" : "text-h2",
+            featured
+              ? "text-[2rem] leading-[1.18] font-bold tracking-[-0.025em] sm:text-[2.5rem] lg:text-[2.625rem]"
+              : "text-h2",
           )}
         >
           {assessment.title}
@@ -103,27 +105,33 @@ export function ActiveAssessmentCard({
         </p>
 
         {featured && assessment.description !== undefined && (
-          <p className="mt-4 max-w-[34rem] border-l-2 border-accent-soft pl-4 text-body-sm text-foreground-muted">
-            {assessment.description}
-          </p>
+          <div className="mt-5 max-w-md border-y border-border py-4">
+            <p className="flex items-center gap-2 text-caption font-bold tracking-[0.08em] text-accent">
+              <Icon name="compass" className="size-4" />
+              이런 교직 장면을 살펴봐요
+            </p>
+            <p className="mt-3 text-body-sm text-foreground-muted">{assessment.description}</p>
+          </div>
         )}
 
-        {children !== undefined && <div className="mt-4 max-w-md">{children}</div>}
-
-        <dl className={cn("grid grid-cols-3 gap-2", featured ? "mt-5 max-w-md" : "mt-5")}>
-          <div className="assessment-mini-card p-3">
+        <dl className={cn("grid grid-cols-3 overflow-hidden rounded-md border border-border bg-background", featured ? "mt-4 max-w-md" : "mt-5")}>
+          <div className="p-3 sm:p-4">
             <dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="book" className="size-4" />문항</dt>
             <dd className="mt-1 text-label tabular-nums text-foreground">{assessment.questionCount}개</dd>
           </div>
-          <div className="assessment-mini-card p-3">
+          <div className="border-l border-border p-3 sm:p-4">
             <dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="layers" className="size-4" />챕터</dt>
             <dd className="mt-1 text-label tabular-nums text-foreground">{assessment.sectionCount}개</dd>
           </div>
-          <div className="assessment-mini-card p-3">
+          <div className="border-l border-border p-3 sm:p-4">
             <dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="clock" className="size-4" />시간</dt>
             <dd className="mt-1 text-label tabular-nums text-foreground">약 {assessment.estimatedMinutes}분</dd>
           </div>
         </dl>
+
+        {children !== undefined && (
+          <div className={cn("max-w-md", featured ? "mt-5 border-t border-border pt-5" : "mt-5")}>{children}</div>
+        )}
 
         {progress.kind === "outdated" && (
           <p className="mt-5 flex gap-2 text-body-sm text-foreground-body" aria-live="polite">
@@ -132,21 +140,21 @@ export function ActiveAssessmentCard({
           </p>
         )}
 
-        <div className={cn("flex flex-col gap-3 sm:flex-row", featured ? "mt-7" : "mt-auto pt-6")}>
+        <div className={cn("flex max-w-md flex-col gap-3 sm:flex-row", featured ? "mt-1" : "mt-auto pt-6")}>
           {isResumable && progress.kind === "inProgress" ? (
             <>
               <Link
                 href={`/assessments/${assessment.slug}/run/${progress.nextSectionOrder}`}
-                className={buttonClasses("primary", "lg")}
+                className={buttonClasses("primary", "lg", featured ? "w-full sm:w-auto" : undefined)}
               >
                 이어서 하기 <Icon name="arrow-right" />
               </Link>
-              <Link href={`/assessments/${assessment.slug}`} className={buttonClasses("secondary", "lg")}>
+              <Link href={`/assessments/${assessment.slug}`} className={buttonClasses("secondary", "lg", featured ? "w-full sm:w-auto" : undefined)}>
                 검사 소개
               </Link>
             </>
           ) : (
-            <Link href={`/assessments/${assessment.slug}`} className={buttonClasses("primary", "lg")}>
+            <Link href={`/assessments/${assessment.slug}`} className={buttonClasses("primary", "lg", featured ? "w-full sm:w-auto" : undefined)}>
               검사 살펴보기 <Icon name="arrow-right" />
             </Link>
           )}

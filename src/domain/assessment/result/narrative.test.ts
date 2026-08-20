@@ -36,6 +36,62 @@ function scores(rawScores: readonly number[]): readonly AxisScore[] {
   });
 }
 
+/**
+ * 정확히 0점 — DEC-046
+ *
+ * "정확히 0점일 때에만 양쪽 점수가 같다고 설명합니다."
+ *
+ * `AxisScore.direction`은 0점일 때 `axis.defaultPole`이 됩니다. 그대로 쓰면
+ * 기울지 않은 사람에게 "한쪽에 조금 더 가깝다"고 말하게 되므로, `isBalanced`를 봅니다.
+ */
+describe("정확히 0점일 때는 한쪽으로 기울여 말하지 않습니다", () => {
+  function zeroScores(): readonly AxisScore[] {
+    const { definition } = loadDefinition();
+    return definition.axes.map((axis) => ({
+      axisId: axis.id,
+      rawScore: 0,
+      minScore: -24,
+      maxScore: 24,
+      normalized: 0.5,
+      direction: axis.defaultPole,
+      isBalanced: true,
+      intensityBandId: "balanced",
+    }));
+  }
+
+  it("0점이면 balanced 방향 문구를 씁니다", () => {
+    const { definition, profile } = loadDefinition();
+    const result = resolveResultNarrative(definition, zeroScores(), profile);
+
+    expect(result.axes).toHaveLength(definition.axes.length);
+    for (const axis of result.axes) {
+      expect(axis.reading.direction, String(axis.axisId)).toBe("balanced");
+    }
+  });
+
+  it("0점 문구는 한쪽에 더 가깝다고 말하지 않습니다", () => {
+    const { definition, profile } = loadDefinition();
+    const result = resolveResultNarrative(definition, zeroScores(), profile);
+
+    for (const axis of result.axes) {
+      const joined = `${axis.reading.headline} ${axis.reading.summary} ${axis.reading.rhythm}`;
+      expect(joined, String(axis.axisId)).not.toMatch(/더 가까|쪽에 가까/);
+      expect(joined, String(axis.axisId)).toMatch(/비슷하게/);
+    }
+  });
+
+  it("0이 아닌 균형 점수는 작은 기울기를 보여 줍니다", () => {
+    const { definition, profile } = loadDefinition();
+    // 균형 구간(0~5) 안이지만 0은 아닌 점수
+    const result = resolveResultNarrative(definition, scores([3, -3, 3, -3]), profile);
+
+    for (const axis of result.axes) {
+      expect(axis.reading.direction, String(axis.axisId)).not.toBe("balanced");
+      expect(axis.reading.summary, String(axis.axisId)).toMatch(/조금 더 가까워요/);
+    }
+  });
+});
+
 describe("강도·균형을 반영한 결과 서술", () => {
   it("모든 축이 균형 구간이어도 산출된 종합 교직 스타일을 전달합니다", () => {
     const { definition, profile } = loadDefinition();
@@ -63,5 +119,42 @@ describe("강도·균형을 반영한 결과 서술", () => {
 
     expect(result.axes).toHaveLength(definition.axes.length);
     expect(result.rhythm.match(/\./g)?.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+/**
+ * 구간 경계가 바뀐 뒤에도 예전 결과가 살아 있어야 합니다 (docs/PRD-result-v2.md 6.4)
+ *
+ * `intensityBandId`는 스냅샷 안에 저장됩니다. 경계가 바뀌면 그 값이 현재 구간표와
+ * 맞지 않게 되는데, 이때 조용히 fallback으로 떨어지면 예전 결과가 통째로 밋밋해집니다.
+ * 보존된 `rawScore`로 다시 찾으므로 그런 일이 없어야 합니다.
+ */
+describe("저장된 구간 id가 낡아도 결과가 살아 있습니다", () => {
+  /** 스냅샷에 남아 있을 법한, 지금은 존재하지 않는 구간 id를 심습니다. */
+  function withStaleBandIds(axisScores: readonly AxisScore[]): readonly AxisScore[] {
+    return axisScores.map((score) => ({ ...score, intensityBandId: "구간이-사라짐" }));
+  }
+
+  it("낡은 구간 id를 무시하고 rawScore로 다시 읽습니다", () => {
+    const { definition, profile } = loadDefinition();
+    const fresh = resolveResultNarrative(definition, scores([-8, 9, 16, -16]), profile);
+    const stale = resolveResultNarrative(
+      definition,
+      withStaleBandIds(scores([-8, 9, 16, -16])),
+      profile,
+    );
+
+    // fallback으로 떨어졌다면 axes가 비어 있습니다.
+    expect(stale.axes).toHaveLength(definition.axes.length);
+    expect(stale.axes.map((axis) => axis.reading.rhythm)).toEqual(
+      fresh.axes.map((axis) => axis.reading.rhythm),
+    );
+  });
+
+  it("균형 판정도 저장된 값이 아니라 rawScore를 따릅니다", () => {
+    const { definition, profile } = loadDefinition();
+    const stale = resolveResultNarrative(definition, withStaleBandIds(scores([0, 0, 0, 0])), profile);
+
+    expect(stale.balancedAxisIds.size).toBe(definition.axes.length);
   });
 });

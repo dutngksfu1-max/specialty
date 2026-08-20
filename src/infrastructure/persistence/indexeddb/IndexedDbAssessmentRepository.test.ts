@@ -224,7 +224,7 @@ describe("저장소를 IndexedDB로 바꿔도 유스케이스는 그대로입니
     expect(resumed.ok).toBe(true);
     if (!resumed.ok) return;
     expect(resumed.value.responses).toHaveLength(10);
-    expect(resumed.value.unanswered).toHaveLength(30);
+    expect(resumed.value.unanswered).toHaveLength(38);
     expect(resumed.value.session.nickname).toBe("테스트");
   });
 

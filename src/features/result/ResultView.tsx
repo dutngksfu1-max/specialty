@@ -8,6 +8,7 @@ import { buttonClasses } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
 import type { ResultProfile } from "@/domain/assessment/result/profile";
+import type { AssessmentSignals } from "@/domain/assessment/result/signals";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 import { displayNickname } from "@/domain/assessment/session/nickname";
 import { NicknameEditor } from "@/features/result/NicknameEditor";
@@ -22,6 +23,7 @@ interface Loaded {
   readonly definition: AssessmentDefinition;
   readonly snapshot: ResultSnapshot;
   readonly profile: ResultProfile;
+  readonly signals?: AssessmentSignals;
 }
 
 type State =
@@ -84,7 +86,7 @@ export function ResultView({ slug }: { readonly slug: string }) {
     );
   }
 
-  const { definition, snapshot, profile } = state.loaded;
+  const { definition, snapshot, profile, signals } = state.loaded;
 
   return (
     <>
@@ -94,6 +96,7 @@ export function ResultView({ slug }: { readonly slug: string }) {
           snapshot={snapshot}
           profile={profile}
           nickname={nickname}
+          signals={signals}
         />
 
         <section className="mt-14 rounded-lg border border-border bg-surface p-5 sm:p-7 lg:flex lg:items-end lg:justify-between lg:gap-8">

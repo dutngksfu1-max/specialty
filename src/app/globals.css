@@ -43,6 +43,27 @@
   --color-clay-600: oklch(0.660 0.115 62);
   --color-clay-700: oklch(0.560 0.105 55);
 
+  /* Perspective — 「나의 교직 스타일 탐색」의 네 관점 보조색.
+     결과·상태의 의미를 나타내지 않으며 카드의 시각적 구분에만 사용합니다. */
+  --color-perspective-sprout: oklch(0.460 0.065 152);
+  --color-perspective-ochre: oklch(0.530 0.090 80);
+  --color-perspective-berry: oklch(0.500 0.075 18);
+  --color-perspective-slate: oklch(0.430 0.055 240);
+
+  /* Result chart — docs/codex-brief-result-ui.md에서 검증 완료된 값.
+     네 축은 같은 발산 쌍을 쓰고, 정체성은 라벨·위치·형태로 구분합니다. */
+  --color-chart-negative: #00713e;
+  --color-chart-positive: #c06f0a;
+  --color-chart-neutral: var(--color-sand-300);
+  --color-chart-sequential-1: #8cb395;
+  --color-chart-sequential-2: #5d996e;
+  --color-chart-sequential-3: #307e4b;
+  --color-chart-sequential-4: #00612c;
+  --color-chart-overlay-1: #00682e;
+  --color-chart-overlay-2: #da950b;
+  --color-chart-overlay-3: #ae4090;
+  --color-chart-overlay-4: #2580c1;
+
   /* Status — 테마색과 구분되도록 채도를 높게. 항상 아이콘·텍스트와 함께 사용 */
   --color-status-success: oklch(0.585 0.135 148);
   --color-status-warning: oklch(0.740 0.140 78);
@@ -148,11 +169,13 @@
   --text-label--font-weight: 600;
 
   /* ---------- Radius (design.md 5) --------------------------------------- */
+  --radius-none: 0px;
   --radius-xs: 6px;
   --radius-sm: 10px;
   --radius-md: 12px;
   --radius-lg: 18px;
   --radius-hero: 28px;
+  --radius-full: 9999px;
 
   /* ---------- Elevation (design.md 6) — 그림자 색은 웜 뉴트럴 ------------- */
   --shadow-elev-1: 0 1px 2px oklch(0.30 0.02 90 / 0.06);
@@ -255,6 +278,86 @@
     background: color-mix(in oklch, var(--color-surface), var(--color-primary-soft) 12%);
   }
 
+  .assessment-perspective-card {
+    --perspective-strong: var(--color-perspective-sprout);
+    --perspective-surface: color-mix(in oklch, var(--perspective-strong), white 90%);
+    --perspective-border: color-mix(in oklch, var(--perspective-strong), white 46%);
+    --perspective-chip: color-mix(in oklch, var(--perspective-strong), white 80%);
+    position: relative;
+    min-width: 0;
+    border: 1px solid var(--perspective-border);
+    border-radius: var(--radius-md);
+    background: var(--perspective-surface);
+    box-shadow:
+      inset 3px 0 0 var(--perspective-border),
+      inset 0 1px 0 color-mix(in oklch, white, var(--perspective-surface) 50%);
+  }
+
+  .assessment-perspective-card--energy {
+    --perspective-strong: var(--color-perspective-sprout);
+  }
+
+  .assessment-perspective-card--lens {
+    --perspective-strong: var(--color-perspective-ochre);
+  }
+
+  .assessment-perspective-card--decision {
+    --perspective-strong: var(--color-perspective-berry);
+  }
+
+  .assessment-perspective-card--rhythm {
+    --perspective-strong: var(--color-perspective-slate);
+  }
+
+  .assessment-perspective-icon {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border: 1px solid var(--perspective-border);
+    border-radius: var(--radius-xs);
+    background: var(--perspective-chip);
+    color: var(--perspective-strong);
+  }
+
+  .assessment-perspective-number,
+  .assessment-perspective-pole {
+    color: var(--perspective-strong);
+  }
+
+  .assessment-perspective-line {
+    height: 0.25rem;
+    flex: 1;
+    border-radius: var(--radius-full);
+    background: color-mix(in oklch, var(--perspective-strong), white 55%);
+  }
+
+  .assessment-perspective-marker {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: var(--radius-full);
+    background: var(--perspective-strong);
+    box-shadow: 0 0 0 2px var(--perspective-surface);
+  }
+
+  .assessment-perspective-card--energy .assessment-perspective-marker {
+    border-radius: var(--radius-xs);
+  }
+
+  .assessment-perspective-card--lens .assessment-perspective-marker {
+    border-radius: var(--radius-full);
+  }
+
+  .assessment-perspective-card--decision .assessment-perspective-marker {
+    border-radius: var(--radius-none);
+    transform: rotate(45deg);
+  }
+
+  .assessment-perspective-card--rhythm .assessment-perspective-marker {
+    border-radius: var(--radius-xs);
+    transform: scaleY(1.6);
+  }
+
   .assessment-rule {
     height: 1px;
     background: linear-gradient(
@@ -262,6 +365,187 @@
       var(--color-accent) 0 2.5rem,
       var(--color-border) 2.5rem 100%
     );
+  }
+
+  /* Result data visualizations (Phase D) */
+  .result-axis-track {
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in oklch, var(--color-chart-negative), white 82%) 0 50%,
+        color-mix(in oklch, var(--color-chart-positive), white 82%) 50% 100%
+      );
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  }
+
+  .result-axis-balanced-zone {
+    border-inline: 1px solid var(--color-border-strong);
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--color-chart-neutral) 0 0.25rem,
+        var(--color-sand-200) 0.25rem 0.5rem
+      );
+  }
+
+  .result-axis-fill[data-direction="negative"] {
+    background: var(--color-chart-negative);
+  }
+
+  .result-axis-fill[data-direction="positive"] {
+    background: var(--color-chart-positive);
+  }
+
+  .result-axis-marker {
+    background: var(--color-chart-neutral);
+    border-radius: var(--radius-xs);
+    box-shadow: 0 0 0 1px var(--color-border-strong);
+  }
+
+  .result-axis-marker[data-direction="negative"] {
+    background: var(--color-chart-negative);
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+
+  .result-axis-marker[data-direction="positive"] {
+    background: var(--color-chart-positive);
+  }
+
+  .result-axis-marker[data-direction="balanced"] {
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--color-sand-300) 0 0.2rem,
+        var(--color-sand-100) 0.2rem 0.4rem
+      );
+  }
+
+  .result-confidence[data-confidence="high"] {
+    border-color: color-mix(in oklch, var(--color-chart-sequential-3), white 58%);
+    background: color-mix(in oklch, var(--color-chart-sequential-1), white 72%);
+    color: var(--color-chart-sequential-4);
+  }
+
+  .result-confidence[data-confidence="medium"] {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface-muted);
+    color: var(--color-foreground-body);
+  }
+
+  .result-confidence[data-confidence="low"] {
+    border-color: color-mix(in oklch, var(--color-chart-positive), white 55%);
+    background: color-mix(in oklch, var(--color-chart-positive), white 88%);
+    color: color-mix(in oklch, var(--color-chart-positive), black 24%);
+  }
+
+  .result-consistency-segment[data-active="false"] {
+    background: var(--color-surface-inset);
+  }
+
+  .result-consistency-segment[data-active="true"][data-level="1"] {
+    background: var(--color-chart-sequential-1);
+  }
+
+  .result-consistency-segment[data-active="true"][data-level="2"] {
+    background: var(--color-chart-sequential-2);
+  }
+
+  .result-consistency-segment[data-active="true"][data-level="3"] {
+    background: var(--color-chart-sequential-4);
+  }
+
+  .result-ranking-fill {
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--color-chart-sequential-3) 0 0.3rem,
+        var(--color-chart-sequential-4) 0.3rem 0.6rem
+      );
+  }
+
+  .result-context-chart::before {
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    height: 0.5rem;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-inset);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    content: "";
+    transform: translateY(-50%);
+  }
+
+  .result-context-connector {
+    top: 50%;
+    left: var(--context-connector-left);
+    width: var(--context-connector-width);
+    height: 0.5rem;
+    background: var(--color-chart-sequential-2);
+    transform: translateY(-50%);
+  }
+
+  .result-context-zero {
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 50%;
+    width: 1px;
+    background: var(--color-border-strong);
+  }
+
+  .result-context-marker {
+    top: 50%;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 2px solid var(--color-surface);
+    background: var(--color-chart-sequential-4);
+    box-shadow: 0 0 0 1px var(--color-chart-sequential-4);
+    transform: translate(-50%, -50%);
+  }
+
+  .result-context-marker[data-kind="low"] {
+    left: var(--context-low);
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+
+  .result-context-marker[data-kind="high"] {
+    left: var(--context-high);
+    border-radius: var(--radius-xs);
+  }
+
+  .result-response-extreme {
+    width: var(--response-extreme);
+    background: var(--color-chart-sequential-4);
+  }
+
+  .result-response-middle {
+    width: var(--response-middle);
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--color-chart-sequential-1) 0 0.25rem,
+        color-mix(in oklch, var(--color-chart-sequential-1), white 42%) 0.25rem 0.5rem
+      );
+  }
+
+  .result-quadrant {
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in oklch, var(--color-chart-negative), white 94%) 0 50%,
+        color-mix(in oklch, var(--color-chart-positive), white 94%) 50% 100%
+      );
+  }
+
+  .result-quadrant-point {
+    top: var(--quadrant-y);
+    left: var(--quadrant-x);
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--color-surface);
+    border-radius: var(--radius-xs);
+    background: var(--color-foreground);
+    box-shadow: 0 0 0 1px var(--color-foreground);
+    transform: translate(-50%, -50%);
   }
 }
 

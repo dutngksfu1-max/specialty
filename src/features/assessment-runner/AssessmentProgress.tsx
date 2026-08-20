@@ -50,7 +50,7 @@ export function AssessmentProgress({
   const percent = totalCount === 0 ? 0 : (answeredCount / totalCount) * 100;
 
   return (
-    <header className="border-b border-border bg-background">
+    <header data-assessment-progress className="border-b border-border bg-background">
       <div className="mx-auto max-w-(--container-survey) px-4 py-3 sm:px-6">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -82,9 +82,19 @@ export function AssessmentProgress({
           {Array.from({ length: sectionCount }, (_, index) => {
             const segmentStart = (index / sectionCount) * 100;
             const segmentFill = Math.max(0, Math.min(100, (percent - segmentStart) * sectionCount));
+            /* 챕터별 고유 색상 — perspective 토큰(design.md 2.2) 활용 */
+            const segmentColor = [
+              "var(--color-perspective-sprout)",
+              "var(--color-perspective-ochre)",
+              "var(--color-perspective-berry)",
+              "var(--color-perspective-slate)",
+            ][index % 4];
             return (
               <span key={index} className="overflow-hidden rounded-full bg-surface-inset">
-                <span className="block h-full rounded-full bg-primary transition-[width] duration-(--motion-base) ease-out-soft" style={{ width: `${segmentFill}%` }} />
+                <span
+                  className="block h-full rounded-full transition-[width] duration-(--motion-base) ease-out-soft"
+                  style={{ width: `${segmentFill}%`, backgroundColor: segmentColor }}
+                />
               </span>
             );
           })}

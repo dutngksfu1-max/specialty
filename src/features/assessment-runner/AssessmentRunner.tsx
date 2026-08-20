@@ -40,6 +40,19 @@ function scrollBehavior(): ScrollBehavior {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 }
 
+/**
+ * 응답 직후 다음 문항으로 이동할 때 화면 위쪽에 남길 여백입니다.
+ *
+ * 상단 진행 헤더에 가리지 않으면서, 방금 답한 문항의 아래쪽이 조금 남아
+ * "무엇을 눌렀는지" 확인할 수 있는 지점에 다음 문항을 세웁니다.
+ */
+function nextQuestionTopOffset(): number {
+  const header = document.querySelector<HTMLElement>("[data-assessment-progress]");
+  const headerHeight = header?.getBoundingClientRect().height ?? 0;
+  const breathingRoom = Math.min(96, Math.max(48, window.innerHeight * 0.08));
+  return headerHeight + breathingRoom;
+}
+
 export function AssessmentRunner(props: AssessmentRunnerProps) {
   const {
     slug,
@@ -68,6 +81,31 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
   const [saveState, setSaveState] = useState<SaveState>("loading");
   const [submitting, setSubmitting] = useState(false);
   const [hasFailedSave, setHasFailedSave] = useState(false);
+
+  /**
+   * 같은 섹션(같은 URL)에서 "처음부터 다시"를 눌렀을 때
+   * 아래 effect를 재실행하여 IndexedDB에서 빈 응답을 다시 읽어오게 합니다.
+   */
+  const [resetKey, setResetKey] = useState(0);
+
+  /**
+   * 무엇을 불러와야 하는지를 나타내는 열쇠입니다.
+   *
+   * 이 값이 바뀌면 아직 새 응답을 못 읽은 상태이므로 곧바로 '불러오는 중'으로 되돌립니다.
+   * effect 안에서 setState를 부르면 렌더가 한 번 더 연쇄되므로,
+   * React가 권장하는 **렌더 중 상태 조정**으로 처리합니다.
+   * (https://react.dev/learn/you-might-not-need-an-effect)
+   */
+  const loadKey = `${slug}:${String(sectionOrder)}:${String(resetKey)}`;
+  const [loadedKey, setLoadedKey] = useState(loadKey);
+  if (loadedKey !== loadKey) {
+    setLoadedKey(loadKey);
+    setStatus("loading");
+    setSaveState("loading");
+  }
+
+  /** 자동 이동은 새로 답한 문항에서만 실행합니다. 수정 중 화면이 튀지 않도록 합니다. */
+  const autoAdvanceRef = useRef<number | null>(null);
 
   const pendingSavesRef = useRef(0);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -100,7 +138,8 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
     return () => {
       alive = false;
     };
-  }, [services, slug, sectionOrder]);
+    // resetKey는 effect 안에서 읽지 않지만, 같은 URL에서 재시작할 때 다시 불러오게 하는 트리거입니다.
+  }, [services, slug, sectionOrder, resetKey]);
 
   const focusFirstMissing = useCallback(() => {
     const missing = questions.find((question) => !answersRef.current.has(String(question.id)));
@@ -113,6 +152,12 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
   useEffect(() => {
     if (status === "ready" && showUnanswered) focusFirstMissing();
   }, [focusFirstMissing, showUnanswered, status]);
+
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceRef.current !== null) window.clearTimeout(autoAdvanceRef.current);
+    };
+  }, []);
 
   function enqueueSave(question: AssessmentQuestion, value: number) {
     if (services === null) return;
@@ -152,6 +197,40 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
     saveQueueRef.current = task;
   }
 
+  /**
+   * 새로 답한 직후 다음 문항으로 부드럽게 내려갑니다.
+   *
+   * - 이미 답한 문항을 고칠 때는 이동하지 않습니다
+   * - 다음 문항이 이미 답해져 있으면 그 아래에서 아직 답하지 않은 문항을 찾습니다
+   * - 이 파트의 마지막이면 하단 버튼이 보이도록 끝까지 내립니다
+   */
+  const advanceAfterAnswer = useCallback(
+    (answered: AssessmentQuestion) => {
+      const index = questions.findIndex((question) => question.id === answered.id);
+      if (index === -1) return;
+
+      const target = questions
+        .slice(index + 1)
+        .find((question) => !answersRef.current.has(String(question.id)));
+
+      const behavior = scrollBehavior();
+
+      if (target === undefined) {
+        if (questions.every((question) => answersRef.current.has(String(question.id)))) {
+          window.scrollTo({ top: document.body.scrollHeight, behavior });
+        }
+        return;
+      }
+
+      const element = document.getElementById(`q-${String(target.id)}`);
+      if (element === null) return;
+
+      const top = window.scrollY + element.getBoundingClientRect().top - nextQuestionTopOffset();
+      window.scrollTo({ top: Math.max(0, top), behavior });
+    },
+    [questions],
+  );
+
   function handleSelect(question: AssessmentQuestion, value: number) {
     const key = String(question.id);
     const previous = answersRef.current;
@@ -161,6 +240,14 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
     setAnswers(next);
     if (isNew) setAnsweredCount((count) => count + 1);
     enqueueSave(question, value);
+
+    if (!isNew) return;
+    if (autoAdvanceRef.current !== null) window.clearTimeout(autoAdvanceRef.current);
+    // 선택 표시(체크·강조)가 눈에 들어온 뒤 움직이도록 한 박자 둡니다.
+    autoAdvanceRef.current = window.setTimeout(() => {
+      autoAdvanceRef.current = null;
+      advanceAfterAnswer(question);
+    }, 260);
   }
 
   async function flushSaves(): Promise<boolean> {
@@ -249,7 +336,25 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
       return false;
     }
     const firstSection = [...started.value.definition.sections].sort((a, b) => a.order - b.order)[0];
-    router.replace(`/assessments/${slug}/run/${firstSection?.order ?? 1}`);
+    const targetOrder = firstSection?.order ?? 1;
+
+    if (targetOrder === sectionOrder) {
+      // 같은 섹션이면 URL이 바뀌지 않아 React가 리마운트하지 않으므로
+      // state를 직접 초기화하고 resetKey를 올려 useEffect를 다시 실행합니다.
+      answersRef.current = new Map();
+      setAnswers(new Map());
+      setAnsweredCount(0);
+      setShowUnanswered(false);
+      setSaveError(null);
+      setSubmitting(false);
+      failedSavesRef.current.clear();
+      setHasFailedSave(false);
+      pendingSavesRef.current = 0;
+      setResetKey((k) => k + 1);
+      window.scrollTo({ top: 0, behavior: "auto" });
+    } else {
+      router.replace(`/assessments/${slug}/run/${targetOrder}`);
+    }
     return true;
   }
 
@@ -283,7 +388,7 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
       </div>
 
       <main id="main" className="mx-auto max-w-(--container-survey) px-4 pt-6 pb-36 sm:px-6 sm:pt-10">
-        <section className="assessment-card assessment-card-deck relative overflow-hidden p-5 sm:p-6">
+        <section className="assessment-card assessment-card-deck relative overflow-hidden px-5 py-3.5 sm:px-6 sm:py-4">
           <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-primary-soft-border" />
           <div className="flex items-start justify-between gap-4 sm:gap-6">
             <div className="min-w-0">
@@ -312,7 +417,7 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
           )}
         </div>
 
-        <ol className="mt-4 flex flex-col gap-6 sm:gap-7">
+        <ol className="mt-4 flex flex-col gap-4 sm:gap-5">
           {questions.map((question) => (
             <QuestionCard
               key={String(question.id)}

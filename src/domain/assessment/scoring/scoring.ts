@@ -37,8 +37,11 @@ export function centerResponse(value: number, centerValue: number): number {
 /**
  * 척도가 만들어 낼 수 있는 최대 편차입니다.
  * 5점 척도(1~5, 중앙 3)면 2, 7점 척도(1~7, 중앙 4)면 3이 됩니다.
+ *
+ * 신호 계산(`result/signals.ts`)의 경계값도 이 값을 기준으로 잡습니다.
+ * 그래야 척도가 바뀌어도 경계의 뜻이 유지됩니다.
  */
-function maxAbsDeviation(scale: ResponseScale): number {
+export function maxAbsDeviation(scale: ResponseScale): number {
   return scale.options.reduce((max, option) => {
     const deviation = Math.abs(centerResponse(option.value, scale.centerValue));
     return deviation > max ? deviation : max;

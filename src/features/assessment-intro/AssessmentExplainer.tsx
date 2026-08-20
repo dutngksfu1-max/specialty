@@ -1,14 +1,18 @@
 import { Icon, type IconName } from "@/components/ui/Icon";
 import type { AssessmentAxis, ResponseOption } from "@/domain/assessment/model/definition";
+import type { ResponseScaleGuideItem } from "@/lib/assessmentPresentation";
 
 const perspectiveIcons: readonly IconName[] = ["message", "compass", "check", "clock"];
+const perspectiveTones = ["energy", "lens", "decision", "rhythm"] as const;
 
 export function AssessmentMapPanel({
   axes,
   options,
+  responseScaleGuide,
 }: {
   readonly axes: readonly AssessmentAxis[];
   readonly options: readonly ResponseOption[];
+  readonly responseScaleGuide?: readonly ResponseScaleGuideItem[];
 }) {
   return (
     <section className="relative h-full min-w-0 overflow-hidden border-t border-primary-soft-border bg-primary-soft p-5 sm:p-7 lg:border-t-0 lg:border-l lg:p-8" aria-labelledby="assessment-map-title">
@@ -29,22 +33,28 @@ export function AssessmentMapPanel({
         <ol className="mt-6 grid grid-cols-2 gap-2.5">
           {axes.map((axis, index) => {
             const icon = perspectiveIcons[index % perspectiveIcons.length] ?? "compass";
+            const tone = perspectiveTones[index % perspectiveTones.length] ?? "energy";
             return (
-              <li key={String(axis.id)} className="assessment-mini-card relative overflow-hidden p-4">
-                <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-primary-soft-border" />
+              <li
+                key={String(axis.id)}
+                data-perspective-tone={tone}
+                className={`assessment-perspective-card assessment-perspective-card--${tone} overflow-hidden p-4`}
+              >
                 <div className="flex items-center justify-between gap-2">
-                  <Icon name={icon} className="size-4 text-primary" />
-                  <span className="text-caption font-bold tabular-nums text-accent">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="assessment-perspective-icon" aria-hidden="true">
+                    <Icon name={icon} className="size-4" />
+                  </span>
+                  <span className="assessment-perspective-number text-caption font-bold tabular-nums">{String(index + 1).padStart(2, "0")}</span>
                 </div>
                 <h3 className="mt-3 text-label text-foreground">{axis.name}</h3>
                 <div className="mt-4 flex items-center justify-between gap-2 text-caption font-semibold text-foreground-body">
                   <span>{axis.positive.shortLabel}</span>
-                  <span>{axis.negative.shortLabel}</span>
+                  <span className="assessment-perspective-pole">{axis.negative.shortLabel}</span>
                 </div>
                 <div aria-hidden="true" className="mt-2 flex items-center gap-1">
-                  <span className="h-1 flex-1 rounded-full bg-primary-soft-border" />
-                  <span className="size-2 rounded-full border-2 border-surface bg-accent" />
-                  <span className="h-1 flex-1 rounded-full bg-accent-soft" />
+                  <span className="assessment-perspective-line" />
+                  <span className="assessment-perspective-marker" />
+                  <span className="assessment-perspective-line" />
                 </div>
               </li>
             );
@@ -57,21 +67,69 @@ export function AssessmentMapPanel({
               <p className="text-caption font-bold tracking-[0.08em] text-accent">응답 척도</p>
               <h3 className="mt-1 text-h3 text-foreground">다섯 단계로 답해요</h3>
             </div>
-            <span className="text-caption text-foreground-muted">가까운 쪽을 선택</span>
+            <p className="max-w-52 text-right text-caption leading-5 text-foreground-muted">
+              요즘의 나를 기준으로, 가장 가까운 정도를 고르세요.
+            </p>
           </div>
-          <ol className="mt-4 grid grid-cols-2 gap-2">
-            {options.map((option) => (
-              <li key={option.value} className="flex min-h-11 min-w-0 items-center gap-2 rounded-sm border border-primary-soft-border bg-surface px-3 text-caption font-semibold text-foreground-body last:col-span-2">
-                <span className="grid size-6 shrink-0 place-items-center rounded-xs bg-primary-soft text-caption font-bold tabular-nums text-primary-active">
-                  {option.value}
-                </span>
-                <span className="min-w-0">{option.visibleLabel ?? option.label}</span>
-              </li>
-            ))}
-          </ol>
+          {responseScaleGuide === undefined ? (
+            <ol className="mt-4 grid grid-cols-2 gap-2">
+              {options.map((option) => (
+                <li key={option.value} className="flex min-h-11 min-w-0 items-center gap-2 rounded-sm border border-primary-soft-border bg-surface px-3 text-caption font-semibold text-foreground-body last:col-span-2">
+                  <span className="grid size-6 shrink-0 place-items-center rounded-xs bg-primary-soft text-caption font-bold tabular-nums text-primary-active">
+                    {option.value}
+                  </span>
+                  <span className="min-w-0">{option.visibleLabel ?? option.label}</span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <ResponseScaleGuide options={options} guide={responseScaleGuide} />
+          )}
         </div>
       </div>
     </section>
+  );
+}
+
+function ResponseScaleGuide({
+  options,
+  guide,
+}: {
+  readonly options: readonly ResponseOption[];
+  readonly guide: readonly ResponseScaleGuideItem[];
+}) {
+  const criterionByValue = new Map(guide.map((item) => [item.value, item.criterion]));
+
+  return (
+    <div data-response-scale-guide className="mt-4 overflow-hidden rounded-md border border-primary-soft-border bg-surface shadow-elev-1">
+      <div className="hidden grid-cols-[1.75rem_minmax(7.5rem,0.62fr)_minmax(0,1.38fr)] items-center gap-x-3 border-b border-primary-soft-border bg-primary-soft/60 px-3.5 py-1.5 sm:grid">
+        <span className="col-span-2 text-caption font-bold tracking-[0.06em] text-primary-active">응답</span>
+        <span className="border-l border-primary-soft-border pl-3 text-caption font-bold tracking-[0.06em] text-primary-active">판단 기준</span>
+      </div>
+      <ol>
+        {options.map((option) => {
+          const visibleLabel = option.visibleLabel ?? option.label;
+          const criterion = criterionByValue.get(option.value) ?? "지금의 나와 가장 가까운 정도를 고를 때";
+
+          return (
+            <li
+              key={option.value}
+              className="grid min-h-11 grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-2.5 border-t border-primary-soft-border px-3 py-1.5 first:border-t-0 sm:min-h-10 sm:grid-cols-[1.75rem_minmax(7.5rem,0.62fr)_minmax(0,1.38fr)] sm:gap-x-3 sm:px-3.5"
+            >
+              <span className="grid size-6 place-items-center rounded-xs bg-primary-soft text-caption font-bold tabular-nums text-primary-active">
+                {option.value}
+              </span>
+              <span className="min-w-0 text-body-sm font-bold leading-5 text-foreground-body">
+                {visibleLabel}
+              </span>
+              <p className="col-start-2 min-w-0 text-caption leading-4 text-foreground-muted sm:col-start-auto sm:border-l sm:border-primary-soft-border sm:pl-3">
+                {criterion}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 

@@ -60,6 +60,8 @@ const questions = Array.from(
       axisId,
       polarity: taken < QUESTIONS_PER_AXIS / 2 ? 1 : -1,
       weight: 1,
+      // 장면 이름은 검사가 소유합니다. 이 대체 검사는 다른 낱말을 써도 엔진이 그대로 처리해야 합니다.
+      context: taken % 2 === 0 ? "scene-alpha" : "scene-beta",
     };
   },
 );

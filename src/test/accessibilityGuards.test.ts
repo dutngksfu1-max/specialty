@@ -71,7 +71,8 @@ describe("척도는 진짜 라디오여야 합니다 (design.md 10.2)", () => {
   });
 
   it("터치 영역 44px를 유지합니다", () => {
-    expect(likert).toContain("size-11");
+    // 실제 터치 타깃은 원 장식이 아니라 input과 연결된 label 전체입니다.
+    expect(likert).toMatch(/<label[^>]*className="[^"]*min-h-11/);
   });
 });
 
@@ -124,7 +125,8 @@ describe("상태를 색만으로 전달하지 않습니다", () => {
 
   it("축 시각화를 문장으로도 읽어 줍니다", () => {
     const axisBar = read("features/result/AxisBar.tsx");
-    expect(axisBar).toContain("sr-only");
+    expect(axisBar).toContain('role="img"');
+    expect(axisBar).toContain("aria-label");
   });
 });
 

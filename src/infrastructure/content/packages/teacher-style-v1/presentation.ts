@@ -31,4 +31,26 @@ export const teacherStylePresentation = {
       artwork: { src: "/assessments/teacher-style/section-04.svg", width: 160, height: 112, alt: "" },
     },
   ],
+  responseScaleGuide: [
+    {
+      value: 1,
+      criterion: "떠오르는 장면이 없을 때",
+    },
+    {
+      value: 2,
+      criterion: "가끔 있지만 평소의 나는 아닐 때",
+    },
+    {
+      value: 3,
+      criterion: "어느 쪽이라 하기 어려울 때",
+    },
+    {
+      value: 4,
+      criterion: "비슷한 장면이 떠오를 때",
+    },
+    {
+      value: 5,
+      criterion: "여러 장면에서 분명히 나타날 때",
+    },
+  ],
 } as const;

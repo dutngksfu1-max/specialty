@@ -126,21 +126,21 @@ describe("축 정의 (DEC-023)", () => {
 });
 
 describe("문항 작성 규칙 (5.2)", () => {
-  it("40문항이 축마다 10개씩, polarity가 5개씩 나뉩니다", () => {
-    expect(definition.questions).toHaveLength(40);
+  it("48문항이 축마다 12개씩, polarity가 6개씩 나뉩니다", () => {
+    expect(definition.questions).toHaveLength(48);
 
     for (const axis of definition.axes) {
       const mine = definition.questions.filter((question) => question.axisId === axis.id);
-      expect(mine).toHaveLength(10);
-      expect(mine.filter((question) => question.polarity === 1)).toHaveLength(5);
-      expect(mine.filter((question) => question.polarity === -1)).toHaveLength(5);
+      expect(mine).toHaveLength(12);
+      expect(mine.filter((question) => question.polarity === 1)).toHaveLength(6);
+      expect(mine.filter((question) => question.polarity === -1)).toHaveLength(6);
     }
   });
 
-  it("Part마다 10문항이고 네 축이 모두 섞여 있습니다", () => {
+  it("Part마다 12문항이고 네 축이 모두 섞여 있습니다", () => {
     for (const section of definition.sections) {
       const mine = definition.questions.filter((question) => question.sectionId === section.id);
-      expect(mine).toHaveLength(10);
+      expect(mine).toHaveLength(12);
       const axesInSection = new Set(mine.map((question) => String(question.axisId)));
       expect(axesInSection.size).toBe(4);
     }
@@ -253,6 +253,253 @@ describe("문항 작성 규칙 (5.2)", () => {
       for (const [scene, pattern] of sceneMarkers) {
         const hits = mine.filter((question) => pattern.test(question.text)).length;
         expect(hits, `${String(axis.id)}의 "${scene}" 장면이 ${hits}회입니다`).toBeLessThanOrEqual(2);
+      }
+    }
+  });
+});
+
+/**
+ * 맥락 태그와 S4(맥락 분화) 가용성 — docs/content/teacher-style-v1-audit.md
+ *
+ * 감사 문서의 수치를 코드가 강제합니다. 문항이나 태그를 바꾸면 여기가 먼저 실패하므로,
+ * 감사 문서를 함께 갱신하지 않고 지나갈 수 없습니다.
+ */
+/**
+ * 언어 규율 — 강도가 확신을 올리지 않습니다 (docs/PRD-result-v2.md 6.3)
+ *
+ * 5구간을 검증 데이터 없이 쓸 수 있는 근거가 바로 이 규율입니다.
+ * 구간이 올라가면 **몇 개의 장면에서 보이는가**가 달라질 뿐,
+ * **얼마나 맞는가**를 더 세게 주장하지 않습니다.
+ *
+ * 사람이 문구를 고칠 때 조용히 무너지기 쉬운 규칙이라 기계가 지킵니다.
+ */
+describe("언어 규율 (DEC-047)", () => {
+  const narrative = definition.resultNarrative;
+  if (narrative === undefined) throw new Error("결과 서술이 없습니다.");
+
+  const allReadings = narrative.axes.flatMap((axis) =>
+    axis.readings.map((reading) => ({ axisId: String(axis.axisId), reading })),
+  );
+
+  it("확신을 끌어올리는 표현을 쓰지 않습니다", () => {
+    // "매우 뚜렷해요" 같은 표현은 강도를 확신으로 바꿔 읽게 만듭니다.
+    const forbidden = /확실히|틀림없이|분명히 그렇|매우 뚜렷해|반드시|당연히/;
+
+    for (const { axisId, reading } of allReadings) {
+      for (const text of [reading.headline, reading.summary, reading.rhythm]) {
+        expect(text, `${axisId}/${reading.intensityBandId}: ${text}`).not.toMatch(forbidden);
+      }
+    }
+  });
+
+  it("높은 구간일수록 장면 범위를 넓게 말합니다", () => {
+    // 구간마다 '어디에서 보이는가'를 가리키는 표현이 있어야 합니다.
+    const scopeWords: Readonly<Record<string, RegExp>> = {
+      leaning: /어떤 장면/,
+      clear: /여러 장면/,
+      strong: /장면이 바뀌어도/,
+      defining: /대부분의 장면/,
+    };
+
+    for (const { axisId, reading } of allReadings) {
+      const pattern = scopeWords[reading.intensityBandId];
+      if (pattern === undefined) continue;
+
+      const joined = `${reading.headline} ${reading.summary} ${reading.rhythm}`;
+      expect(joined, `${axisId}/${reading.intensityBandId}`).toMatch(pattern);
+    }
+  });
+
+  it("균형 구간은 방향을 단정하지 않습니다", () => {
+    const balanced = allReadings.filter((item) => item.reading.intensityBandId === "balanced");
+    expect(balanced.length).toBeGreaterThan(0);
+
+    for (const { axisId, reading } of balanced) {
+      const joined = `${reading.headline} ${reading.summary} ${reading.rhythm}`;
+      // '두 방식'을 함께 언급해, 한쪽으로 확정하지 않았음을 드러냅니다.
+      expect(joined, `${axisId}/balanced: ${joined}`).toMatch(/두 방식|비슷하게/);
+    }
+  });
+
+  /**
+   * 방향이 반대인데 문구가 같으면, 읽는 사람은 자기가 어느 쪽인지 알 수 없습니다.
+   * 특히 `summary`는 결과 상단 한 줄 설명이라 방향이 반드시 드러나야 합니다.
+   */
+  it("같은 구간에서 방향이 다르면 문구도 다릅니다", () => {
+    for (const axis of narrative.axes) {
+      const byBand = new Map<string, { headline: string; summary: string; rhythm: string }[]>();
+      for (const reading of axis.readings) {
+        if (reading.direction === "balanced") continue;
+        byBand.set(reading.intensityBandId, [
+          ...(byBand.get(reading.intensityBandId) ?? []),
+          reading,
+        ]);
+      }
+
+      for (const [bandId, readings] of byBand) {
+        for (const field of ["headline", "summary", "rhythm"] as const) {
+          const texts = readings.map((reading) => reading[field]);
+          expect(
+            new Set(texts).size,
+            `${String(axis.axisId)}/${bandId}/${field}가 방향과 무관하게 같습니다`,
+          ).toBe(texts.length);
+        }
+      }
+    }
+  });
+
+  it("축마다 균형 문구가 서로 다릅니다", () => {
+    // 네 축이 모두 0점이면 같은 문장이 네 번 나옵니다.
+    const headlines = narrative.axes.map(
+      (axis) =>
+        axis.readings.find((reading) => reading.direction === "balanced")?.headline ?? "",
+    );
+
+    expect(new Set(headlines).size).toBe(headlines.length);
+  });
+
+  it("축마다 반증 문구가 있습니다 (T3)", () => {
+    for (const axis of narrative.axes) {
+      expect(axis.counterEvidence.length, String(axis.axisId)).toBeGreaterThan(20);
+      // 결과가 빗나갔을 때 의심할 조건을 제시해야 합니다.
+      expect(axis.counterEvidence, String(axis.axisId)).toMatch(/다면|라면/);
+    }
+  });
+});
+
+/**
+ * 축쌍 렌즈 — 6쌍 전부 (docs/PRD-result-v2.md 4.4)
+ *
+ * 네 축에서 만들 수 있는 쌍은 6개입니다. 하나라도 빠지면 해석 폭이 줄어듭니다.
+ */
+describe("축 조합 렌즈 (DEC-038 확장)", () => {
+  it("네 축의 모든 쌍(6개)을 덮습니다", () => {
+    const pairs = definition.axisCombinations.map((combination) =>
+      [...combination.axisIds].map(String).sort().join("+"),
+    );
+
+    const expected: string[] = [];
+    const ids = definition.axes.map((axis) => String(axis.id));
+    for (let i = 0; i < ids.length; i += 1) {
+      for (let j = i + 1; j < ids.length; j += 1) {
+        expected.push([ids[i], ids[j]].filter((id): id is string => id !== undefined).sort().join("+"));
+      }
+    }
+
+    expect(pairs.sort()).toEqual(expected.sort());
+  });
+
+  it("조합마다 방향 네 가지를 모두 담습니다", () => {
+    for (const combination of definition.axisCombinations) {
+      expect(combination.readings, combination.id).toHaveLength(4);
+    }
+  });
+});
+
+describe("문항 맥락 태그 (Phase A)", () => {
+  /** 이 검사가 쓰는 장면 어휘. 검사가 소유하며 엔진은 문자열로만 다룹니다 (DEC-004). */
+  const ALLOWED_CONTEXTS = ["lesson", "guidance", "admin", "colleague", "family", "self"] as const;
+
+  /** S4 자격 — 장면당 최소 문항 수와 장면 안 polarity 최대 비율 */
+  const MIN_ITEMS_PER_CONTEXT = 3;
+  const MAX_POLARITY_RATIO = 2;
+
+  function tally(axisId: string): ReadonlyMap<string, { positive: number; negative: number }> {
+    const byContext = new Map<string, { positive: number; negative: number }>();
+    for (const question of definition.questions) {
+      if (String(question.axisId) !== axisId) continue;
+      const cell = byContext.get(question.context) ?? { positive: 0, negative: 0 };
+      if (question.polarity === 1) cell.positive += 1;
+      else cell.negative += 1;
+      byContext.set(question.context, cell);
+    }
+    return byContext;
+  }
+
+  /** 장면 하나가 S4 비교 대상이 될 수 있는지. 묵종 편향이 장면 차이로 둔갑하지 않게 막습니다. */
+  function qualifies(cell: { positive: number; negative: number }): boolean {
+    const total = cell.positive + cell.negative;
+    if (total < MIN_ITEMS_PER_CONTEXT) return false;
+    const high = Math.max(cell.positive, cell.negative);
+    const low = Math.min(cell.positive, cell.negative);
+    if (low === 0) return false;
+    return high / low <= MAX_POLARITY_RATIO;
+  }
+
+  it("모든 문항에 알려진 장면 태그가 붙어 있습니다", () => {
+    for (const question of definition.questions) {
+      expect(
+        (ALLOWED_CONTEXTS as readonly string[]).includes(question.context),
+        `${question.id}의 장면 "${question.context}"를 모릅니다`,
+      ).toBe(true);
+    }
+  });
+
+  it("장면 태그가 문항 본문이 아니라 메타데이터로만 존재합니다", () => {
+    // 태그 낱말이 본문에 그대로 박혀 있으면 어휘 누수 검사와 뜻이 겹칩니다.
+    for (const question of definition.questions) {
+      expect(question.text).not.toContain(question.context);
+    }
+  });
+
+  it("축별 S4 가용성이 감사 문서와 일치합니다", () => {
+    // docs/content/teacher-style-v1-audit.md 3장의 판정 (DEC-048 이후)
+    const expected: Readonly<Record<string, number>> = {
+      "axis-energy": 2,
+      "axis-lens": 3,
+      "axis-decision": 2,
+      "axis-rhythm": 3,
+    };
+
+    for (const [axisId, count] of Object.entries(expected)) {
+      const qualifying = [...tally(axisId).values()].filter(qualifies).length;
+      expect(qualifying, `${axisId}의 자격 장면 수`).toBe(count);
+    }
+  });
+
+  it("네 축 모두 S4를 보고할 수 있습니다 (DEC-048)", () => {
+    const reportable = definition.axes
+      .map((axis) => String(axis.id))
+      .filter((axisId) => [...tally(axisId).values()].filter(qualifies).length >= 2);
+
+    expect(reportable).toHaveLength(4);
+  });
+
+  /**
+   * 장면 프로파일 — DEC-048로 새로 열린 해석 틀
+   *
+   * 한 장면 안에 문항 3개 이상인 축이 둘 이상이면, 그 장면에서 축끼리 견줄 수 있습니다.
+   * 네 축을 세로로 읽는 기존 틀과 달리 "이 장면에서의 나"를 가로로 읽습니다.
+   */
+  it("장면 프로파일을 만들 수 있는 장면이 5개입니다", () => {
+    const axesByContext = new Map<string, string[]>();
+    for (const axis of definition.axes) {
+      for (const [context, cell] of tally(String(axis.id))) {
+        if (cell.positive + cell.negative < MIN_ITEMS_PER_CONTEXT) continue;
+        axesByContext.set(context, [...(axesByContext.get(context) ?? []), String(axis.id)]);
+      }
+    }
+
+    const usable = [...axesByContext.entries()].filter(([, axes]) => axes.length >= 2);
+    expect(usable.map(([context]) => context).sort()).toEqual([
+      "admin",
+      "colleague",
+      "guidance",
+      "lesson",
+      "self",
+    ]);
+  });
+
+  it("자격 장면은 polarity가 한쪽으로 몰려 있지 않습니다", () => {
+    for (const axis of definition.axes) {
+      for (const [context, cell] of tally(String(axis.id))) {
+        if (!qualifies(cell)) continue;
+        const high = Math.max(cell.positive, cell.negative);
+        const low = Math.min(cell.positive, cell.negative);
+        expect(
+          high / low,
+          `${String(axis.id)}/${context}가 ${cell.positive}:${cell.negative}로 치우쳤습니다`,
+        ).toBeLessThanOrEqual(MAX_POLARITY_RATIO);
       }
     }
   });
@@ -517,11 +764,11 @@ describe("채점과의 연결", () => {
     }
   });
 
-  it("축당 최대 절대 점수가 20점이고 구간이 이를 덮습니다", () => {
+  it("축당 최대 절대 점수가 24점이고 구간이 이를 덮습니다", () => {
     for (const axis of definition.axes) {
       const count = definition.questions.filter((question) => question.axisId === axis.id).length;
       const maxAbs = count * 2; // 5점 척도의 최대 편차 2
-      expect(maxAbs).toBe(20);
+      expect(maxAbs).toBe(24);
 
       const last = [...axis.intensityBands].sort((a, b) => a.maxAbsScore - b.maxAbsScore).at(-1);
       expect(last?.maxAbsScore).toBe(maxAbs);

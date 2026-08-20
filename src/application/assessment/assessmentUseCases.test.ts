@@ -86,7 +86,7 @@ describe("startAssessment", () => {
     const first = await startAssessment(deps, { slug: SLUG, nickname: "테스트" });
     if (!first.ok) throw new Error("시작 실패");
     await answerAll(4);
-    expect(repository.countResponses(first.value.session.id)).toBe(40);
+    expect(repository.countResponses(first.value.session.id)).toBe(48);
 
     const restarted = await startAssessment(deps, { slug: SLUG, restart: true });
     expect(restarted.ok).toBe(true);
@@ -169,10 +169,10 @@ describe("getPartState", () => {
     expect(first.ok).toBe(true);
     if (!first.ok) return;
 
-    expect(first.value.questions).toHaveLength(10);
-    expect(first.value.totalCount).toBe(40);
+    expect(first.value.questions).toHaveLength(12);
+    expect(first.value.totalCount).toBe(48);
     expect(first.value.answeredCount).toBe(0);
-    expect(first.value.unansweredInPart).toHaveLength(10);
+    expect(first.value.unansweredInPart).toHaveLength(12);
     expect(first.value.isFirstSection).toBe(true);
     expect(first.value.isLastSection).toBe(false);
 
@@ -184,7 +184,7 @@ describe("getPartState", () => {
     if (!after.ok) throw new Error("조회 실패");
     expect(after.value.answeredCount).toBe(1);
     expect(after.value.answers.get(question.id)).toBe(4);
-    expect(after.value.unansweredInPart).toHaveLength(9);
+    expect(after.value.unansweredInPart).toHaveLength(11);
   });
 
   it("마지막 Part는 isLastSection이 true입니다", async () => {
@@ -220,8 +220,8 @@ describe("resumeSession", () => {
     expect(resumed.ok).toBe(true);
     if (!resumed.ok) return;
 
-    expect(resumed.value.responses).toHaveLength(10);
-    expect(resumed.value.unanswered).toHaveLength(30);
+    expect(resumed.value.responses).toHaveLength(12);
+    expect(resumed.value.unanswered).toHaveLength(36);
     expect(resumed.value.nextSectionOrder).toBe(2);
     expect(resumed.value.session.nickname).toBe("테스트");
   });
@@ -312,8 +312,8 @@ describe("completeAssessment", () => {
     // polarity가 축마다 +1 5개 / -1 5개이므로 전부 5점이면 상쇄되어 0점입니다.
     for (const axisScore of completed.value.snapshot.score.axisScores) {
       expect(axisScore.rawScore).toBe(0);
-      expect(axisScore.minScore).toBe(-20);
-      expect(axisScore.maxScore).toBe(20);
+      expect(axisScore.minScore).toBe(-24);
+      expect(axisScore.maxScore).toBe(24);
       expect(axisScore.normalized).toBeCloseTo(0.5, 10);
     }
   });
@@ -363,6 +363,29 @@ describe("getResult", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error.code).toBe("SESSION_NOT_FOUND");
+  });
+
+  /**
+   * 신호는 스냅샷에 저장하지 않고 원본 응답에서 다시 계산합니다
+   * (docs/PRD-result-v2.md 4장). 검사를 마쳐도 응답이 남아 있어야 가능합니다.
+   */
+  it("응답에서 계산한 신호를 함께 돌려줍니다", async () => {
+    await startAssessment(deps, { slug: SLUG, nickname: "테스트" });
+    // 전 문항에 '보통이다'로 답하면 응답 폭이 centered로 나와야 합니다.
+    await answerAll(3);
+    await completeAssessment(deps, { slug: SLUG });
+
+    const result = await getResult(deps, { slug: SLUG });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const signals = result.value.signals;
+    expect(signals).toBeDefined();
+    expect(signals?.consistency).toHaveLength(result.value.definition.axes.length);
+    expect(signals?.responseStyle.id).toBe("centered");
+    expect(signals?.responseStyle.answeredCount).toBe(48);
+    // 가운데만 골랐으면 장면 사이 격차가 없으므로 아무 말도 하지 않습니다.
+    expect(signals?.contextSplits).toEqual([]);
   });
 
   it("검사 버전이 올라갔으면 VERSION_MISMATCH", async () => {

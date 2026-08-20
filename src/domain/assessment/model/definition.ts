@@ -93,6 +93,13 @@ export interface AxisNarrativeReading {
 export interface AxisResultNarrative {
   readonly axisId: AxisId;
   readonly readings: readonly AxisNarrativeReading[];
+  /**
+   * T3 반증 여지 — "이 설명이 안 맞는다면" 문구 (docs/PRD-result-v2.md 5장)
+   *
+   * 반박할 수 없는 결과는 검사가 아니라 점괘입니다.
+   * 결과가 빗나갔을 때 무엇을 의심해 보면 되는지를 먼저 알려 줍니다.
+   */
+  readonly counterEvidence: string;
 }
 
 /** 검사별 결과 서술 규격. 채점 엔진은 이 문구를 알지 못합니다. */
@@ -140,6 +147,13 @@ export interface AssessmentQuestion {
   readonly polarity: Polarity;
   /** MVP에서 항상 1 */
   readonly weight: number;
+  /**
+   * 이 문항이 묻는 교직 장면입니다. 채점에는 쓰이지 않습니다.
+   *
+   * 같은 축이라도 장면에 따라 답이 갈리는지 살피는 데 씁니다.
+   * 장면 이름은 검사가 소유하므로 엔진은 문자열로만 다룹니다 (DEC-004와 같은 원칙).
+   */
+  readonly context: string;
 }
 
 export interface AssessmentSection {

@@ -33,6 +33,11 @@ export interface AxisSpec {
   readonly polarities: readonly Polarity[];
   readonly defaultPole?: PoleSide;
   readonly bands?: IntensityBands;
+  /**
+   * 문항 하나당 장면 하나. `polarities`와 길이가 같아야 합니다.
+   * 생략하면 두 장면을 번갈아 넣습니다.
+   */
+  readonly contexts?: readonly string[];
 }
 
 export interface DefinitionSpec {
@@ -153,6 +158,10 @@ export function buildDefinition(spec: DefinitionSpec): AssessmentDefinition {
         axisId: toAxisId(axisSpec.id),
         polarity,
         weight: 1,
+        // fixture는 장면을 번갈아 넣어, 맥락이 하나로 몰린 경우와 갈린 경우를 모두 만들 수 있게 합니다.
+        context:
+          axisSpec.contexts?.[index] ??
+          (index % 2 === 0 ? "fixture-scene-a" : "fixture-scene-b"),
       });
     });
   }
