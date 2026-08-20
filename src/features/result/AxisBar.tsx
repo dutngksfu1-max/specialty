@@ -50,17 +50,34 @@ export function AxisBar({
   const neutral = "var(--color-foreground-muted)";
   const negativeColor = score.isBalanced ? neutral : score.direction === "negative" ? emphasized : quiet;
   const positiveColor = score.isBalanced ? neutral : score.direction === "positive" ? emphasized : quiet;
+  const leaningLabel = score.isBalanced
+    ? "균형"
+    : `${score.direction === "positive" ? axis.positive.label : axis.negative.label} 쪽`;
+  const summaryLabel = band === undefined ? leaningLabel : `${leaningLabel} · ${band.label}`;
 
   return (
-    <div style={{ paddingBlock: size.gapPx }}>
-      <p
-        style={{ fontSize: size.badgePx, color: "var(--color-foreground-subtle)" }}
-        className="mb-1"
-      >
-        {axis.name}
-      </p>
+    <div
+      style={{ paddingBlock: variant === "share" ? size.gapPx : undefined }}
+      className={variant === "screen" ? "py-5" : undefined}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p style={{ fontSize: size.labelPx, color: "var(--color-foreground)" }} className="font-semibold">
+          {axis.name}
+        </p>
+        <span
+          style={{
+            fontSize: size.badgePx,
+            background: badgeBackground,
+            paddingInline: variant === "share" ? 12 : 8,
+            paddingBlock: variant === "share" ? 4 : 2,
+          }}
+          className="inline-block rounded-xs font-medium text-foreground-body"
+        >
+          {summaryLabel}
+        </span>
+      </div>
 
-      <div className="flex items-baseline justify-between gap-4">
+      <div style={{ marginTop: size.gapPx }} className="flex items-baseline justify-between gap-4">
         <span style={{ fontSize: size.labelPx, fontWeight: 600, color: negativeColor }}>
           {axis.negative.label}
         </span>
@@ -92,20 +109,6 @@ export function AxisBar({
           }}
           className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-solid border-surface bg-accent"
         />
-      </div>
-
-      <div style={{ marginTop: size.gapPx }}>
-        <span
-          style={{
-            fontSize: size.badgePx,
-            background: badgeBackground,
-            paddingInline: variant === "share" ? 12 : 8,
-            paddingBlock: variant === "share" ? 4 : 2,
-          }}
-          className="inline-block rounded-xs font-medium text-foreground-body"
-        >
-          {band === undefined ? "" : band.label}
-        </span>
       </div>
 
       {/* 화면에는 막대로 보이지만, 스크린리더에는 문장으로 읽어 줍니다. */}

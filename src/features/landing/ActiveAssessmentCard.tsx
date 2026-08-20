@@ -79,7 +79,7 @@ export function ActiveAssessmentCard({
     <section
       style={assessmentThemeVariables(assessment.presentation) as CSSProperties}
       className={cn(
-        "assessment-theme hero-enter min-w-0 max-w-full",
+        "assessment-theme hero-enter min-w-0 max-w-full transition-all duration-300 hover:-translate-y-1 hover:shadow-elev-2",
         featured
           ? "assessment-card assessment-card-deck grid grid-cols-1 items-center gap-8 overflow-hidden p-4 sm:p-7 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:gap-14 lg:p-8"
           : "assessment-card flex h-full flex-col p-5",
@@ -108,15 +108,15 @@ export function ActiveAssessmentCard({
           </p>
         )}
 
-        {children !== undefined && <div className="mt-7 max-w-md">{children}</div>}
+        {children !== undefined && <div className="mt-4 max-w-md">{children}</div>}
 
-        <dl className={cn("grid grid-cols-3 gap-2", featured ? "mt-7 max-w-md" : "mt-5")}>
+        <dl className={cn("grid grid-cols-3 gap-2", featured ? "mt-5 max-w-md" : "mt-5")}>
           <div className="assessment-mini-card p-3">
             <dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="book" className="size-4" />문항</dt>
             <dd className="mt-1 text-label tabular-nums text-foreground">{assessment.questionCount}개</dd>
           </div>
           <div className="assessment-mini-card p-3">
-            <dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="layers" className="size-4" />묶음</dt>
+            <dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="layers" className="size-4" />챕터</dt>
             <dd className="mt-1 text-label tabular-nums text-foreground">{assessment.sectionCount}개</dd>
           </div>
           <div className="assessment-mini-card p-3">
@@ -124,17 +124,6 @@ export function ActiveAssessmentCard({
             <dd className="mt-1 text-label tabular-nums text-foreground">약 {assessment.estimatedMinutes}분</dd>
           </div>
         </dl>
-
-        {featured && (
-          <ul className="mt-3 grid max-w-md grid-cols-2 gap-2 text-caption text-foreground-body">
-            <li className="flex min-h-11 items-center gap-2 rounded-sm border border-border bg-surface-muted px-3">
-              <Icon name="check" className="size-4 text-primary" /> 정답이 없는 탐색
-            </li>
-            <li className="flex min-h-11 items-center gap-2 rounded-sm border border-border bg-surface-muted px-3">
-              <Icon name="lock" className="size-4 text-primary" /> 가입·전송 없이 저장
-            </li>
-          </ul>
-        )}
 
         {progress.kind === "outdated" && (
           <p className="mt-5 flex gap-2 text-body-sm text-foreground-body" aria-live="polite">
@@ -172,11 +161,6 @@ export function ActiveAssessmentCard({
       </div>
 
       <div className={cn("relative min-w-0", featured ? "order-1 lg:order-2" : "order-1")}>
-        {featured && (
-          <span className="absolute -top-2 left-5 z-2 rounded-xs border border-primary-soft-border bg-primary-soft px-3 py-1 text-caption font-bold text-primary-active shadow-elev-1">
-            오늘의 탐색 카드
-          </span>
-        )}
         {artwork === undefined ? (
           <ArtworkFallback />
         ) : (

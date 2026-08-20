@@ -44,7 +44,7 @@ export function NicknameEntry() {
   return (
     <section className="w-full">
       <label htmlFor={inputId} className="block text-label text-foreground-body">
-        어떻게 불러 드릴까요? (선택)
+        닉네임을 입력해주세요.
       </label>
 
       <input
@@ -55,7 +55,6 @@ export function NicknameEntry() {
         autoComplete="off"
         maxLength={NICKNAME_MAX_LENGTH}
         value={value}
-        aria-describedby={helperId}
         disabled={services === null}
         placeholder="예: 3반 김선생"
         onChange={(event) => {
@@ -71,10 +70,6 @@ export function NicknameEntry() {
         }}
         className="mt-2 min-h-13 w-full rounded-sm border border-border-strong bg-surface px-4 text-body text-foreground-body shadow-elev-1 placeholder:text-foreground-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:bg-surface-muted"
       />
-
-      <p id={helperId} className="mt-2 max-w-prose text-body-sm text-foreground-muted">
-        입력하지 않으면 &lsquo;선생님&rsquo;으로 표시돼요. {PRIVACY_NOTE.short}
-      </p>
 
       <p className="mt-1 min-h-5 text-caption text-status-success" aria-live="polite">
         {saved ? (

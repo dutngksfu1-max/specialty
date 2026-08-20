@@ -68,7 +68,7 @@ export default async function AssessmentIntroPage({ params }: PageProps<"/assess
 
             <dl className="mt-7 grid grid-cols-3 divide-x divide-border border-y border-border py-4">
               <div className="px-2 first:pl-0"><dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="book" className="size-4" />문항</dt><dd className="mt-1 text-h3 tabular-nums text-foreground">{definition.questions.length}개</dd></div>
-              <div className="px-3"><dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="layers" className="size-4" />묶음</dt><dd className="mt-1 text-h3 tabular-nums text-foreground">{sections.length}개</dd></div>
+              <div className="px-3"><dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="layers" className="size-4" />챕터</dt><dd className="mt-1 text-h3 tabular-nums text-foreground">{sections.length}개</dd></div>
               <div className="px-3 pr-0"><dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="clock" className="size-4" />시간</dt><dd className="mt-1 text-h3 tabular-nums text-foreground">약 {definition.estimatedMinutes}분</dd></div>
             </dl>
 
@@ -120,10 +120,10 @@ export default async function AssessmentIntroPage({ params }: PageProps<"/assess
           <p className="mt-2 text-body-sm text-foreground-muted">시작하기 전에 궁금할 만한 내용을 짧게 모았어요.</p>
           <div className="mt-5 border-t border-border">
             <Accordion summary="어떤 순서로 진행되나요?">
-              <p>문항은 {sections.length}개 묶음으로 나뉘고, 한 화면에는 약 {Math.round(definition.questions.length / Math.max(sections.length, 1))}문항이 나옵니다. 답을 고를 때마다 바로 저장되어 중간에 멈춰도 이어서 할 수 있어요.</p>
+              <p>문항은 {sections.length}개 챕터로 나뉘고, 한 화면에는 약 {Math.round(definition.questions.length / Math.max(sections.length, 1))}문항이 나옵니다. 답을 고를 때마다 바로 저장되어 중간에 멈춰도 이어서 할 수 있어요.</p>
             </Accordion>
             <Accordion summary="답을 고치고 싶으면요?">
-              <p>언제든 다시 고르면 됩니다. 이전 묶음으로 돌아가도 마지막에 고른 답이 그대로 저장돼요.</p>
+              <p>언제든 다시 고르면 됩니다. 이전 챕터로 돌아가도 마지막에 고른 답이 그대로 저장돼요.</p>
             </Accordion>
             <Accordion summary="모든 문항에 답해야 하나요?">
               <p>결과를 보려면 모든 문항에 답해야 해요. 빠진 문항이 있으면 그 자리로 안내해 드립니다.</p>

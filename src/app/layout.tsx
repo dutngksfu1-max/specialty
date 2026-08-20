@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
-import { pretendard } from "@/app/fonts";
+import { ridi } from "@/app/fonts";
 import { AssessmentRepositoryProvider } from "@/features/shared/AssessmentRepositoryProvider";
 import { ConnectionNotices } from "@/features/shared/ConnectionNotices";
 import { ServiceWorkerProvider } from "@/features/shared/ServiceWorkerProvider";
@@ -56,7 +56,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className={pretendard.variable}>
+    <html lang="ko" className={ridi.variable}>
       {/* 페이지 배경은 globals.css의 --gradient-page가 담당합니다. */}
       <body className="min-h-dvh text-foreground-body antialiased">
         <a

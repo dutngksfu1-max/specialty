@@ -10,7 +10,7 @@
  */
 
 /** 서비스 이름 (DEC-003 확정) */
-export const BRAND_NAME = "서치티쳐마인드";
+export const BRAND_NAME = "클래스렌즈";
 
 /**
  * 배포 주소 (DEC-022 확정 — 2026-08-20)
@@ -63,7 +63,7 @@ export const UPCOMING_ASSESSMENTS = [
 export const FAQ = [
   {
     question: "얼마나 걸리나요?",
-    answer: "40문항이고 보통 10분 안팎이 걸려요. 4개 묶음으로 나뉘어 있어 중간에 쉬어 가도 됩니다.",
+    answer: "40문항이고 보통 10분 안팎이 걸려요. 4개 챕터로 나뉘어 있어 중간에 쉬어 가도 됩니다.",
   },
   {
     question: "제 응답이 서버에 저장되나요?",

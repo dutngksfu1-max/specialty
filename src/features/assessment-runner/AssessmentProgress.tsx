@@ -58,7 +58,7 @@ export function AssessmentProgress({
               <Icon name="arrow-left" className="size-4" /> 검사 안내
             </Link>
             <p className="truncate text-label text-foreground">
-              묶음 <span className="tabular-nums">{sectionOrder} / {sectionCount}</span>
+              챕터 <span className="tabular-nums">{sectionOrder} / {sectionCount}</span>
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-3">

@@ -39,7 +39,7 @@ describe("검사 문항 접근성 마크업", () => {
 
   it("다섯 척도 라벨을 모두 화면에 출력합니다", () => {
     const html = markup();
-    for (const label of ["전혀 그렇지 않다", "그렇지 않다", "보통이다", "그렇다", "매우 그렇다"]) {
+    for (const label of ["전혀 그렇지 않다", "그렇지 않은 편이다", "보통이다", "그런 편이다", "매우 그렇다"]) {
       expect(html).toContain(label);
     }
     expect(html).toContain("선택됨");

@@ -18,11 +18,11 @@ import localFont from "next/font/local";
  * "swap"이면 그 사이 맑은 고딕 같은 시스템 폰트가 잠깐 보였다가 바뀌는데,
  * 그 깜빡임을 없애기 위한 선택입니다 (DEC-035).
  */
-export const pretendard = localFont({
-  src: "../assets/fonts/PretendardVariable.woff2",
-  weight: "45 920",
+export const ridi = localFont({
+  src: "../assets/fonts/RIDIBatang.woff2",
+  weight: "400",
   style: "normal",
-  variable: "--font-pretendard",
+  variable: "--font-ridi",
   display: "block",
   preload: true,
   fallback: [

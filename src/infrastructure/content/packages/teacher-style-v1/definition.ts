@@ -215,9 +215,9 @@ const scale = {
   centerValue: 3,
   options: [
     { value: 1, label: "전혀 그렇지 않다", visibleLabel: "전혀 그렇지 않다" },
-    { value: 2, label: "그렇지 않다", visibleLabel: "그렇지 않다" },
+    { value: 2, label: "그렇지 않은 편이다", visibleLabel: "그렇지 않은 편이다" },
     { value: 3, label: "보통이다", visibleLabel: "보통이다" },
-    { value: 4, label: "그렇다", visibleLabel: "그렇다" },
+    { value: 4, label: "그런 편이다", visibleLabel: "그런 편이다" },
     { value: 5, label: "매우 그렇다", visibleLabel: "매우 그렇다" },
   ],
 };
@@ -226,10 +226,10 @@ export const teacherStyleV1Base = {
   id: "teacher-style",
   slug: "teacher-style",
   title: "나의 교직 스타일 탐색",
-  summary: "40문항으로 살펴보는 나의 교실 운영 스타일",
+  summary: "질문으로 살펴보는 나의 교실 운영 스타일",
   description:
     "어디에서 힘을 얻고, 무엇이 먼저 눈에 들어오고, 무엇을 딛고 결정하고, 어떤 리듬으로 일을 굴리는지 네 가지 축으로 살펴봅니다. 맞고 틀린 답은 없고, 어느 쪽이 더 좋은 스타일인 것도 아니에요. 나와 동료가 서로 어떻게 다른지를 이야기해 보는 데 쓰시면 좋습니다.",
-  estimatedMinutes: 10,
+  estimatedMinutes: 5,
   status: "published",
   // 축과 문항이 통째로 바뀌었습니다. 버전을 올려야 예전 응답이 조용히 섞이지 않고
   // "새로 시작" 안내를 받습니다 (architecture 7.3).

@@ -84,7 +84,7 @@
   --em-core: var(--color-accent);
 
   /* ---------- Typography (design.md 3) ----------------------------------- */
-  --font-sans: var(--font-pretendard), -apple-system, BlinkMacSystemFont,
+  --font-sans: var(--font-ridi), -apple-system, BlinkMacSystemFont,
     "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 
   --text-display: 1.75rem;

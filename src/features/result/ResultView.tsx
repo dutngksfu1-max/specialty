@@ -88,7 +88,7 @@ export function ResultView({ slug }: { readonly slug: string }) {
 
   return (
     <>
-      <main id="main" className="mx-auto max-w-(--container-survey) px-4 py-10 sm:px-6 sm:py-14">
+      <main id="main" className="mx-auto max-w-(--container-landing) px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
         <ResultRenderer
           definition={definition}
           snapshot={snapshot}
@@ -96,17 +96,26 @@ export function ResultView({ slug }: { readonly slug: string }) {
           nickname={nickname}
         />
 
-        <div className="mt-14 border-t border-border pt-8">
-          <NicknameEditor slug={slug} nickname={nickname} onChanged={setNickname} />
-        </div>
+        <section className="mt-14 rounded-lg border border-border bg-surface p-5 sm:p-7 lg:flex lg:items-end lg:justify-between lg:gap-8">
+          <div>
+            <p className="text-caption font-semibold text-primary-active">결과 보관</p>
+            <h2 className="mt-2 text-h2 text-foreground sm:text-h2-lg">이 결과를 남겨 두세요</h2>
+            <p className="mt-2 max-w-prose text-body-sm text-foreground-muted">
+              이미지로 저장하면 오프라인에서도 다시 볼 수 있어요. 이름만 바꿔 저장해도 결과와 점수는 달라지지 않습니다.
+            </p>
+            <div className="mt-4">
+              <NicknameEditor slug={slug} nickname={nickname} onChanged={setNickname} />
+            </div>
+          </div>
 
-        <div className="mt-8 flex flex-col items-stretch gap-3 sm:items-start">
-          <SaveImageButton targetRef={shareCardRef} nickname={nickname} />
-          <RetakeControls slug={slug} />
-          <Link href="/" className={buttonClasses("ghost", "md", "w-full sm:w-auto")}>
-            <Icon name="home" /> 처음으로
-          </Link>
-        </div>
+          <div className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-start lg:mt-0 lg:justify-end">
+            <SaveImageButton targetRef={shareCardRef} nickname={nickname} />
+            <RetakeControls slug={slug} />
+            <Link href="/" className={buttonClasses("ghost", "md", "w-full sm:w-auto")}>
+              <Icon name="home" /> 처음으로
+            </Link>
+          </div>
+        </section>
       </main>
 
       {/* 화면 밖에서 대기하는 캡처용 카드. 이 노드만 이미지로 만듭니다. */}

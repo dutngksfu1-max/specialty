@@ -14,13 +14,15 @@ export function LikertScale({
   readonly onSelect: (value: number) => void;
 }) {
   return (
-    <div className="relative grid min-w-0 grid-cols-5 gap-0 overflow-hidden rounded-md border border-border bg-surface-muted p-1">
-      <span aria-hidden="true" className="pointer-events-none absolute top-[2rem] right-[10%] left-[10%] h-px bg-border-strong" />
+    <div className="relative grid min-w-0 grid-cols-5 gap-0 overflow-hidden rounded-md border border-primary-soft-border bg-primary-soft/20 p-1">
+      <span aria-hidden="true" className="pointer-events-none absolute top-[2rem] right-[10%] left-[10%] h-px bg-primary-soft-border" />
       {options.map((option) => {
         const id = `${name}-${option.value}`;
         const selected = value === option.value;
         const visibleLabel = option.visibleLabel ?? option.label;
         const visualLines = splitLabelIntoTwoLines(visibleLabel);
+        const distance = Math.abs(option.value - 3);
+        const circleSizeClass = distance === 0 ? "size-5" : distance === 1 ? "size-6" : "size-7";
         return (
           <label key={option.value} htmlFor={id} className="relative z-1 min-w-0 cursor-pointer text-center">
             <input
@@ -32,13 +34,13 @@ export function LikertScale({
               onChange={() => onSelect(option.value)}
               className="peer sr-only"
             />
-            <span className={`flex min-h-24 min-w-0 flex-col items-center rounded-sm border px-0.5 py-1.5 transition-[background-color,border-color] duration-(--motion-fast) ease-out-soft peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-focus-ring ${selected ? "border-primary-soft-border bg-primary-soft" : "border-transparent"}`}>
+            <span className={`flex min-h-24 min-w-0 flex-col items-center rounded-sm border px-0.5 py-1.5 transition-[background-color,border-color] duration-(--motion-fast) ease-out-soft peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-focus-ring ${selected ? "border-primary-soft-border bg-primary-soft" : "border-transparent hover:bg-surface-inset"}`}>
               <span className="grid size-11 shrink-0 place-items-center rounded-full">
-                <span className={`grid size-6 place-items-center rounded-full border-2 transition-[background-color,border-color,transform] duration-(--motion-fast) ease-out-soft ${selected ? "scale-105 border-primary bg-primary" : "border-border-strong bg-surface"}`}>
+                <span className={`grid ${circleSizeClass} place-items-center rounded-full border-2 transition-[background-color,border-color,transform] duration-(--motion-fast) ease-out-soft ${selected ? "scale-105 border-primary bg-primary" : "border-foreground-disabled bg-surface"}`}>
                   <IconCheck selected={selected} />
                 </span>
               </span>
-              <span aria-hidden="true" className={`mt-1 min-h-10 w-full min-w-0 text-xs leading-[1.35] tracking-[-0.04em] ${selected ? "font-bold text-primary-active" : "text-foreground-subtle"}`}>
+              <span aria-hidden="true" className={`mt-1.5 min-h-10 w-full min-w-0 text-body-sm leading-[1.35] tracking-[-0.04em] ${selected ? "font-bold text-primary-active" : "font-medium text-foreground-body"}`}>
                 {visualLines.map((line, lineIndex) => (
                   <span key={`${line}-${lineIndex}`} className="block whitespace-nowrap">{line}</span>
                 ))}

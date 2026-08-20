@@ -86,7 +86,7 @@ export function AssessmentMenu({
               <div>
                 <Dialog.Title className="text-h2 text-foreground">처음부터 다시 할까요?</Dialog.Title>
                 <Dialog.Description className="mt-2 text-body text-foreground-muted">
-                  지금까지 고른 답이 모두 지워지고 첫 묶음부터 시작합니다. 이 작업은 되돌릴 수 없어요.
+                  지금까지 고른 답이 모두 지워지고 첫 챕터부터 시작합니다. 이 작업은 되돌릴 수 없어요.
                 </Dialog.Description>
               </div>
             </div>

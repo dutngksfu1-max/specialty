@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import { BRAND_NAME, HERO } from "@/lib/siteCopy";
 
@@ -11,7 +13,7 @@ import { BRAND_NAME, HERO } from "@/lib/siteCopy";
  * **개인 결과는 담지 않습니다.** 서비스 소개만 담습니다 (DEC-013 — 결과 공유는 이미지 저장만).
  * 결과 페이지는 아예 noindex이고 자체 OG 이미지도 만들지 않습니다.
  *
- * 한글 폰트를 쓰지 않는 아이콘(`appIcon.tsx`)과 달리 여기는 글자가 필요해서
+ * 정적 PNG 아이콘과 달리 여기는 글자가 필요해서
  * `next/og`가 쓸 폰트를 직접 실어 줍니다. 안 실으면 한글이 네모(□)로 나옵니다.
  */
 
@@ -25,8 +27,6 @@ const SURFACE = "#ffffff"; // --color-surface
 const FOREGROUND = "#211f1b"; // --color-foreground (sand-950)
 const MUTED = "#6f6a61"; // --color-foreground-muted (sand-700)
 const BORDER = "#e8e4dc"; // --color-border (sand-200)
-const SAGE = "#5c7a68"; // --color-primary (sage-600)
-const CLAY = "#c4855a"; // --color-accent (clay-600)
 
 async function loadFont(): Promise<ArrayBuffer | null> {
   try {
@@ -42,6 +42,7 @@ async function loadFont(): Promise<ArrayBuffer | null> {
 
 export default async function OpengraphImage() {
   const font = await loadFont();
+  const appIcon = await readFile(join(process.cwd(), "public/icons/icon-192.png"), "base64");
 
   return new ImageResponse(
     (
@@ -58,24 +59,15 @@ export default async function OpengraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          {/* 아이콘과 같은 세 줄 마크 */}
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 14,
-              background: SAGE,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 7,
-            }}
-          >
-            <div style={{ width: 34, height: 5, borderRadius: 5, background: BACKGROUND }} />
-            <div style={{ width: 21, height: 5, borderRadius: 5, background: CLAY }} />
-            <div style={{ width: 29, height: 5, borderRadius: 5, background: BACKGROUND }} />
-          </div>
+          {/* ImageResponse에서는 Next Image 대신 일반 img에 로컬 PNG를 직접 넣습니다. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`data:image/png;base64,${appIcon}`}
+            alt=""
+            width={64}
+            height={64}
+            style={{ borderRadius: 14 }}
+          />
           <span style={{ fontSize: 30, color: MUTED, letterSpacing: "-0.01em" }}>{BRAND_NAME}</span>
         </div>
 

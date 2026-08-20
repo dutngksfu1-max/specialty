@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { BRAND_NAME } from "@/lib/siteCopy";
 
@@ -11,8 +12,16 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-(--container-landing) items-center px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="rounded-sm py-2 text-2xl font-extrabold tracking-[-0.025em] text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring sm:text-3xl"
+          className="flex items-center gap-3 rounded-sm py-2 text-2xl font-extrabold tracking-[-0.025em] text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring sm:text-3xl"
         >
+          <Image
+            src="/icons/icon-192.png"
+            alt=""
+            width={36}
+            height={36}
+            className="size-9 rounded-md"
+            priority
+          />
           {BRAND_NAME}
         </Link>
       </div>

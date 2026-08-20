@@ -20,7 +20,7 @@ export default function HomePage() {
       <StorageNotice />
 
       <main id="main" className="mx-auto min-h-[calc(100dvh-9rem)] max-w-(--container-landing) px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        <h1 className="sr-only">서치티쳐마인드 — 교직 성향·업무 스타일 탐색</h1>
+        <h1 className="sr-only">클래스렌즈 — 교직 성향·업무 스타일 탐색</h1>
 
         {featured !== undefined ? (
           <>

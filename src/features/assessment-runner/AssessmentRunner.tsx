@@ -288,7 +288,7 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
           <div className="flex items-start justify-between gap-4 sm:gap-6">
             <div className="min-w-0">
               <p className="text-caption font-bold tracking-[0.08em] text-accent">
-                묶음 <span className="tabular-nums">{String(sectionOrder).padStart(2, "0")}</span>
+                챕터 <span className="tabular-nums">{String(sectionOrder).padStart(2, "0")}</span>
               </p>
               <h1 className="mt-2 text-h1 text-foreground sm:text-h1-lg">{sectionTitle}</h1>
               {sectionDescription !== undefined && <p className="mt-3 text-body-sm text-foreground-muted sm:text-body">{sectionDescription}</p>}
@@ -298,11 +298,6 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
             )}
           </div>
 
-          <ul className="mt-5 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center text-caption font-semibold text-foreground-body">
-            <li className="assessment-mini-card flex min-h-11 items-center justify-center px-2">한 문항씩</li>
-            <li className="assessment-mini-card flex min-h-11 items-center justify-center px-2">답은 수정 가능</li>
-            <li className="assessment-mini-card flex min-h-11 items-center justify-center px-2">선택 즉시 저장</li>
-          </ul>
         </section>
 
         <div className="min-h-7 pt-4" aria-live="polite">
@@ -335,12 +330,12 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
         <div className="mx-auto flex max-w-(--container-survey) gap-2 sm:px-2">
           {previousSectionOrder !== null && (
             <Button variant="secondary" size="md" className="flex-1" disabled={submitting} onClick={() => void navigate(`/assessments/${slug}/run/${previousSectionOrder}`)}>
-              <Icon name="arrow-left" /> 이전 묶음
+              <Icon name="arrow-left" /> 이전으로
             </Button>
           )}
           {nextSectionOrder !== null ? (
             <Button variant="primary" size="md" className="flex-[1.4]" disabled={submitting || status !== "ready"} onClick={() => void goToNext()}>
-              {submitting ? "저장 확인 중…" : "다음 묶음"} {!submitting && <Icon name="arrow-right" />}
+              {submitting ? "저장 확인 중…" : "다음으로"} {!submitting && <Icon name="arrow-right" />}
             </Button>
           ) : (
             <Button variant="primary" size="md" className="flex-[1.4]" disabled={submitting || status !== "ready"} aria-busy={submitting} onClick={() => void finish()}>

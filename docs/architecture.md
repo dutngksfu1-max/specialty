@@ -1,4 +1,4 @@
-# Architecture — 서치티쳐마인드
+# Architecture — 클래스렌즈
 
 > 문서 상태: v0.2 (Phase 1 반영)
 > 최종 수정: 2026-08-19
@@ -835,8 +835,8 @@ export default withSerwist(nextConfig);
 // app/manifest.ts
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "서치티쳐마인드",
-    short_name: "서치티쳐마인드",
+    name: "클래스렌즈",
+    short_name: "클래스렌즈",
     description: "교직 성향과 업무 스타일을 탐색하는 교사용 검사",
     start_url: "/",
     display: "standalone",
@@ -853,10 +853,10 @@ export default function manifest(): MetadataRoute.Manifest {
 }
 ```
 
-**아이콘 생성 (DEC-031)**
+**아이콘 파일 (DEC-044)**
 
-이미지 파일을 저장소에 넣지 않고 `next/og`의 `ImageResponse`로 빌드 시점에 만듭니다.
-디자인 토큰이 바뀌면 `src/lib/appIcon.tsx` 한 곳만 고치면 다섯 개가 함께 바뀝니다.
+선택한 원본은 `public/brand/classlens-icon-source.png`에 보존합니다.
+브라우저·iOS·PWA 규격별 PNG를 정적으로 제공하며, maskable 아이콘만 안전 영역을 위해 여백을 더 둡니다.
 
 | 경로 | 크기 | 용도 |
 |---|---|---|
@@ -866,8 +866,7 @@ export default function manifest(): MetadataRoute.Manifest {
 | `/icons/icon-512.png` | 512 | manifest (설치 요건) |
 | `/icons/maskable-512.png` | 512 | 안드로이드 maskable (여백 26%) |
 
-> 아이콘에 **글자를 넣지 않았습니다.** 아이콘을 그릴 때는 페이지의 폰트를 쓸 수 없어서
-> 한글을 넣으려면 폰트 파일을 따로 실어야 하고, 그만큼 무거워집니다.
+> 아이콘에는 글자를 넣지 않고 열린 책과 렌즈 심볼만 사용합니다.
 
 > manifest·metadata·OG 태그 어디에도 **기존 성격유형 검사의 명칭이나 4글자 코드를 넣지 않습니다.**
 

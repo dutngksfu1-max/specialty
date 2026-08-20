@@ -188,4 +188,4 @@ axes[3] → 바깥 링
 - `docs/design.md` — 색 토큰, 금지 패턴 20개
 - `docs/decisions.md` DEC-039 — 왜 캐릭터가 아니라 엠블럼인가
 - `docs/content/teacher-style-v1-revision.md` 2절 — 4축이 각각 무엇을 재는가
-- `src/lib/appIcon.tsx` — 같은 방식(코드로 SVG 생성)을 쓰는 PWA 아이콘
+- `public/brand/classlens-icon-source.png` — 별도로 선택된 클래스렌즈 앱 아이콘 원본

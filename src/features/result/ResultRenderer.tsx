@@ -1,42 +1,92 @@
 import type { ReactNode } from "react";
 
+import { Icon, type IconName } from "@/components/ui/Icon";
 import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
-import type { ResultProfile } from "@/domain/assessment/result/profile";
-import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
-import type { SceneNote } from "@/domain/assessment/result/profile";
 import { resolveAxisCombinations } from "@/domain/assessment/result/axisCombination";
+import type { ResultProfile, SceneNote } from "@/domain/assessment/result/profile";
+import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 import { AxisBar } from "@/features/result/AxisBar";
 import { TypeEmblem } from "@/features/result/TypeEmblem";
-import { Icon, type IconName } from "@/components/ui/Icon";
 import { DISCLAIMER } from "@/lib/siteCopy";
 
 /**
- * 결과 본문 (docs/design.md 11.1, PRD F-5.1)
+ * 결과 본문 (DEC-038 · DEC-045)
  *
- * "결과표"가 아니라 **한 편의 글**입니다.
- * 카드를 나열하지 않고 제목·본문·여백으로 흐름을 만듭니다.
- *
- * 섹션 순서는 PRD에서 고정되어 있습니다. 임의로 바꾸지 않습니다.
+ * 콘텐츠 순서는 유지하되, 같은 무게로 흩어져 있던 내용을 네 개의 장으로 묶습니다.
+ * 결과 키는 내부 식별자이므로 화면에 출력하지 않습니다.
  */
 
-function ResultSection({ title, children }: { readonly title: string; readonly children: ReactNode }) {
+const RESULT_NAVIGATION = [
+  { href: "#result-overview", number: "01", label: "한눈에 보는 나" },
+  { href: "#result-scenes", number: "02", label: "교실에서의 모습" },
+  { href: "#result-collaboration", number: "03", label: "함께 일하는 방식" },
+  { href: "#result-next", number: "04", label: "다음 대화로" },
+] as const;
+
+function ResultNavigation() {
   return (
-    <section className="mt-14 border-t border-border pt-8">
-      <div className="flex items-center gap-3">
-        <span aria-hidden="true" className="block h-0.5 w-7 bg-accent" />
-        <h2 className="text-h2 text-foreground sm:text-h2-lg">{title}</h2>
-      </div>
-      <div className="mt-4 text-body text-foreground-body">{children}</div>
-    </section>
+    <nav
+      aria-label="결과 내용 바로가기"
+      className="rounded-lg border border-border bg-surface shadow-elev-1 lg:sticky lg:top-6"
+    >
+      <p className="border-b border-border px-4 py-3 text-caption font-semibold text-foreground-subtle">
+        결과 순서
+      </p>
+      <ol className="grid grid-cols-2 lg:grid-cols-1">
+        {RESULT_NAVIGATION.map((item, index) => (
+          <li
+            key={item.href}
+            className={`${index >= 2 ? "border-t border-border" : ""} ${index % 2 === 1 ? "border-l border-border lg:border-l-0" : ""} ${index > 0 ? "lg:border-t lg:border-border" : ""}`}
+          >
+            <a
+              href={item.href}
+              className="flex min-h-12 items-center gap-3 px-4 py-3 text-body-sm font-medium text-foreground-muted hover:bg-surface-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+            >
+              <span className="font-bold tabular-nums text-accent" aria-hidden="true">
+                {item.number}
+              </span>
+              <span>{item.label}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
   );
 }
 
-function Points({ items }: { readonly items: readonly string[] }) {
+function ChapterHeading({
+  number,
+  title,
+  description,
+}: {
+  readonly number: string;
+  readonly title: string;
+  readonly description: string;
+}) {
   return (
-    <ul className="flex flex-col gap-3">
+    <header className="border-b border-border pb-5">
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden="true"
+          className="flex size-9 shrink-0 items-center justify-center rounded-sm border border-primary-soft-border bg-primary-soft text-caption font-bold tabular-nums text-primary-active"
+        >
+          {number}
+        </span>
+        <h2 className="text-h1 text-foreground sm:text-h1-lg">{title}</h2>
+      </div>
+      <p className="mt-3 max-w-prose text-body text-foreground-muted">{description}</p>
+    </header>
+  );
+}
+
+function Points({ items, icon = "check" }: { readonly items: readonly string[]; readonly icon?: IconName }) {
+  return (
+    <ul className="flex flex-col gap-4">
       {items.map((item) => (
         <li key={item} className="flex gap-3">
-          <Icon name="check" className="mt-1 size-4 shrink-0 text-accent" />
+          <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-sm bg-primary-soft text-primary-active">
+            <Icon name={icon} className="size-4" />
+          </span>
           <span className="max-w-prose">{item}</span>
         </li>
       ))}
@@ -44,43 +94,64 @@ function Points({ items }: { readonly items: readonly string[] }) {
   );
 }
 
-/**
- * 장면이 붙은 서술 (contentVersion 3.0.0)
- *
- * 장면 칩을 함께 보여 주면, 선생님이 지금 궁금한 장면만 골라 읽을 수 있습니다.
- * 칩은 색만으로 구분하지 않고 글자 자체가 장면 이름이라 색 없이도 뜻이 전달됩니다.
- */
-function ScenePoints({ items }: { readonly items: readonly SceneNote[] }) {
-  const iconForScene = (scene: string): IconName => {
-    if (scene.includes("수업") || scene.includes("교실")) return "book";
-    if (scene.includes("동료") || scene.includes("회의")) return "message";
-    if (scene.includes("업무") || scene.includes("준비")) return "layers";
-    return "compass";
-  };
+function iconForScene(scene: string): IconName {
+  if (scene.includes("수업") || scene.includes("교실")) return "book";
+  if (scene.includes("동료") || scene.includes("회의")) return "message";
+  if (scene.includes("업무") || scene.includes("준비")) return "layers";
+  return "compass";
+}
 
+function ScenePoints({ items }: { readonly items: readonly SceneNote[] }) {
   return (
-    <ul className="flex flex-col gap-4">
+    <ul className="mt-5 grid gap-x-8 gap-y-5 sm:grid-cols-2">
       {items.map((item) => (
-        <li key={item.text} className="border-l-2 border-primary-soft-border pl-4">
+        <li key={`${item.scene}-${item.text}`} className="min-w-0">
           <span className="inline-flex items-center gap-1.5 rounded-xs bg-primary-soft px-2 py-1 text-body-sm font-medium text-primary-active">
-            <Icon name={iconForScene(item.scene)} className="size-4" /> {item.scene}
+            <Icon name={iconForScene(item.scene)} className="size-4" />
+            {item.scene}
           </span>
-          <p className="mt-2 max-w-prose">{item.text}</p>
+          <p className="mt-2 text-body text-foreground-body">{item.text}</p>
         </li>
       ))}
     </ul>
   );
 }
 
-/** 번호가 붙은 실천 목록 — 순서가 정보를 담으므로 ol을 씁니다. */
+function SceneGroup({
+  title,
+  description,
+  icon,
+  items,
+}: {
+  readonly title: string;
+  readonly description: string;
+  readonly icon: IconName;
+  readonly items: readonly SceneNote[];
+}) {
+  return (
+    <section className="p-5 sm:p-7">
+      <div className="flex gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-accent-soft text-accent">
+          <Icon name={icon} />
+        </span>
+        <div>
+          <h3 className="text-h3 text-foreground sm:text-h3-lg">{title}</h3>
+          <p className="mt-1 text-body-sm text-foreground-muted">{description}</p>
+        </div>
+      </div>
+      <ScenePoints items={items} />
+    </section>
+  );
+}
+
 function NumberedPoints({ items }: { readonly items: readonly string[] }) {
   return (
-    <ol className="flex flex-col gap-3">
+    <ol className="flex flex-col gap-4">
       {items.map((item, index) => (
         <li key={item} className="flex gap-3">
           <span
             aria-hidden="true"
-            className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-xs border border-border-strong bg-surface text-caption font-bold tabular-nums text-primary-active"
+            className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-surface text-caption font-bold tabular-nums text-primary-active"
           >
             {index + 1}
           </span>
@@ -88,6 +159,27 @@ function NumberedPoints({ items }: { readonly items: readonly string[] }) {
         </li>
       ))}
     </ol>
+  );
+}
+
+function ActionPanel({
+  title,
+  description,
+  icon,
+  children,
+}: {
+  readonly title: string;
+  readonly description: string;
+  readonly icon: IconName;
+  readonly children: ReactNode;
+}) {
+  return (
+    <section className="rounded-lg border border-border bg-surface p-5 sm:p-6">
+      <Icon name={icon} className="text-accent" />
+      <h3 className="mt-4 text-h3 text-foreground">{title}</h3>
+      <p className="mt-2 text-body-sm text-foreground-muted">{description}</p>
+      <div className="mt-5 text-body text-foreground-body">{children}</div>
+    </section>
   );
 }
 
@@ -107,91 +199,176 @@ export function ResultRenderer({
 
   return (
     <article>
-      {/* 1. 닉네임 → 2. 결과 제목 → 3. 한 줄 설명 → 4. 유형 엠블럼 (DEC-039) */}
-      <header className="relative overflow-hidden rounded-(--radius-hero) border border-border bg-surface p-6 shadow-elev-1 sm:p-9">
-        <span aria-hidden="true" className="absolute top-0 right-0 h-28 w-28 border-b border-l border-primary-soft-border opacity-70" />
-        <div className="relative grid items-center gap-8 sm:grid-cols-[minmax(0,1fr)_auto]">
+      {/* 닉네임 → 결과 제목 → 한 줄 설명 → 엠블럼 → 교직 리듬 */}
+      <header className="relative overflow-hidden rounded-(--radius-hero) border border-primary-soft-border bg-primary-soft p-6 shadow-elev-1 sm:p-9 lg:p-10">
+        <span
+          aria-hidden="true"
+          className="absolute top-0 right-0 size-32 border-b border-l border-primary-soft-border bg-surface opacity-40"
+        />
+        <div className="relative grid items-center gap-8 md:grid-cols-[minmax(0,1fr)_auto]">
           <div>
-            <p className="text-caption font-semibold text-primary-active">{nickname} 님의 교직 리듬</p>
-            <h1 className="mt-3 text-display text-foreground sm:text-display-lg">{profile.title}</h1>
-            <p className="mt-4 max-w-prose text-body-lg text-foreground-muted sm:text-body-lg-desktop">
+            <p className="text-caption font-semibold text-primary-active">검사 결과 · {nickname} 님</p>
+            <h1 className="mt-3 max-w-prose text-display text-foreground sm:text-display-lg">
+              {profile.title}
+            </h1>
+            <p className="mt-5 max-w-prose text-h3 font-medium text-foreground-body">
               {profile.oneLiner}
             </p>
           </div>
-          <div className="justify-self-start sm:justify-self-end">
-          <TypeEmblem
-            axisIds={definition.axes.map((axis) => axis.id)}
-            poles={profile.poles}
-            size={112}
-            label={`${profile.title} 유형을 나타내는 상징`}
-          />
+
+          <div className="relative z-10 justify-self-start rounded-lg border border-primary-soft-border bg-surface p-4 shadow-elev-1 md:justify-self-end">
+            <TypeEmblem
+              axisIds={definition.axes.map((axis) => axis.id)}
+              poles={profile.poles}
+              size={168}
+              label={`${profile.title} 결과를 나타내는 상징`}
+            />
           </div>
+        </div>
+
+        <div className="relative mt-8 grid gap-3 border-t border-primary-soft-border pt-6 md:grid-cols-[auto_minmax(0,1fr)] md:gap-7">
+          <p className="text-label text-primary-active">나의 교직 리듬</p>
+          <p className="max-w-prose text-body-lg text-foreground-body sm:text-body-lg-desktop">
+            {profile.rhythm}
+          </p>
         </div>
       </header>
 
-      {/* 4. 나의 교직 리듬 */}
-      <ResultSection title="나의 교직 리듬">
-        <p className="max-w-prose">{profile.rhythm}</p>
-      </ResultSection>
-
-      {/* 5. 4개 성향 축 */}
-      <ResultSection title="네 가지 축으로 본 나">
-        <div className="flex flex-col divide-y divide-border rounded-lg border border-border bg-surface px-4 sm:px-6">
-          {snapshot.score.axisScores.map((score) => {
-            const axis = axisById.get(String(score.axisId));
-            if (axis === undefined) return null;
-            return <AxisBar key={String(score.axisId)} axis={axis} score={score} />;
-          })}
+      <div className="mt-8 grid gap-8 lg:grid-cols-4 lg:items-start">
+        <div className="lg:col-start-4 lg:row-start-1">
+          <ResultNavigation />
         </div>
-        <p className="mt-6 max-w-prose text-body-sm text-foreground-subtle">
-          이 구간 표시는 통계 규준이 아니라, 결과를 이야기하기 쉽게 나눈 구분이에요.
-        </p>
-      </ResultSection>
 
-      {/* 5b. 축 조합 해석 — 두 축이 만났을 때만 보이는 이야기 */}
-      {combinationReadings.map((combination) => (
-        <ResultSection key={combination.id} title={combination.title}>
-          <p className="max-w-prose">{combination.text}</p>
-        </ResultSection>
-      ))}
+        <div className="min-w-0 lg:col-span-3 lg:col-start-1 lg:row-start-1">
+          {/* 네 가지 축 → 축 조합 해석 */}
+          <section id="result-overview" className="scroll-mt-28">
+            <ChapterHeading
+              number="01"
+              title="한눈에 보는 나"
+              description="네 축의 위치와 축들이 함께 만들어 내는 흐름을 먼저 살펴보세요. 어느 한쪽이 더 좋은 것은 아니며, 가운데에 가까울수록 두 방식이 비슷하게 나타납니다."
+            />
 
-      {/* 6~8. 프로필 본문 */}
-      <ResultSection title="교실에서 빛나는 순간">
-        <ScenePoints items={profile.shiningMoments} />
-      </ResultSection>
+            <div className="mt-6 overflow-hidden rounded-lg border border-border bg-surface px-5 sm:px-7">
+              {snapshot.score.axisScores.map((score) => {
+                const axis = axisById.get(String(score.axisId));
+                if (axis === undefined) return null;
+                return (
+                  <div key={String(score.axisId)} className="border-b border-border last:border-b-0">
+                    <AxisBar axis={axis} score={score} />
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-4 max-w-prose text-body-sm text-foreground-subtle">
+              강도 표시는 통계 규준이나 등급이 아니라, 결과를 이야기하기 쉽게 나눈 구분이에요.
+            </p>
 
-      <ResultSection title="바쁠 때 나타날 수 있는 모습">
-        <ScenePoints items={profile.underPressure} />
-      </ResultSection>
+            {combinationReadings.length > 0 && (
+              <div className="mt-10">
+                <h3 className="text-h3 text-foreground sm:text-h3-lg">축이 함께 움직일 때</h3>
+                <p className="mt-2 max-w-prose text-body text-foreground-muted">
+                  한 축씩 볼 때보다 두 관점이 만나는 지점에서 실제 업무 방식이 더 또렷하게 드러납니다.
+                </p>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  {combinationReadings.map((combination) => (
+                    <section
+                      key={combination.id}
+                      className="rounded-lg border border-border bg-surface p-5"
+                    >
+                      <h4 className="text-label text-primary-active">{combination.title}</h4>
+                      <p className="mt-3 text-body text-foreground-body">{combination.text}</p>
+                    </section>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
 
-      <ResultSection title="동료와 함께 일할 때">
-        <ScenePoints items={profile.withColleagues} />
-      </ResultSection>
+          {/* 교실에서 빛나는 순간 → 바쁠 때 → 동료와 함께 일할 때 */}
+          <section id="result-scenes" className="mt-16 scroll-mt-28">
+            <ChapterHeading
+              number="02"
+              title="교실에서 드러나는 모습"
+              description="결과를 추상적인 설명으로만 읽지 않고, 수업·생활지도·업무처럼 실제 장면에 놓아 보았습니다."
+            />
+            <div className="mt-6 divide-y divide-border rounded-lg border border-border bg-surface">
+              <SceneGroup
+                title="교실에서 빛나는 순간"
+                description="자연스럽게 강점이 드러나는 장면이에요."
+                icon="check"
+                items={profile.shiningMoments}
+              />
+              <SceneGroup
+                title="바쁠 때 나타날 수 있는 모습"
+                description="단점이라기보다 여유가 줄었을 때 먼저 살펴볼 신호예요."
+                icon="warning"
+                items={profile.underPressure}
+              />
+              <SceneGroup
+                title="동료와 함께 일할 때"
+                description="학년과 학교 안에서 이 리듬이 보이는 방식이에요."
+                icon="message"
+                items={profile.withColleagues}
+              />
+            </div>
+          </section>
 
-      {/* 9~10. 협업 — "궁합" 표현을 쓰지 않습니다 (PRD F-5.3) */}
-      <ResultSection title="호흡이 자연스러운 스타일">
-        <Points items={profile.collaboration.naturalFit} />
-      </ResultSection>
+          {/* 호흡이 자연스러운 스타일 → 조율하면 더 편한 스타일 */}
+          <section id="result-collaboration" className="mt-16 scroll-mt-28">
+            <ChapterHeading
+              number="03"
+              title="함께 일하는 방식"
+              description="누가 더 잘 맞는지를 가르는 내용이 아니라, 서로 다른 리듬 사이에서 무엇이 자연스럽고 무엇을 먼저 말해 두면 좋은지 보여 줍니다."
+            />
+            <div className="mt-6 grid overflow-hidden rounded-lg border border-border bg-surface md:grid-cols-2 md:divide-x md:divide-border">
+              <section className="border-b border-border p-5 md:border-b-0 sm:p-7">
+                <p className="text-caption font-semibold text-primary-active">자연스럽게 이어지는 지점</p>
+                <h3 className="mt-2 text-h3 text-foreground">호흡이 자연스러운 스타일</h3>
+                <div className="mt-5 text-body text-foreground-body">
+                  <Points items={profile.collaboration.naturalFit} />
+                </div>
+              </section>
+              <section className="p-5 sm:p-7">
+                <p className="text-caption font-semibold text-accent">먼저 말해 두면 좋은 지점</p>
+                <h3 className="mt-2 text-h3 text-foreground">조율하면 더 편한 스타일</h3>
+                <div className="mt-5 text-body text-foreground-body">
+                  <Points items={profile.collaboration.needsTuning} icon="message" />
+                </div>
+              </section>
+            </div>
+          </section>
 
-      <ResultSection title="조율하면 더 편한 스타일">
-        <Points items={profile.collaboration.needsTuning} />
-      </ResultSection>
+          {/* 내일 해 볼 것 → 동료와 나눌 질문 → 검사 안내 */}
+          <section id="result-next" className="mt-16 scroll-mt-28">
+            <ChapterHeading
+              number="04"
+              title="다음 대화로"
+              description="결과를 읽는 데서 멈추지 않고, 내일의 작은 행동과 동료와의 대화로 이어 보세요."
+            />
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <ActionPanel
+                title="내일 해 볼 것"
+                description="부담 없이 하나만 골라도 충분해요."
+                icon="compass"
+              >
+                <NumberedPoints items={profile.nextSteps} />
+              </ActionPanel>
+              <ActionPanel
+                title="동료와 나눌 질문"
+                description="답을 맞히기보다 서로의 다름을 발견하는 질문이에요."
+                icon="message"
+              >
+                <NumberedPoints items={profile.talkingPoints} />
+              </ActionPanel>
+            </div>
 
-      {/* 11~12. 성향 서술에서 끝내지 않고 해 볼 것으로 넘깁니다 */}
-      <ResultSection title="내일 해 볼 것">
-        <NumberedPoints items={profile.nextSteps} />
-      </ResultSection>
-
-      <ResultSection title="동료와 나눌 질문">
-        <NumberedPoints items={profile.talkingPoints} />
-        <p className="mt-6 max-w-prose text-body-sm text-foreground-subtle">
-          옆자리 선생님과 한 문항씩 주고받아 보세요. 답을 맞히는 자리가 아니라 서로의 다름을 확인하는 자리예요.
-        </p>
-      </ResultSection>
-
-      <p className="mt-14 flex max-w-prose gap-3 border-t border-border pt-7 text-body-sm text-foreground-muted">
-        <Icon name="compass" className="mt-0.5 text-primary" /> {DISCLAIMER}
-      </p>
+            <p className="mt-8 flex max-w-prose gap-3 rounded-lg border border-border bg-surface-muted p-5 text-body-sm text-foreground-muted">
+              <Icon name="compass" className="mt-0.5 text-primary" />
+              <span>{DISCLAIMER}</span>
+            </p>
+          </section>
+        </div>
+      </div>
     </article>
   );
 }

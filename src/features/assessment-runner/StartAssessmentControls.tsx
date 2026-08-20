@@ -96,7 +96,7 @@ export function StartAssessmentControls({ slug }: { readonly slug: string }) {
                 triggerVariant="secondary"
                 triggerSize="lg"
                 title="처음부터 다시 할까요?"
-                description="지금까지 고른 답이 지워지고 첫 묶음부터 시작합니다. 이 작업은 되돌릴 수 없어요."
+                description="지금까지 고른 답이 지워지고 첫 챕터부터 시작합니다. 이 작업은 되돌릴 수 없어요."
                 confirmLabel="응답 지우고 다시 시작"
                 disabled={busy}
                 onConfirm={() => begin(true)}
