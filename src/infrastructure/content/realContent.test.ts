@@ -358,6 +358,36 @@ describe("언어 규율 (DEC-047)", () => {
     expect(new Set(headlines).size).toBe(headlines.length);
   });
 
+  /**
+   * 제목과 본문이 같은 말을 하면, 읽는 사람은 본문을 건너뜁니다.
+   * 제목은 "어느 쪽으로 얼마나", 본문은 "그래서 실제로 어떤 모습인지"를 맡습니다.
+   */
+  it("제목과 본문이 같은 말을 되풀이하지 않습니다", () => {
+    /** 두 글자 단위로 잘라 겹치는 정도를 봅니다. 한국어는 어절이 붙어 있어 이 방식이 안정적입니다. */
+    const bigrams = (text: string): ReadonlySet<string> => {
+      const letters = text.replace(/[^가-힣]/g, "");
+      return new Set(
+        Array.from({ length: Math.max(0, letters.length - 1) }, (_, i) => letters.slice(i, i + 2)),
+      );
+    };
+
+    for (const axis of narrative.axes) {
+      for (const reading of axis.readings) {
+        const head = bigrams(reading.headline);
+        if (head.size === 0) continue;
+        const body = bigrams(reading.summary);
+
+        const shared = [...head].filter((gram) => body.has(gram)).length;
+        expect(
+          shared / head.size,
+          `${String(axis.axisId)}/${reading.intensityBandId}/${reading.direction}
+  제목: ${reading.headline}
+  본문: ${reading.summary}`,
+        ).toBeLessThan(0.7);
+      }
+    }
+  });
+
   it("축마다 반증 문구가 있습니다 (T3)", () => {
     for (const axis of narrative.axes) {
       expect(axis.counterEvidence.length, String(axis.axisId)).toBeGreaterThan(20);
