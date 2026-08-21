@@ -111,7 +111,7 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).not.toContain("몰입형과는,");
   });
 
-  it("새 신호가 있으면 근거·확신도·장면 차이·응답 폭을 함께 보여 줍니다", () => {
+  it("새 신호가 있으면 장면 차이만 필요한 곳에 보여 줍니다", () => {
     const found = staticAssessmentCatalog.findBySlug("teacher-style");
     if (!found.ok) throw new Error("테스트용 검사를 불러오지 못했습니다.");
 
@@ -161,9 +161,14 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).toContain("동료");
     expect(markup).toContain("+1.5");
     expect(markup).toContain("6문항");
-    expect(markup).toContain("확신도 높음");
-    expect(markup).toContain("양 끝 선택");
-    expect(markup).toContain("25%");
+    expect(markup).not.toContain(">근거</p>");
+    expect(markup).not.toContain("응답 문항");
+    expect(markup).not.toContain("응답 일관성");
+
+    // 결과를 의심하게 만드는 메타 표시는 화면에 두지 않습니다.
+    expect(markup).not.toContain("확신도");
+    expect(markup).not.toContain("살펴볼 점");
+    expect(markup).not.toContain("안 맞는다면");
   });
 
   it("신호가 없어도 기본 결과는 온전히 보이고 빈 신호 영역은 남기지 않습니다", () => {
@@ -182,15 +187,35 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).not.toContain(">주축<");
   });
 
-  it("측정 범위 문구는 결과 전체에서 한 번만 표시합니다", () => {
+  it("결과를 의심하게 만드는 안내 문구를 두지 않습니다", () => {
     const found = staticAssessmentCatalog.findBySlug("teacher-style");
     if (!found.ok || found.value.resultNarrative === undefined) {
-      throw new Error("테스트용 측정 범위 문구가 없습니다.");
+      throw new Error("테스트용 검사를 불러오지 못했습니다.");
     }
     const { markup } = renderResult();
-    const occurrences = markup.split(found.value.resultNarrative.scopeNote).length - 1;
 
-    expect(occurrences).toBe(1);
+    // 측정 범위 고지와 면책 문구는 검사 소개 화면이 맡습니다. 결과에서는 빼둡니다.
+    expect(markup).not.toContain(found.value.resultNarrative.scopeNote);
+    expect(markup).not.toContain("표준화된 심리검사가 아니");
+  });
+
+  /**
+   * 목차가 스크롤을 따라오려면 sticky가 움직일 공간이 있어야 합니다.
+   *
+   * 그리드에 `items-start`가 붙으면 사이드바 칸이 목차 높이로 줄어들어,
+   * sticky가 붙어 있어도 **아무 일도 일어나지 않습니다.** 화면을 열어 보기 전에는
+   * 눈치채기 어렵고 테스트에도 안 잡히는 종류라 여기서 막습니다.
+   */
+  it("목차가 스크롤을 따라올 수 있는 구조입니다", () => {
+    const { markup } = renderResult();
+
+    // 목차 자체는 sticky여야 합니다.
+    expect(markup).toMatch(/lg:sticky/);
+
+    // 목차를 감싼 그리드가 칸 높이를 줄이면 안 됩니다.
+    const grid = markup.match(/<div class="[^"]*grid[^"]*lg:grid-cols-4[^"]*"/)?.[0] ?? "";
+    expect(grid, "사이드바 그리드를 찾지 못했습니다").not.toBe("");
+    expect(grid, "items-start가 있으면 sticky가 동작하지 않습니다").not.toContain("items-start");
   });
 
   it("고정된 결과 콘텐츠 순서를 유지합니다", () => {

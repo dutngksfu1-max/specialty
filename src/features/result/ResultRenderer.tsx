@@ -18,16 +18,13 @@ import {
 import type { ResultProfile, SceneNote } from "@/domain/assessment/result/profile";
 import type {
   AssessmentSignals,
-  AxisConfidence,
-  AxisConsistency,
   AxisContextSplit,
-  ResponseStyle,
 } from "@/domain/assessment/result/signals";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 import type { AxisScore } from "@/domain/assessment/scoring/score";
 import { AxisBar } from "@/features/result/AxisBar";
+import { ResultNavigation } from "@/features/result/ResultNavigation";
 import { TypeEmblem } from "@/features/result/TypeEmblem";
-import { DISCLAIMER } from "@/lib/siteCopy";
 
 /**
  * 결과 본문 (DEC-038 · DEC-045 · Phase D)
@@ -52,40 +49,12 @@ const CONTEXT_LABELS: Readonly<Record<string, string>> = {
   self: "혼자",
 };
 
-const CONFIDENCE_LABELS = {
-  low: "낮음",
-  medium: "보통",
-  high: "높음",
-} as const;
-
-const CONFIDENCE_REASON_LABELS = {
-  balanced: "균형 구간",
-  split: "문항에 따라 크게 갈림",
-  centered: "가운데 응답 비중",
-} as const;
-
-const CONSISTENCY_LABELS = {
-  steady: "문항에서 비슷하게 답함",
-  mixed: "문항에 따라 조금씩 다름",
-  split: "문항에 따라 크게 갈림",
-} as const;
-
-const RESPONSE_STYLE_LABELS = {
-  wide: "척도를 넓게 쓴 응답",
-  moderate: "기본 응답 폭",
-  centered: "가운데 응답이 많은 응답",
-} as const;
-
 function signedNumber(value: number, fractionDigits = 0): string {
   const formatted = value.toLocaleString("ko-KR", {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   });
   return value > 0 ? `+${formatted}` : formatted;
-}
-
-function percentage(value: number): string {
-  return `${Math.round(value * 100)}%`;
 }
 
 function contextLabel(context: string): string {
@@ -95,37 +64,6 @@ function contextLabel(context: string): string {
 function withHonorific(nickname: string): string {
   const trimmed = nickname.trim();
   return trimmed.endsWith("님") ? trimmed : `${trimmed} 님`;
-}
-
-function ResultNavigation() {
-  return (
-    <nav
-      aria-label="결과 내용 바로가기"
-      className="rounded-lg border border-border bg-surface lg:sticky lg:top-6"
-    >
-      <p className="border-b border-border px-4 py-3 text-caption font-semibold text-foreground-subtle">
-        결과 순서
-      </p>
-      <ol className="grid grid-cols-2 lg:grid-cols-1">
-        {RESULT_NAVIGATION.map((item, index) => (
-          <li
-            key={item.href}
-            className={`${index >= 2 ? "border-t border-border" : ""} ${index % 2 === 1 ? "border-l border-border lg:border-l-0" : ""} ${index > 0 ? "lg:border-t lg:border-border" : ""}`}
-          >
-            <a
-              href={item.href}
-              className="flex min-h-12 items-center gap-3 px-4 py-3 text-body-sm font-medium text-foreground-muted hover:bg-surface-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
-            >
-              <span className="font-bold tabular-nums text-accent" aria-hidden="true">
-                {item.number}
-              </span>
-              <span>{item.label}</span>
-            </a>
-          </li>
-        ))}
-      </ol>
-    </nav>
-  );
 }
 
 function ChapterHeading({
@@ -153,60 +91,16 @@ function ChapterHeading({
   );
 }
 
-function ConfidenceBadge({ confidence }: { readonly confidence: AxisConfidence }) {
-  const icon: IconName =
-    confidence.id === "high" ? "check" : confidence.id === "low" ? "warning" : "compass";
-
-  return (
-    <span
-      data-confidence={confidence.id}
-      className="result-confidence inline-flex min-h-8 items-center gap-1.5 rounded-xs border px-2 py-1 text-caption font-semibold"
-    >
-      <Icon name={icon} className="size-4" />
-      확신도 {CONFIDENCE_LABELS[confidence.id]}
-    </span>
-  );
-}
-
-function ConsistencyMeter({ consistency }: { readonly consistency: AxisConsistency }) {
-  const activeSegments = consistency.bandId === "steady" ? 1 : consistency.bandId === "mixed" ? 2 : 3;
-  const label = CONSISTENCY_LABELS[consistency.bandId];
-
-  return (
-    <div className="min-w-0">
-      <div
-        className="grid grid-cols-3 gap-1"
-        role="img"
-        aria-label={`응답 일관성: ${label}`}
-      >
-        {[1, 2, 3].map((segment) => (
-          <span
-            key={segment}
-            data-active={segment <= activeSegments ? "true" : "false"}
-            data-level={segment}
-            className="result-consistency-segment h-2 rounded-xs"
-          />
-        ))}
-      </div>
-      <p className="mt-2 text-caption text-foreground-muted">응답 일관성 · {label}</p>
-    </div>
-  );
-}
-
 function AxisInsightCard({
   index,
   axis,
   score,
   narrative,
-  consistency,
-  confidence,
 }: {
   readonly index: number;
   readonly axis: AssessmentAxis;
   readonly score: AxisScore;
   readonly narrative?: ResolvedAxisNarrative;
-  readonly consistency?: AxisConsistency;
-  readonly confidence?: AxisConfidence;
 }) {
   return (
     <section className="assessment-card min-w-0 p-5 sm:p-6">
@@ -214,7 +108,6 @@ function AxisInsightCard({
         <span className="text-caption font-bold tabular-nums text-primary-active">
           관점 {String(index + 1).padStart(2, "0")}
         </span>
-        {confidence !== undefined && <ConfidenceBadge confidence={confidence} />}
       </div>
 
       <h3 className="mt-4 text-h3 text-foreground sm:text-h3-lg">
@@ -232,41 +125,6 @@ function AxisInsightCard({
         />
       </div>
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-caption font-semibold text-foreground-subtle">근거</p>
-          <dl className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-body-sm">
-            <div>
-              <dt className="inline text-foreground-muted">축 점수 </dt>
-              <dd className="inline font-bold tabular-nums text-foreground">
-                {signedNumber(score.rawScore)}
-              </dd>
-            </div>
-            {consistency !== undefined && (
-              <div>
-                <dt className="inline text-foreground-muted">응답 문항 </dt>
-                <dd className="inline font-bold tabular-nums text-foreground">
-                  {consistency.questionCount}개
-                </dd>
-              </div>
-            )}
-          </dl>
-        </div>
-        {consistency !== undefined && <ConsistencyMeter consistency={consistency} />}
-      </div>
-
-      {confidence !== undefined && confidence.reasons.length > 0 && (
-        <p className="mt-4 text-caption text-foreground-muted">
-          살펴볼 점 · {confidence.reasons.map((reason) => CONFIDENCE_REASON_LABELS[reason]).join(" · ")}
-        </p>
-      )}
-
-      {narrative?.counterEvidence !== undefined && (
-        <p className="mt-5 border-t border-dashed border-border pt-4 text-body-sm text-foreground-muted">
-          <span className="font-semibold text-foreground-body">이 설명이 안 맞는다면 — </span>
-          {narrative.counterEvidence}
-        </p>
-      )}
     </section>
   );
 }
@@ -402,101 +260,6 @@ function ContextSplitCard({
           </div>
         ))}
       </dl>
-    </section>
-  );
-}
-
-function ResponsePattern({ responseStyle }: { readonly responseStyle: ResponseStyle }) {
-  const extreme = Math.min(Math.max(responseStyle.extremeRate * 100, 0), 100);
-  const middle = Math.min(Math.max(responseStyle.middleRate * 100, 0), 100 - extreme);
-  const style = {
-    "--response-extreme": `${extreme}%`,
-    "--response-middle": `${middle}%`,
-  } as CSSProperties;
-
-  return (
-    <div>
-      <p className="text-caption font-semibold text-accent">응답 폭</p>
-      <h4 className="mt-1 text-h3 text-foreground">{RESPONSE_STYLE_LABELS[responseStyle.id]}</h4>
-      <div
-        className="result-response-bar mt-5 flex h-3 overflow-hidden rounded-full bg-surface-inset"
-        style={style}
-        role="img"
-        aria-label={`양 끝 선택 ${percentage(responseStyle.extremeRate)}, 가운데 선택 ${percentage(responseStyle.middleRate)}`}
-      >
-        <span className="result-response-extreme h-full" />
-        <span className="result-response-middle h-full" />
-      </div>
-      <dl className="mt-4 grid grid-cols-3 gap-3 text-caption">
-        <div>
-          <dt className="text-foreground-muted">양 끝 선택</dt>
-          <dd className="mt-1 font-bold tabular-nums text-foreground">{percentage(responseStyle.extremeRate)}</dd>
-        </div>
-        <div>
-          <dt className="text-foreground-muted">가운데 선택</dt>
-          <dd className="mt-1 font-bold tabular-nums text-foreground">{percentage(responseStyle.middleRate)}</dd>
-        </div>
-        <div>
-          <dt className="text-foreground-muted">응답</dt>
-          <dd className="mt-1 font-bold tabular-nums text-foreground">{responseStyle.answeredCount}개</dd>
-        </div>
-      </dl>
-    </div>
-  );
-}
-
-function ReadingGuide({
-  signals,
-  axes,
-  scopeNote,
-}: {
-  readonly signals?: AssessmentSignals;
-  readonly axes: readonly AssessmentAxis[];
-  readonly scopeNote?: string;
-}) {
-  const axisById = new Map(axes.map((axis) => [String(axis.id), axis]));
-
-  if (signals === undefined && scopeNote === undefined) return null;
-
-  return (
-    <section className="assessment-card mt-10 overflow-hidden">
-      <header className="border-b border-border p-5 sm:p-7">
-        <p className="text-caption font-semibold text-primary-active">해석 안내</p>
-        <h3 className="mt-2 text-h3 text-foreground sm:text-h3-lg">이 결과를 읽는 법</h3>
-      </header>
-
-      {signals !== undefined && (
-        <div className="grid gap-0 md:grid-cols-2 md:divide-x md:divide-border">
-          <div className="border-b border-border p-5 md:border-b-0 sm:p-7">
-            <ResponsePattern responseStyle={signals.responseStyle} />
-          </div>
-          <div className="p-5 sm:p-7">
-            <p className="text-caption font-semibold text-accent">축별 확신도</p>
-            <ul className="mt-3 divide-y divide-border">
-              {signals.confidence.map((confidence) => {
-                const axis = axisById.get(String(confidence.axisId));
-                if (axis === undefined) return null;
-                return (
-                  <li key={String(confidence.axisId)} className="flex min-w-0 items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                    <span className="min-w-0 text-body-sm font-medium text-foreground-body">{axis.name}</span>
-                    <ConfidenceBadge confidence={confidence} />
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {scopeNote !== undefined && (
-        <aside className="flex gap-3 border-t border-border bg-surface-muted p-5 sm:p-7">
-          <Icon name="compass" className="mt-0.5 text-primary-active" />
-          <div>
-            <h4 className="text-label text-foreground">측정 범위</h4>
-            <p className="mt-1 text-body-sm text-foreground-muted">{scopeNote}</p>
-          </div>
-        </aside>
-      )}
     </section>
   );
 }
@@ -668,12 +431,6 @@ export function ResultRenderer({
   );
   const ranking = resolveAxisRanking(definition.axes, snapshot.score.axisScores);
   const narrativeById = new Map(narrative.axes.map((item) => [String(item.axisId), item]));
-  const consistencyById = new Map(
-    signals?.consistency.map((item) => [String(item.axisId), item]) ?? [],
-  );
-  const confidenceById = new Map(
-    signals?.confidence.map((item) => [String(item.axisId), item]) ?? [],
-  );
   const scaleExtent = Math.max(
     ...definition.scale.options.map((option) =>
       Math.abs(option.value - definition.scale.centerValue),
@@ -720,9 +477,9 @@ export function ResultRenderer({
         </div>
       </header>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-4 lg:items-start">
+      <div className="mt-8 grid gap-8 lg:grid-cols-4">
         <div className="lg:col-start-4 lg:row-start-1">
-          <ResultNavigation />
+          <ResultNavigation items={RESULT_NAVIGATION} />
         </div>
 
         <div className="min-w-0 lg:col-span-3 lg:col-start-1 lg:row-start-1">
@@ -750,15 +507,10 @@ export function ResultRenderer({
                     axis={axis}
                     score={score}
                     narrative={narrativeById.get(String(score.axisId))}
-                    consistency={consistencyById.get(String(score.axisId))}
-                    confidence={confidenceById.get(String(score.axisId))}
                   />
                 );
               })}
             </div>
-            <p className="mt-4 max-w-prose text-body-sm text-foreground-subtle">
-              이 표시는 어느 쪽에 얼마나 가까운지 보여 주는 참고 구간이며, 등급이나 우열을 뜻하지 않아요.
-            </p>
 
             <WeightCenter
               ranking={ranking}
@@ -789,11 +541,6 @@ export function ResultRenderer({
               </section>
             )}
 
-            <ReadingGuide
-              signals={signals}
-              axes={definition.axes}
-              scopeNote={definition.resultNarrative?.scopeNote}
-            />
 
             {combinationReadings.length > 0 && (
               <section className="mt-10">
@@ -909,11 +656,6 @@ export function ResultRenderer({
                 <NumberedPoints items={guidance.talkingPoints} />
               </ActionPanel>
             </div>
-
-            <p className="mt-8 flex max-w-prose gap-3 rounded-lg border border-border bg-surface-muted p-5 text-body-sm text-foreground-muted">
-              <Icon name="compass" className="mt-0.5 text-primary" />
-              <span>{DISCLAIMER}</span>
-            </p>
           </section>
         </div>
       </div>

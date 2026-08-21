@@ -438,22 +438,6 @@
     color: color-mix(in oklch, var(--color-chart-positive), black 24%);
   }
 
-  .result-consistency-segment[data-active="false"] {
-    background: var(--color-surface-inset);
-  }
-
-  .result-consistency-segment[data-active="true"][data-level="1"] {
-    background: var(--color-chart-sequential-1);
-  }
-
-  .result-consistency-segment[data-active="true"][data-level="2"] {
-    background: var(--color-chart-sequential-2);
-  }
-
-  .result-consistency-segment[data-active="true"][data-level="3"] {
-    background: var(--color-chart-sequential-4);
-  }
-
   .result-ranking-fill {
     background:
       repeating-linear-gradient(
