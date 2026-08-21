@@ -39,6 +39,7 @@ describe("축 막대의 균형·강도 표현", () => {
     expect(markup).toContain("몰입형 · 균형");
     expect(markup).not.toContain("조금 가까움");
     expect(markup).toContain("혼자 정리하는 몰입형 방향의 균형 구간");
+    expect(markup).toContain("result-axis-center");
   });
 
   it("정확히 0점이면 어느 쪽으로도 기울이지 않습니다", () => {

@@ -1,9 +1,11 @@
 import { Icon, type IconName } from "@/components/ui/Icon";
 import type { AssessmentAxis, ResponseOption } from "@/domain/assessment/model/definition";
-import type { ResponseScaleGuideItem } from "@/lib/assessmentPresentation";
+import {
+  assessmentPerspectiveTone,
+  type ResponseScaleGuideItem,
+} from "@/lib/assessmentPresentation";
 
 const perspectiveIcons: readonly IconName[] = ["message", "compass", "check", "clock"];
-const perspectiveTones = ["energy", "lens", "decision", "rhythm"] as const;
 
 export function AssessmentMapPanel({
   axes,
@@ -33,7 +35,7 @@ export function AssessmentMapPanel({
         <ol className="mt-6 grid grid-cols-2 gap-2.5">
           {axes.map((axis, index) => {
             const icon = perspectiveIcons[index % perspectiveIcons.length] ?? "compass";
-            const tone = perspectiveTones[index % perspectiveTones.length] ?? "energy";
+            const tone = assessmentPerspectiveTone(index);
             return (
               <li
                 key={String(axis.id)}

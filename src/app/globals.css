@@ -309,6 +309,39 @@
     --perspective-strong: var(--color-perspective-slate);
   }
 
+  .result-axis-card {
+    background: var(--perspective-surface);
+  }
+
+  .result-axis-card-kicker {
+    color: var(--perspective-strong);
+  }
+
+  .result-axis-card-chart {
+    border-color: var(--perspective-border);
+  }
+
+  .result-axis-card .result-axis-score-badge {
+    border-color: var(--perspective-border);
+    background: var(--perspective-chip);
+    color: var(--perspective-strong);
+  }
+
+  .result-axis-card .result-axis-track {
+    box-shadow: inset 0 0 0 1px var(--perspective-border);
+  }
+
+  .result-axis-card .result-axis-marker {
+    border-color: var(--perspective-surface);
+  }
+
+  @media (min-width: 48rem) {
+    .result-axis-card-title,
+    .result-axis-card-summary {
+      min-block-size: 3lh;
+    }
+  }
+
   .assessment-perspective-icon {
     display: grid;
     width: 2rem;
@@ -372,20 +405,48 @@
     background:
       linear-gradient(
         90deg,
-        color-mix(in oklch, var(--color-chart-negative), white 82%) 0 50%,
-        color-mix(in oklch, var(--color-chart-positive), white 82%) 50% 100%
+        color-mix(in oklch, var(--color-chart-negative), white 72%) 0 50%,
+        color-mix(in oklch, var(--color-chart-positive), white 72%) 50% 100%
       );
-    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    box-shadow:
+      inset 0 0 0 1px var(--color-border-strong),
+      0 1px 0 color-mix(in oklch, white, transparent 35%);
   }
 
   .result-axis-balanced-zone {
-    border-inline: 1px solid var(--color-border-strong);
+    z-index: 1;
+    border-inline: 2px solid color-mix(in oklch, var(--color-accent), white 35%);
     background:
       repeating-linear-gradient(
         135deg,
-        var(--color-chart-neutral) 0 0.25rem,
-        var(--color-sand-200) 0.25rem 0.5rem
+        var(--color-sand-400) 0 0.22rem,
+        var(--color-sand-100) 0.22rem 0.44rem
       );
+  }
+
+  .result-axis-center {
+    z-index: 2;
+    width: 3px;
+    height: calc(100% + 0.875rem);
+    border-radius: var(--radius-full);
+    background: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-surface);
+  }
+
+  .result-axis-center::before {
+    position: absolute;
+    top: -0.125rem;
+    left: 50%;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: var(--radius-full);
+    background: var(--color-accent);
+    content: "";
+    transform: translate(-50%, -50%);
+  }
+
+  .result-axis-card .result-axis-center {
+    box-shadow: 0 0 0 2px var(--perspective-surface);
   }
 
   .result-axis-fill[data-direction="negative"] {
@@ -415,9 +476,10 @@
     background:
       repeating-linear-gradient(
         135deg,
-        var(--color-sand-300) 0 0.2rem,
-        var(--color-sand-100) 0.2rem 0.4rem
+        var(--color-accent) 0 0.2rem,
+        var(--color-accent-soft) 0.2rem 0.4rem
       );
+    box-shadow: 0 0 0 2px var(--color-accent);
   }
 
   .result-confidence[data-confidence="high"] {

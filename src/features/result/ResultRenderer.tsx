@@ -11,6 +11,7 @@ import {
   resolveAxisRanking,
   type AxisRanking,
 } from "@/domain/assessment/result/axisRanking";
+import { emphasizeText } from "@/domain/assessment/result/emphasis";
 import {
   resolveResultNarrative,
   type ResolvedAxisNarrative,
@@ -25,6 +26,7 @@ import type { AxisScore } from "@/domain/assessment/scoring/score";
 import { AxisBar } from "@/features/result/AxisBar";
 import { ResultNavigation } from "@/features/result/ResultNavigation";
 import { TypeEmblem } from "@/features/result/TypeEmblem";
+import { assessmentPerspectiveTone } from "@/lib/assessmentPresentation";
 
 /**
  * 결과 본문 (DEC-038 · DEC-045 · Phase D)
@@ -91,33 +93,74 @@ function ChapterHeading({
   );
 }
 
+/**
+ * 줄글에서 핵심 어구만 살짝 도드라지게 합니다.
+ *
+ * 강조 대상은 콘텐츠(`emphasisTerms`)가 정하고, 한 문장에 몇 개까지 칠할지는
+ * `emphasizeText`가 막습니다. 색을 크게 쓰지 않고 **굵기 + 진한 잉크**로 처리해
+ * "강조는 크기 → 여백 → 굵기 → 색" 순서(docs/design.md)를 지킵니다.
+ */
+function EmphasizedText({
+  text,
+  terms,
+}: {
+  readonly text: string;
+  readonly terms?: readonly string[];
+}) {
+  if (terms === undefined || terms.length === 0) return <>{text}</>;
+
+  return (
+    <>
+      {emphasizeText(text, terms).map((segment, index) =>
+        segment.emphasized ? (
+          <strong key={index} className="font-semibold text-foreground">
+            {segment.text}
+          </strong>
+        ) : (
+          <span key={index}>{segment.text}</span>
+        ),
+      )}
+    </>
+  );
+}
+
 function AxisInsightCard({
   index,
   axis,
   score,
   narrative,
+  terms,
 }: {
   readonly index: number;
   readonly axis: AssessmentAxis;
   readonly score: AxisScore;
   readonly narrative?: ResolvedAxisNarrative;
+  readonly terms?: readonly string[];
 }) {
+  const tone = assessmentPerspectiveTone(index);
+
   return (
-    <section className="assessment-card min-w-0 p-5 sm:p-6">
+    <section
+      data-perspective-tone={tone}
+      className={`assessment-perspective-card assessment-perspective-card--${tone} result-axis-card flex h-full min-w-0 flex-col overflow-hidden p-5 sm:p-6`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="text-caption font-bold tabular-nums text-primary-active">
+        <span className="result-axis-card-kicker inline-flex items-center gap-2 text-caption font-bold tabular-nums">
+          <span aria-hidden="true" className="assessment-perspective-marker shrink-0" />
           관점 {String(index + 1).padStart(2, "0")}
         </span>
       </div>
 
-      <h3 className="mt-4 text-h3 text-foreground sm:text-h3-lg">
+      <h3 className="result-axis-card-title mt-4 text-h3 text-foreground sm:text-h3-lg">
         {narrative?.reading.headline ?? axis.name}
       </h3>
       {narrative !== undefined && (
-        <p className="mt-2 text-body text-foreground-body">{narrative.reading.summary}</p>
+        <p className="result-axis-card-summary mt-2 text-body text-foreground-body">
+          <EmphasizedText text={narrative.reading.summary} terms={terms} />
+        </p>
       )}
 
-      <div className="mt-5 border-y border-border py-5">
+      <div className="result-axis-card-chart mt-5 border-t pt-5 md:mt-auto">
         <AxisBar
           axis={axis}
           score={score}
@@ -321,7 +364,13 @@ function iconForScene(scene: string): IconName {
   return "compass";
 }
 
-function ScenePoints({ items }: { readonly items: readonly SceneNote[] }) {
+function ScenePoints({
+  items,
+  terms,
+}: {
+  readonly items: readonly SceneNote[];
+  readonly terms?: readonly string[];
+}) {
   return (
     <ul className="mt-5 grid gap-x-8 gap-y-5 sm:grid-cols-2">
       {items.map((item) => (
@@ -330,7 +379,9 @@ function ScenePoints({ items }: { readonly items: readonly SceneNote[] }) {
             <Icon name={iconForScene(item.scene)} className="size-4" />
             {item.scene}
           </span>
-          <p className="mt-2 text-body text-foreground-body">{item.text}</p>
+          <p className="mt-2 text-body text-foreground-body">
+            <EmphasizedText text={item.text} terms={terms} />
+          </p>
         </li>
       ))}
     </ul>
@@ -342,11 +393,13 @@ function SceneGroup({
   description,
   icon,
   items,
+  terms,
 }: {
   readonly title: string;
   readonly description: string;
   readonly icon: IconName;
   readonly items: readonly SceneNote[];
+  readonly terms?: readonly string[];
 }) {
   return (
     <section className="p-5 sm:p-7">
@@ -359,7 +412,7 @@ function SceneGroup({
           <p className="mt-1 text-body-sm text-foreground-muted">{description}</p>
         </div>
       </div>
-      <ScenePoints items={items} />
+      <ScenePoints items={items} terms={terms} />
     </section>
   );
 }
@@ -430,6 +483,7 @@ export function ResultRenderer({
     narrative.balancedAxisIds,
   );
   const ranking = resolveAxisRanking(definition.axes, snapshot.score.axisScores);
+  const emphasisTerms = definition.resultNarrative?.emphasisTerms;
   const narrativeById = new Map(narrative.axes.map((item) => [String(item.axisId), item]));
   const scaleExtent = Math.max(
     ...definition.scale.options.map((option) =>
@@ -472,7 +526,7 @@ export function ResultRenderer({
         <div className="mt-8 grid gap-3 border-t border-primary-soft-border pt-6 md:grid-cols-[auto_minmax(0,1fr)] md:gap-7">
           <p className="text-label text-primary-active">나의 교직 리듬</p>
           <p className="max-w-prose text-body-lg text-foreground-body sm:text-body-lg-desktop">
-            {narrative.rhythm}
+            <EmphasizedText text={narrative.rhythm} terms={emphasisTerms} />
           </p>
         </div>
       </header>
@@ -496,7 +550,7 @@ export function ResultRenderer({
               }
             />
 
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="result-axis-card-grid mt-6 grid gap-4 md:auto-rows-fr md:grid-cols-2">
               {snapshot.score.axisScores.map((score, index) => {
                 const axis = axisById.get(String(score.axisId));
                 if (axis === undefined) return null;
@@ -507,6 +561,7 @@ export function ResultRenderer({
                     axis={axis}
                     score={score}
                     narrative={narrativeById.get(String(score.axisId))}
+                    terms={emphasisTerms}
                   />
                 );
               })}
@@ -573,7 +628,9 @@ export function ResultRenderer({
                             poles={profile.poles}
                           />
                         )}
-                        <p className="mt-4 text-body text-foreground-body">{combination.text}</p>
+                        <p className="mt-4 text-body text-foreground-body">
+                          <EmphasizedText text={combination.text} terms={emphasisTerms} />
+                        </p>
                       </section>
                     );
                   })}
@@ -590,18 +647,21 @@ export function ResultRenderer({
             />
             <div className="mt-6 divide-y divide-border rounded-lg border border-border bg-surface">
               <SceneGroup
+                terms={emphasisTerms}
                 title="강점이 드러날 수 있는 장면"
                 description="현재 교직 스타일이 힘을 발휘하는 장면이에요."
                 icon="check"
                 items={guidance.shiningMoments}
               />
               <SceneGroup
+                terms={emphasisTerms}
                 title="바쁠 때 나타날 수 있는 모습"
                 description="단점이라기보다 여유가 줄었을 때 먼저 살펴볼 신호예요."
                 icon="warning"
                 items={guidance.underPressure}
               />
               <SceneGroup
+                terms={emphasisTerms}
                 title="동료와 함께 일할 때"
                 description="학년과 학교 안에서 현재 경향이 드러날 수 있는 방식이에요."
                 icon="message"

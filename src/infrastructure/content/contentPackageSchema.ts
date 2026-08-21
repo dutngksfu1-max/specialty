@@ -151,6 +151,7 @@ const resultNarrativeSchema = z.object({
   balancedOneLiner: z.string().min(1),
   balancedAxisNote: z.string().min(1),
   scopeNote: z.string().min(1),
+  emphasisTerms: z.array(z.string().min(2)).default([]),
   balancedGuidance: resultGuidanceSchema,
   axes: z.array(axisResultNarrativeSchema).min(1),
 });

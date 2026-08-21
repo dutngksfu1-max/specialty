@@ -11,7 +11,7 @@ import type { AxisScore } from "@/domain/assessment/scoring/score";
 export type AxisBarVariant = "screen" | "share";
 
 const SIZE = {
-  screen: { track: 10, marker: 18, labelPx: 14, badgePx: 13, gapPx: 12 },
+  screen: { track: 12, marker: 20, labelPx: 14, badgePx: 13, gapPx: 12 },
   share: { track: 12, marker: 24, labelPx: 21, badgePx: 18, gapPx: 14 },
 } as const;
 
@@ -69,10 +69,16 @@ export function AxisBar({
       style={{ paddingBlock: variant === "share" ? size.gapPx : undefined }}
       className="min-w-0"
     >
-      <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-4 gap-y-2">
+      <div
+        className={
+          variant === "screen"
+            ? "grid h-10 min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2"
+            : "flex min-w-0 flex-wrap items-start justify-between gap-x-4 gap-y-2"
+        }
+      >
         <p
           style={{ fontSize: size.labelPx, color: "var(--color-foreground)" }}
-          className="min-w-0 font-semibold"
+          className="result-axis-name min-w-0 font-semibold"
         >
           {axis.name}
         </p>
@@ -82,13 +88,16 @@ export function AxisBar({
             paddingInline: variant === "share" ? 12 : 8,
             paddingBlock: variant === "share" ? 4 : 3,
           }}
-          className="shrink-0 rounded-xs border border-border-strong bg-surface-muted font-semibold tabular-nums text-foreground-body"
+          className="result-axis-score-badge shrink-0 rounded-xs border border-border-strong bg-surface-muted font-semibold tabular-nums text-foreground-body"
         >
           {signedScore(score.rawScore)} · {summaryLabel}
         </span>
       </div>
 
-      <div style={{ marginTop: size.gapPx }} className="flex items-end justify-between gap-4">
+      <div
+        style={{ marginTop: size.gapPx }}
+        className={`flex items-end justify-between gap-4 ${variant === "screen" ? "h-11" : ""}`}
+      >
         <span
           style={{ fontSize: size.labelPx }}
           className="max-w-[46%] font-semibold text-chart-negative"
@@ -134,7 +143,7 @@ export function AxisBar({
 
         <span
           aria-hidden="true"
-          className="absolute inset-y-[-0.25rem] left-1/2 w-px -translate-x-1/2 bg-border-strong"
+          className="result-axis-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         />
         <span
           aria-hidden="true"
@@ -145,7 +154,7 @@ export function AxisBar({
             height: size.marker,
             borderWidth: variant === "share" ? 3 : 2,
           }}
-          className="result-axis-marker absolute top-1/2 -translate-x-1/2 -translate-y-1/2 border-solid border-surface"
+          className="result-axis-marker absolute top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 border-solid border-surface"
         />
       </div>
     </div>

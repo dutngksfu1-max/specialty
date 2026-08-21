@@ -1,5 +1,21 @@
 import type { SectionId } from "@/domain/shared/ids";
 
+export const ASSESSMENT_PERSPECTIVE_TONES = [
+  "energy",
+  "lens",
+  "decision",
+  "rhythm",
+] as const;
+
+export type AssessmentPerspectiveTone =
+  (typeof ASSESSMENT_PERSPECTIVE_TONES)[number];
+
+/** 소개와 결과에서 관점 순서를 같은 색·형태 문법으로 연결합니다. */
+export function assessmentPerspectiveTone(index: number): AssessmentPerspectiveTone {
+  const safeIndex = Math.abs(index) % ASSESSMENT_PERSPECTIVE_TONES.length;
+  return ASSESSMENT_PERSPECTIVE_TONES[safeIndex] ?? "energy";
+}
+
 export const PRESENTATION_COLOR_TOKENS = [
   "sand-50",
   "sand-100",

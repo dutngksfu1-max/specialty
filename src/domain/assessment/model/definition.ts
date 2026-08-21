@@ -109,6 +109,13 @@ export interface ResultNarrativeSpec {
   readonly balancedAxisNote: string;
   /** 본문 흐름을 끊지 않고 해석 범위만 짧게 알리는 문구 */
   readonly scopeNote: string;
+  /**
+   * 줄글에서 눈이 걸릴 곳을 만들 핵심 어구입니다.
+   *
+   * 무엇을 강조할지는 **콘텐츠가 정하고**, 한 문장에 몇 개까지 칠할지는 엔진이 막습니다.
+   * 이 검사는 축마다 전용 어휘를 쓰므로 목록 하나를 모든 결과 문장에 함께 써도 축이 섞이지 않습니다.
+   */
+  readonly emphasisTerms: readonly string[];
   /** 균형 축이 하나라도 있을 때 부호 기반 16개 프로필 대신 보여 줄 중립 안내 */
   readonly balancedGuidance: Pick<
     ResultProfile,

@@ -101,6 +101,18 @@ describe("결과 페이지 정보 구조", () => {
     }
   });
 
+  it("네 관점 카드는 소개 화면과 같은 네 가지 색 문법과 정렬 구조를 사용합니다", () => {
+    const { markup } = renderResult();
+    const tones = [...markup.matchAll(/data-perspective-tone="([^"]+)"/g)].map(
+      (match) => match[1],
+    );
+
+    expect(tones).toEqual(["energy", "lens", "decision", "rhythm"]);
+    expect(markup).toContain("result-axis-card-grid");
+    expect(markup).toContain("md:auto-rows-fr");
+    expect(markup).toContain("result-axis-card-chart");
+  });
+
   it("균형 구간이 있어도 산출된 교직 스타일을 끝까지 전달합니다", () => {
     const markup = renderBalancedResult();
 
