@@ -220,7 +220,7 @@ describe("결과 페이지 정보 구조", () => {
       throw new Error("테스트용 코드 규격을 불러오지 못했습니다.");
     }
 
-    expect(markup).toContain("함께 정하고 꼼꼼히 준비하는 교실");
+    expect(markup).toContain("함께 정하고 꼼꼼히 준비하는 선생님");
     expect(markup).not.toContain("결과를 나타내는 상징");
     expect(markup).toContain("balanced-male.jpg");
     expect(markup).toContain("·");

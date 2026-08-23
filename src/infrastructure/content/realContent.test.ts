@@ -627,7 +627,9 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
       expect(length, profile.title).toBeGreaterThanOrEqual(12);
       expect(length, profile.title).toBeLessThanOrEqual(20);
       expect(profile.title, profile.title).not.toMatch(/(형|타입)$/);
-      expect(profile.title, profile.title).toMatch(/교실$/);
+      // 결과 제목은 공간이 아니라 사람을 가리킵니다. 읽는 분이 자기 이야기로 받아들이도록
+      // '~하는 선생님'으로 끝냅니다. 분류 어미('~형')는 여전히 금지입니다.
+      expect(profile.title, profile.title).toMatch(/선생님$/);
     }
   });
 

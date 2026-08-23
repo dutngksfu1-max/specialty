@@ -400,9 +400,9 @@ export const teacherStyleV1Base = {
   // 문장의 뜻이 달라진 문항이 있어, 예전 응답을 그대로 이어 쓰면 다른 문장에 답한 점수가 됩니다.
   // 그래서 contentVersion만 올리지 않고 assessmentVersion을 함께 올려 재검사를 유도합니다.
   assessmentVersion: 5,
-  // 4.1.1 — 문구만 다듬었습니다(교직 리듬 16개). 문항·채점은 그대로라
-  // assessmentVersion은 올리지 않습니다. 저장된 응답은 그대로 이어집니다.
-  contentVersion: "4.1.1",
+  // 4.2.0 — 결과 제목 16개를 "~하는 선생님"으로 바꾸고 교직 리듬 16개를 다시 썼습니다.
+  // 문항·축·채점은 그대로라 assessmentVersion은 올리지 않습니다. 저장된 응답도 그대로 이어집니다.
+  contentVersion: "4.2.0",
   scale,
   axes,
   typeCode,

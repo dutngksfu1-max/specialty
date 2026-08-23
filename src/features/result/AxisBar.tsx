@@ -10,6 +10,8 @@ import type { AxisScore } from "@/domain/assessment/scoring/score";
 
 export type AxisBarVariant = "screen" | "share";
 
+export const AXIS_DISPLAY_LEVEL_MAX = 5;
+
 const SIZE = {
   screen: { track: 12, marker: 20, labelPx: 14, badgePx: 13, gapPx: 12 },
   share: { track: 12, marker: 24, labelPx: 21, badgePx: 18, gapPx: 14 },
@@ -19,24 +21,27 @@ function clampPercent(value: number): number {
   return Math.min(Math.max(value, 0), 100);
 }
 
-/**
- * Keep zero and both score limits fixed while making small differences around
- * the center easier to compare. This affects presentation only; scoring and
- * intensity bands continue to use the unmodified raw score.
- */
+/** Display-only level. Scoring and intensity bands keep using the raw score. */
+export function axisDisplayLevel(
+  score: Pick<AxisScore, "rawScore" | "minScore" | "maxScore">,
+): number {
+  if (score.rawScore === 0) return 0;
+
+  const extent = score.rawScore > 0 ? score.maxScore : Math.abs(score.minScore);
+  if (extent <= 0) return 0;
+
+  const strength = Math.min(Math.abs(score.rawScore) / extent, 1);
+  const level = Math.max(1, Math.ceil(strength * AXIS_DISPLAY_LEVEL_MAX));
+  const direction = score.rawScore > 0 ? 1 : -1;
+
+  return direction * level;
+}
+
 export function visualMarkerPercent(
   score: Pick<AxisScore, "rawScore" | "minScore" | "maxScore">,
 ): number {
-  if (score.rawScore === 0) return 50;
-
-  const extent = score.rawScore > 0 ? score.maxScore : Math.abs(score.minScore);
-  if (extent <= 0) return 50;
-
-  const strength = Math.min(Math.abs(score.rawScore) / extent, 1);
-  const visualStrength = Math.pow(strength, 0.6);
-  const direction = score.rawScore > 0 ? 1 : -1;
-
-  return clampPercent(50 + direction * visualStrength * 50);
+  const level = axisDisplayLevel(score);
+  return clampPercent(50 + (level / AXIS_DISPLAY_LEVEL_MAX) * 50);
 }
 
 function signedScore(value: number): string {
@@ -57,6 +62,7 @@ export function AxisBar({
 }) {
   const size = SIZE[variant];
   const band = axis.intensityBands.find((candidate) => candidate.id === intensityBandId);
+  const displayLevel = axisDisplayLevel(score);
   const markerPercent = visualMarkerPercent(score);
   const showsDirection = band?.directional ?? !score.isBalanced;
   const isExactCenter = score.rawScore === 0;
@@ -109,7 +115,7 @@ export function AxisBar({
           }}
           className="result-axis-score-badge shrink-0 rounded-xs border border-border-strong bg-surface-muted font-semibold tabular-nums text-foreground-body"
         >
-          {signedScore(score.rawScore)} · {summaryLabel}
+          {signedScore(displayLevel)} · {summaryLabel}
         </span>
       </div>
 
@@ -141,7 +147,7 @@ export function AxisBar({
               ? "두 방향의 점수가 같은 균형 구간"
               : `${directionLabel} 방향의 균형 구간`
             : `${directionLabel} 쪽, ${band?.label ?? "방향 확인"}`
-        }, 축 점수 ${signedScore(score.rawScore)}`}
+        }, 기울기 단계 ${signedScore(displayLevel)}`}
       >
         {!showsDirection && (
           <span

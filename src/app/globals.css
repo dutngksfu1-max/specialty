@@ -558,7 +558,12 @@
   }
 
   .result-axis-card .result-axis-center {
-    box-shadow: 0 0 0 2px var(--perspective-surface);
+    background: var(--perspective-strong);
+    box-shadow: none;
+  }
+
+  .result-axis-card .result-axis-center::before {
+    background: var(--perspective-strong);
   }
 
   .result-axis-fill[data-direction="negative"] {
