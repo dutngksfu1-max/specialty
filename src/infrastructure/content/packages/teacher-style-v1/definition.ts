@@ -94,7 +94,7 @@ const axes = [
       code: "A",
       crosswalkCode: "S",
       description:
-        "관찰한 장면과 구체적인 자료를 바탕으로 아이와 수업을 이해합니다. 실제로 확인한 변화와 결과를 중요한 근거로 삼습니다.",
+        "직접 본 것과 남아 있는 자료를 바탕으로 아이와 수업을 이해합니다. 실제로 확인한 변화와 결과를 중요한 근거로 삼습니다.",
     },
     negative: {
       side: "negative",
@@ -103,7 +103,7 @@ const axes = [
       code: "O",
       crosswalkCode: "N",
       description:
-        "현재 장면이 앞으로 어떻게 이어질지를 그리며 아이와 수업을 이해합니다. 개별 장면을 전체 흐름과 연결해 살핍니다.",
+        "지금 보이는 일이 앞으로 어떻게 이어질지를 그리며 아이와 수업을 이해합니다. 하나하나를 전체 흐름과 이어서 살핍니다.",
     },
     defaultPole: "positive",
     intensityBands,
@@ -173,15 +173,15 @@ const axisCombinations = [
     readings: [
       {
         poles: { "axis-lens": "positive", "axis-rhythm": "positive" },
-        text: "새 방법이 눈에 들어오면 필요한 준비물과 순서를 먼저 확인하고, 어느 수업에서 시도할지 정한 뒤 시작하는 편이에요. 구체적인 실행 조건이 갖춰졌을 때 움직이기 편할 수 있습니다.",
+        text: "새 방법이 눈에 들어오면 필요한 준비물과 순서를 먼저 확인하고, 어느 수업에서 시도할지 정한 뒤 시작하는 편이에요. 필요한 것이 다 갖춰졌을 때 움직이기 편한 편이에요.",
       },
       {
         poles: { "axis-lens": "positive", "axis-rhythm": "negative" },
-        text: "바로 써 볼 수 있는 방법이 눈에 들어오면 작은 범위에서 먼저 시도하고, 아이들 반응을 보며 다음 방법을 정하는 편이에요. 시도 뒤에 짧게 기록해 두면 판단 근거를 남기기 좋습니다.",
+        text: "바로 써 볼 수 있는 방법이 눈에 들어오면 작은 범위에서 먼저 시도하고, 아이들 반응을 보며 다음 방법을 정하는 편이에요. 해 본 뒤에 짧게 적어 두면 왜 그렇게 정했는지 남겨 두기 좋습니다.",
       },
       {
         poles: { "axis-lens": "negative", "axis-rhythm": "positive" },
-        text: "새로운 방법이 우리 반의 배움과 어디로 이어질지를 먼저 그려 보고, 의미가 분명해지면 학기 흐름 안에 자리를 마련하는 편이에요. 방향과 첫 실행 단계를 함께 적어 두면 생각을 옮기기 편합니다.",
+        text: "새로운 방법이 우리 반의 배움과 어디로 이어질지를 먼저 그려 보고, 의미가 분명해지면 학기 흐름 안에 자리를 마련하는 편이에요. 방향과 첫 걸음을 함께 적어 두면 생각을 옮기기 편합니다.",
       },
       {
         poles: { "axis-lens": "negative", "axis-rhythm": "negative" },
@@ -227,7 +227,7 @@ const axisCombinations = [
       },
       {
         poles: { "axis-energy": "negative", "axis-lens": "positive" },
-        text: "혼자 자료와 기록을 살피며 사실을 확인하는 편이에요. 확인이 꼼꼼한 만큼 어디까지 보면 충분한지 정하기 어려울 때가 있으니, 시작 전에 확인의 범위를 정해 두면 수월합니다.",
+        text: "혼자 자료와 기록을 살피며 사실을 확인하는 편이에요. 확인이 꼼꼼한 만큼 어디까지 보면 충분한지 정하기 어려울 때가 있으니, 시작 전에 어디까지 볼지 정해 두면 수월합니다.",
       },
       {
         poles: { "axis-energy": "negative", "axis-lens": "negative" },
@@ -265,7 +265,7 @@ const axisCombinations = [
     readings: [
       {
         poles: { "axis-lens": "positive", "axis-decision": "positive" },
-        text: "확인한 사실을 정해 둔 기준에 비추어 판단하는 편이에요. 근거와 기준이 함께 있으면 설명이 분명해지지만, 기록에 남지 않은 사정이 빠질 수 있다는 점은 살펴볼 만합니다.",
+        text: "확인한 사실을 정해 둔 기준에 비추어 판단하는 편이에요. 근거와 기준이 함께 있으면 설명이 분명해지지만, 기록에 없는 사정은 빠질 수 있다는 점도 함께 살펴보면 좋습니다.",
       },
       {
         poles: { "axis-lens": "positive", "axis-decision": "negative" },
@@ -292,7 +292,7 @@ const axisCombinations = [
       },
       {
         poles: { "axis-decision": "positive", "axis-rhythm": "negative" },
-        text: "기준은 분명히 하되 방법은 상황에 맞춰 바꾸는 편이에요. 무엇이 바뀌지 않는 기준이고 무엇이 조정 가능한지 나눠 말하면 동료가 따라오기 쉽습니다.",
+        text: "기준은 분명히 하되 방법은 상황에 맞춰 바꾸는 편이에요. 무엇은 바꾸지 않는 기준이고 무엇은 바꿔도 되는지 나눠 말하면 동료가 따라오기 쉽습니다.",
       },
       {
         poles: { "axis-decision": "negative", "axis-rhythm": "positive" },
@@ -300,7 +300,7 @@ const axisCombinations = [
       },
       {
         poles: { "axis-decision": "negative", "axis-rhythm": "negative" },
-        text: "상황을 보며 판단도 방법도 함께 조정하는 편이에요. 두 가지가 동시에 움직이면 밖에서는 흐름이 보이지 않으므로, 다시 확인할 시점을 정해 두면 좋습니다.",
+        text: "상황을 보며 판단도 방법도 함께 조정하는 편이에요. 두 가지가 동시에 움직이면 밖에서는 흐름이 보이지 않으므로, 언제 다시 확인할지 정해 두면 좋습니다.",
       },
     ],
   },
@@ -400,10 +400,11 @@ export const teacherStyleV1Base = {
   // 문장의 뜻이 달라진 문항이 있어, 예전 응답을 그대로 이어 쓰면 다른 문장에 답한 점수가 됩니다.
   // 그래서 contentVersion만 올리지 않고 assessmentVersion을 함께 올려 재검사를 유도합니다.
   assessmentVersion: 5,
-  // 4.3.0 — 결과를 요약/자세히 두 갈래로 나누고(DEC-062) 축 서술 44개·협업 문구 64개를 다시 썼습니다.
-  // 균형 축이 있을 때 쓰는 제목·리듬도 콘텐츠가 갖습니다.
+  // 4.4.0 — 결과 문장을 교실 말로 다시 썼습니다 (DEC-062 2·3차).
+  // 축 서술 132문장, 장면 29곳, 협업·행동·질문 108곳, 조합 해석 7곳.
+  // 강도 사다리도 '장면' 대신 가끔 → 자주 → 상황이 달라져도 → 거의 늘 로 읽습니다.
   // 문항·축·채점은 그대로라 assessmentVersion은 올리지 않습니다. 저장된 응답도 그대로 이어집니다.
-  contentVersion: "4.3.0",
+  contentVersion: "4.4.0",
   scale,
   axes,
   typeCode,

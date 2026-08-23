@@ -133,3 +133,60 @@ describe("safeFileName", () => {
     expect(safeFileName("   ")).toBe("결과");
   });
 });
+
+
+/**
+ * 숨은 탭 패널 안의 본문 캡처 (DEC-062)
+ *
+ * 결과 본문은 `자세히 보기` 패널 안에 있고, 고르지 않은 패널에는 `hidden`이 붙습니다.
+ * 펼치지 않고 캡처하면 크기가 0이라 **빈 페이지가 담긴 PDF**가 나옵니다.
+ * 브라우저 없이 확인할 수 없는 대신, 펼치고 되돌리는 절차를 여기서 지킵니다.
+ */
+describe("revealHiddenAncestors", () => {
+  /** parentElement 사슬만 흉내 냅니다. 실제 DOM 없이 절차만 확인합니다. */
+  function chain(hiddenFlags: readonly boolean[]) {
+    const nodes = hiddenFlags.map((hidden) => ({ hidden, parentElement: null }) as unknown as HTMLElement);
+    for (let i = 0; i < nodes.length - 1; i += 1) {
+      Object.defineProperty(nodes[i] as object, "parentElement", {
+        value: nodes[i + 1],
+        writable: true,
+      });
+    }
+    return nodes;
+  }
+
+  it("숨은 조상을 펼치고, 되돌리면 원래대로 돌아옵니다", async () => {
+    const { revealHiddenAncestors } = await import("@/features/result/captureNode");
+    const [target, panel, page] = chain([false, true, false]);
+    if (target === undefined || panel === undefined || page === undefined) {
+      throw new Error("테스트 노드를 만들지 못했습니다.");
+    }
+
+    const restore = revealHiddenAncestors(target);
+    expect(panel.hidden).toBe(false);
+
+    restore();
+    expect(panel.hidden).toBe(true);
+    expect(page.hidden).toBe(false);
+  });
+
+  it("숨은 조상이 없으면 아무것도 건드리지 않습니다", async () => {
+    const { revealHiddenAncestors } = await import("@/features/result/captureNode");
+    const [target, parent] = chain([false, false]);
+    if (target === undefined || parent === undefined) {
+      throw new Error("테스트 노드를 만들지 못했습니다.");
+    }
+
+    revealHiddenAncestors(target)();
+    expect(parent.hidden).toBe(false);
+  });
+
+  it("캡처 대상 자신은 건드리지 않습니다 — 조상만 봅니다", async () => {
+    const { revealHiddenAncestors } = await import("@/features/result/captureNode");
+    const [target] = chain([true]);
+    if (target === undefined) throw new Error("테스트 노드를 만들지 못했습니다.");
+
+    revealHiddenAncestors(target);
+    expect(target.hidden).toBe(true);
+  });
+});

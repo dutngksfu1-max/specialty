@@ -305,7 +305,7 @@ describe("결과 페이지 정보 구조", () => {
 
     const { markup } = renderResult(signals);
 
-    expect(markup).toContain("장면에 따라 달라지는 점");
+    expect(markup).toContain("상황에 따라 달라지는 점");
     expect(markup).toContain("동료");
     expect(markup).toContain("+1.5");
     expect(markup).toContain("6문항");
@@ -325,7 +325,7 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).not.toContain(narrative.oneLiner);
     expect(markup).toContain(narrative.rhythm);
     expect(markup).toContain("한눈에 보는 나");
-    expect(markup).not.toContain("장면에 따라 달라지는 점");
+    expect(markup).not.toContain("상황에 따라 달라지는 점");
     expect(markup).not.toContain("응답 폭");
   });
 
@@ -371,7 +371,7 @@ describe("결과 페이지 정보 구조", () => {
     const { markup } = renderResult();
     const headings = [
       "한눈에 보는 나",
-      "강점이 드러나는 장면",
+      "이럴 때 강점이 돼요",
       "여유가 줄었을 때 나타나는 모습",
       "동료와 함께 일할 때",
       "함께할 때 잘 이어지는 점",
@@ -545,7 +545,7 @@ describe("요약 보기와 자세히 보기 (DEC-062)", () => {
 
   it("두 관점 해석은 두 장까지만 펼칩니다", () => {
     const { markup } = renderResult();
-    const cards = markup.match(/두 관점 렌즈/g) ?? [];
+    const cards = markup.match(/두 관점이 만날 때/g) ?? [];
 
     expect(cards.length).toBeLessThanOrEqual(2);
   });

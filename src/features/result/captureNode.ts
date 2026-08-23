@@ -76,6 +76,33 @@ export async function captureNodeAsPng(node: HTMLElement): Promise<string> {
   return toPng(node, options);
 }
 
+/**
+ * 캡처할 노드가 숨은 조상 안에 있으면 잠깐 펼칩니다 (DEC-062).
+ *
+ * 결과 본문은 `요약 보기 / 자세히 보기` 탭 패널 안에 있고, 고르지 않은 패널에는
+ * `hidden` 속성이 붙습니다. `hidden`은 `display: none`이라 크기가 0이 되고,
+ * 그대로 캡처하면 **빈 페이지가 담긴 PDF**가 나옵니다.
+ *
+ * 그래서 캡처 동안만 펼쳤다가 되돌립니다. 돌려주는 함수를 반드시 `finally`에서 부르세요.
+ * `hidden` 속성만 다룹니다 — 화면 스타일은 건드리지 않으므로 되돌리기가 확실합니다.
+ */
+export function revealHiddenAncestors(node: HTMLElement): () => void {
+  const restores: (() => void)[] = [];
+
+  for (let current = node.parentElement; current !== null; current = current.parentElement) {
+    if (!current.hidden) continue;
+    const element = current;
+    element.hidden = false;
+    restores.push(() => {
+      element.hidden = true;
+    });
+  }
+
+  return () => {
+    for (const restore of restores.reverse()) restore();
+  };
+}
+
 /** 파일명에 쓸 수 없는 문자를 걸러 냅니다. */
 export function safeFileName(name: string): string {
   const cleaned = name.replace(/[\\/:*?"<>|]/g, "").trim();

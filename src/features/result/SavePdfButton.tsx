@@ -4,7 +4,11 @@ import { useState, type RefObject } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
-import { captureNodeAsPng, safeFileName } from "@/features/result/captureNode";
+import {
+  captureNodeAsPng,
+  revealHiddenAncestors,
+  safeFileName,
+} from "@/features/result/captureNode";
 
 type State = "idle" | "working" | "failed";
 
@@ -57,6 +61,8 @@ export function SavePdfButton({
     if (heroNode === null) return;
 
     setState("working");
+    /** 캡처하려고 펼친 탭 패널을 되돌리는 함수들 */
+    const restores: (() => void)[] = [];
     try {
       // jsPDF를 동적으로 import합니다.
       // 왜: PDF 다운로드를 누르지 않는 사용자에게 ~80KB를 로드하지 않기 위해서입니다.
@@ -134,10 +140,17 @@ export function SavePdfButton({
       // 1단계: Hero 캡처 → 첫 페이지
       await addNodeToPdf(heroNode);
 
-      // 2단계: 본문 섹션들을 순서대로 캡처 → 이어지는 페이지들
+      /*
+        2단계: 본문 섹션들을 순서대로 캡처 → 이어지는 페이지들
+
+        본문은 `자세히 보기` 탭 패널 안에 있습니다. 요약 보기를 고른 상태라면 그 패널에
+        `hidden`이 붙어 크기가 0이므로, 펼쳐 두지 않으면 빈 페이지만 담깁니다 (DEC-062).
+        캡처가 끝나면 아래 finally에서 원래대로 되돌립니다.
+      */
       for (const sectionId of SECTION_IDS) {
         const sectionNode = document.getElementById(sectionId);
         if (sectionNode === null) continue;
+        restores.push(revealHiddenAncestors(sectionNode));
         await addNodeToPdf(sectionNode);
       }
 
@@ -147,6 +160,8 @@ export function SavePdfButton({
       setState("idle");
     } catch {
       setState("failed");
+    } finally {
+      for (const restore of restores) restore();
     }
   }
 

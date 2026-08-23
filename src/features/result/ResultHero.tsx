@@ -230,7 +230,7 @@ export function ResultHero({
             {definition.axes.length}개 관점을 한눈에
           </h2>
           <p className="mt-2 max-w-prose text-body-sm text-foreground-muted">
-            마주 보는 두 방향 사이에서 현재 기울기와 균형을 한 모양으로 살펴봅니다.
+            네 관점이 각각 어느 쪽으로 얼마나 기울었는지 한 모양으로 겹쳐 봅니다.
           </p>
           <div className="mt-5 flex justify-center">
             <ResultBalanceMap

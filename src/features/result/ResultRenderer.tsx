@@ -269,7 +269,7 @@ function ContextSplitCard({
     <section className="assessment-card min-w-0 p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-caption font-semibold text-primary-active">장면 차이</p>
+          <p className="text-caption font-semibold text-primary-active">상황 차이</p>
           <h4 className="mt-1 text-h3 text-foreground">{axis.name}</h4>
         </div>
         <span className="rounded-xs border border-border-strong bg-surface-muted px-2 py-1 text-caption font-semibold tabular-nums text-foreground-body">
@@ -696,7 +696,7 @@ function SummaryView({
           네 관점 한눈에
         </h2>
         <p className="mt-2 max-w-prose text-body text-foreground-muted">
-          지금의 응답이 각 관점에서 어느 쪽에 얼마나 가까운지입니다.
+          각 관점에서 어느 쪽에 얼마나 가까운지예요.
         </p>
         <div className="mt-5">
           <AxisCardGrid
@@ -716,7 +716,7 @@ function SummaryView({
           교실에서는 이렇게 나타나요
         </h2>
         <p className="mt-2 max-w-prose text-body text-foreground-muted">
-          장면마다 하나씩만 골랐습니다. 나머지는 자세히 보기에 있어요.
+          묶음마다 하나씩만 골랐어요. 나머지는 자세히 보기에 있습니다.
         </p>
         <SummaryScenes guidance={guidance} terms={terms} />
       </section>
@@ -756,7 +756,7 @@ function SummaryView({
           <Icon name="compass" /> 전체 결과 자세히 보기
         </button>
         <p className="mt-3 text-body-sm text-foreground-muted">
-          장면 아홉 개와 두 관점 해석까지 이어서 읽습니다.
+          교실에서의 모습 아홉 가지와 두 관점 해석까지 이어서 읽습니다.
         </p>
       </div>
     </div>
@@ -930,9 +930,9 @@ export function ResultRenderer({
 
                   {signals !== undefined && signals.contextSplits.length > 0 && (
                     <section className="mt-10">
-                      <h3 className="text-h3 text-foreground sm:text-h3-lg">장면에 따라 달라지는 점</h3>
+                      <h3 className="text-h3 text-foreground sm:text-h3-lg">상황에 따라 달라지는 점</h3>
                       <p className="mt-2 max-w-prose text-body text-foreground-muted">
-                        축 합계로는 보이지 않는 장면별 차이입니다. 평균과 문항 수를 함께 살펴보세요.
+                        같은 관점인데 수업일 때와 회의일 때 답이 달랐던 곳이에요. 평균과 문항 수를 함께 봐 주세요.
                       </p>
                       <div className="mt-5 grid gap-4 md:grid-cols-2">
                         {signals.contextSplits.map((split) => {
@@ -953,9 +953,9 @@ export function ResultRenderer({
 
                   {topCombinations.length > 0 && (
                     <section className="mt-10">
-                      <h3 className="text-h3 text-foreground sm:text-h3-lg">두 관점이 함께 드러나는 장면</h3>
+                      <h3 className="text-h3 text-foreground sm:text-h3-lg">두 관점이 겹칠 때</h3>
                       <p className="mt-2 max-w-prose text-body text-foreground-muted">
-                        지금 가장 도드라진 관점끼리 실제 수업과 업무에서 어떻게 이어지는지 살펴보세요.
+                        지금 가장 도드라진 두 관점이 수업과 업무에서 어떻게 만나는지 적었습니다.
                       </p>
                       <div className="mt-5 grid gap-4 md:grid-cols-2">
                         {topCombinations.map(({ combination, spec }) => {
@@ -971,7 +971,7 @@ export function ResultRenderer({
                               key={combination.id}
                               className="assessment-card min-w-0 p-5 sm:p-6"
                             >
-                              <p className="text-caption font-semibold text-primary-active">두 관점 렌즈</p>
+                              <p className="text-caption font-semibold text-primary-active">두 관점이 만날 때</p>
                               <h4 className="mt-2 text-h3 text-foreground">{combination.title}</h4>
                               {first !== undefined && second !== undefined && (
                                 <CombinationQuadrant
@@ -994,7 +994,7 @@ export function ResultRenderer({
                   <ChapterHeading
                     number="02"
                     title="교실에서 드러나는 모습"
-                    description="네 가지 결과를 함께 읽어, 수업과 업무에서 자연스럽게 드러나는 모습을 정리했습니다."
+                    description="네 관점을 함께 읽어, 수업·생활지도·업무·동료 사이에서 자주 나타나는 모습을 적었습니다."
                   />
                   {/* 한 덩어리로 이어 붙이지 않고 묶음마다 면을 끊습니다 (DEC-054). */}
                   <div className="mt-6 grid gap-4">
@@ -1002,8 +1002,8 @@ export function ResultRenderer({
                       tone="strength"
                       index={1}
                       terms={emphasisTerms}
-                      title="강점이 드러나는 장면"
-                      description="지금의 교직 스타일이 그대로 힘이 되는 상황입니다."
+                      title="이럴 때 강점이 돼요"
+                      description="지금 방식이 그대로 힘이 되는 때예요."
                       icon="check"
                       items={guidance.shiningMoments}
                     />
@@ -1021,7 +1021,7 @@ export function ResultRenderer({
                       index={3}
                       terms={emphasisTerms}
                       title="동료와 함께 일할 때"
-                      description="학년과 학교 안에서 이 스타일이 드러나는 방식입니다."
+                      description="학년 협의나 업무를 나눌 때 자주 보이는 모습이에요."
                       icon="message"
                       items={guidance.withColleagues}
                     />
@@ -1032,7 +1032,7 @@ export function ResultRenderer({
                   <ChapterHeading
                     number="03"
                     title="함께 일하는 방식"
-                    description="누가 더 잘 맞는지를 가르는 내용이 아니라, 서로 다른 리듬 사이에서 무엇이 자연스럽고 무엇을 먼저 말해 두면 좋은지 보여 줍니다."
+                    description="누가 더 잘 맞는지 가르는 내용이 아니에요. 방식이 서로 다를 때 무엇이 편하고, 무엇을 먼저 말해 두면 좋은지 적었습니다."
                   />
                   <div className="mt-6 grid overflow-hidden rounded-lg border border-border bg-surface md:grid-cols-2 md:divide-x md:divide-border">
                     <section className="border-b border-border p-5 md:border-b-0 sm:p-7">

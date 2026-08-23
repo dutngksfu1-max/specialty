@@ -72,6 +72,7 @@ export default async function AssessmentIntroPage({ params }: PageProps<"/assess
               <div className="px-3 pr-0"><dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="clock" className="size-4" />시간</dt><dd className="mt-1 text-h3 tabular-nums text-foreground">{definition.estimatedTimeLabel ?? `약 ${definition.estimatedMinutes}분`}</dd></div>
             </dl>
 
+
             <div className="mt-7">
               <p className="text-caption font-bold tracking-[0.08em] text-accent">이 검사가 읽는 것</p>
               <p className="mt-3 max-w-prose text-body text-foreground-body">{definition.description}</p>
