@@ -388,8 +388,11 @@ export const teacherStyleV1Base = {
   status: "published",
   // 축과 문항이 통째로 바뀌었습니다. 버전을 올려야 예전 응답이 조용히 섞이지 않고
   // "새로 시작" 안내를 받습니다 (architecture 7.3).
-  assessmentVersion: 4,
-  contentVersion: "4.0.0",
+  // 48문항 중 20개의 문장을 다시 썼습니다 (DEC-051). 축·polarity·id·장면태그는 그대로지만
+  // 문장의 뜻이 달라진 문항이 있어, 예전 응답을 그대로 이어 쓰면 다른 문장에 답한 점수가 됩니다.
+  // 그래서 contentVersion만 올리지 않고 assessmentVersion을 함께 올려 재검사를 유도합니다.
+  assessmentVersion: 5,
+  contentVersion: "4.1.0",
   scale,
   axes,
   typeCode,
