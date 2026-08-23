@@ -298,14 +298,21 @@ function ScenePoints({
   readonly terms?: readonly string[];
 }) {
   return (
-    <ul className="mt-5 grid gap-x-8 gap-y-5 sm:grid-cols-2">
+    <ul className="result-scene-list mt-5 grid gap-3 md:grid-cols-3">
       {items.map((item) => (
-        <li key={`${item.scene}-${item.text}`} className="min-w-0">
-          <span className="inline-flex items-center gap-1.5 rounded-xs bg-primary-soft px-2 py-1 text-body-sm font-medium text-primary-active">
-            <Icon name={iconForScene(item.scene)} className="size-4" />
-            {item.scene}
-          </span>
-          <p className="mt-2 text-body text-foreground-body">
+        <li key={`${item.scene}-${item.situation}`} className="result-scene-item min-w-0">
+          {/*
+            상황 제목이 먼저 눈에 들어와야 합니다 (DEC-054).
+            문단만 늘어놓으면 눈이 걸릴 곳이 없어 "뭘 얘기하려는 거지?"가 됩니다.
+          */}
+          <p className="flex min-w-0 items-center gap-1.5 text-caption font-medium text-foreground-muted">
+            <Icon name={iconForScene(item.scene)} className="size-4 shrink-0" />
+            <span className="truncate">{item.scene}</span>
+          </p>
+          <p className="result-scene-situation mt-1.5 text-body font-semibold text-foreground">
+            {item.situation}
+          </p>
+          <p className="mt-2 text-body-sm text-foreground-body">
             <EmphasizedText text={item.text} terms={terms} />
           </p>
         </li>
@@ -314,13 +321,26 @@ function ScenePoints({
   );
 }
 
+/**
+ * 세 묶음은 서로 다른 면으로 읽혀야 합니다 (DEC-054).
+ *
+ * 예전에는 셋이 같은 면 위에 같은 모양으로 이어져서, 지금 읽는 것이
+ * 강점인지 주의 신호인지 구분되지 않았습니다. 색만으로 나누면 색각 이상 사용자에게
+ * 정보가 사라지므로 **면·아이콘·표식 모양**을 함께 다르게 둡니다.
+ */
+type SceneGroupTone = "strength" | "pressure" | "colleague";
+
 function SceneGroup({
+  tone,
+  index,
   title,
   description,
   icon,
   items,
   terms,
 }: {
+  readonly tone: SceneGroupTone;
+  readonly index: number;
   readonly title: string;
   readonly description: string;
   readonly icon: IconName;
@@ -328,14 +348,20 @@ function SceneGroup({
   readonly terms?: readonly string[];
 }) {
   return (
-    <section className="p-5 sm:p-7">
-      <div className="flex gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-accent-soft text-accent">
+    <section data-scene-tone={tone} className="result-scene-group min-w-0 p-5 sm:p-7">
+      <div className="flex min-w-0 items-start gap-3">
+        <span
+          aria-hidden="true"
+          className="result-scene-badge flex size-10 shrink-0 items-center justify-center rounded-sm"
+        >
           <Icon name={icon} />
         </span>
-        <div>
-          <h3 className="text-h3 text-foreground sm:text-h3-lg">{title}</h3>
-          <p className="mt-1 text-body-sm text-foreground-muted">{description}</p>
+        <div className="min-w-0">
+          <p className="result-scene-index text-caption font-semibold tabular-nums">
+            {String(index).padStart(2, "0")}
+          </p>
+          <h3 className="mt-0.5 text-h3 text-foreground sm:text-h3-lg">{title}</h3>
+          <p className="mt-1 max-w-prose text-body-sm text-foreground-muted">{description}</p>
         </div>
       </div>
       <ScenePoints items={items} terms={terms} />
@@ -543,25 +569,32 @@ export function ResultRenderer({
               title="교실에서 드러나는 모습"
               description="네 가지 결과를 함께 읽어, 수업과 업무에서 자연스럽게 드러나는 모습을 정리했습니다."
             />
-            <div className="mt-6 divide-y divide-border rounded-lg border border-border bg-surface">
+            {/* 한 덩어리로 이어 붙이지 않고 묶음마다 면을 끊습니다 (DEC-054). */}
+            <div className="mt-6 grid gap-4">
               <SceneGroup
+                tone="strength"
+                index={1}
                 terms={emphasisTerms}
-                title="강점이 드러날 수 있는 장면"
-                description="현재 교직 스타일이 힘을 발휘하는 장면이에요."
+                title="강점이 드러나는 장면"
+                description="지금의 교직 스타일이 그대로 힘이 되는 상황입니다."
                 icon="check"
                 items={guidance.shiningMoments}
               />
               <SceneGroup
+                tone="pressure"
+                index={2}
                 terms={emphasisTerms}
-                title="바쁠 때 나타날 수 있는 모습"
-                description="단점이라기보다 여유가 줄었을 때 먼저 살펴볼 신호예요."
+                title="여유가 줄었을 때 나타나는 모습"
+                description="단점이 아니라, 바빠지면 먼저 나타나는 신호입니다."
                 icon="warning"
                 items={guidance.underPressure}
               />
               <SceneGroup
+                tone="colleague"
+                index={3}
                 terms={emphasisTerms}
                 title="동료와 함께 일할 때"
-                description="학년과 학교 안에서 현재 경향이 드러날 수 있는 방식이에요."
+                description="학년과 학교 안에서 이 스타일이 드러나는 방식입니다."
                 icon="message"
                 items={guidance.withColleagues}
               />

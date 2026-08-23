@@ -18,6 +18,14 @@ export interface CollaborationProfile {
  */
 export interface SceneNote {
   readonly scene: string;
+  /**
+   * 짧은 상황 제목 (DEC-054) — 예: "월요일 1교시", "길어지는 학년 회의"
+   *
+   * 읽는 사람이 제목만 훑어도 무슨 이야기인지 알 수 있게 합니다.
+   * 문단만 늘어놓으면 눈이 걸릴 곳이 없어 "뭘 얘기하려는 거지?"가 됩니다.
+   */
+  readonly situation: string;
+  /** 그 상황에서 실제로 일어나는 일. 추측형 어미를 쓰지 않습니다 (DEC-054) */
   readonly text: string;
 }
 

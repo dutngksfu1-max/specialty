@@ -641,15 +641,55 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
 
   it("각 묶음의 항목 수가 규격을 지킵니다", () => {
     for (const profile of definition.resultProfiles) {
+      // 세 묶음 모두 3개입니다 (DEC-054). 묶음마다 개수가 다르면 화면에서 높이가 어긋납니다.
       expect(profile.shiningMoments).toHaveLength(3);
-      expect(profile.underPressure.length).toBeGreaterThanOrEqual(2);
-      expect(profile.underPressure.length).toBeLessThanOrEqual(3);
-      expect(profile.withColleagues.length).toBeGreaterThanOrEqual(2);
-      expect(profile.withColleagues.length).toBeLessThanOrEqual(3);
+      expect(profile.underPressure).toHaveLength(3);
+      expect(profile.withColleagues).toHaveLength(3);
       expect(profile.collaboration.naturalFit).toHaveLength(2);
       expect(profile.collaboration.needsTuning).toHaveLength(2);
       expect(profile.nextSteps).toHaveLength(3);
       expect(profile.talkingPoints).toHaveLength(3);
+    }
+  });
+
+  /**
+   * 장면 서술 문장 규칙 (DEC-054)
+   *
+   * "~해 볼 수 있어요"는 제안이지 서술이 아닙니다. 읽는 사람은 자기 이야기를 들은 게 아니라
+   * 훈수를 들은 것이 됩니다. 실제로 일어나는 장면을 적습니다.
+   */
+  it("장면 서술에 추측형 어미를 쓰지 않습니다", () => {
+    for (const profile of definition.resultProfiles) {
+      const notes = [...profile.shiningMoments, ...profile.underPressure, ...profile.withColleagues];
+      for (const note of notes) {
+        expect(note.text, `${profile.key}: ${note.text}`).not.toMatch(
+          /수 있어요|수 있습니다|것 같아요|일지도|하면 좋아요|해 보세요/,
+        );
+      }
+    }
+  });
+
+  it("장면마다 짧은 상황 제목이 붙어 있습니다", () => {
+    for (const profile of definition.resultProfiles) {
+      const notes = [...profile.shiningMoments, ...profile.underPressure, ...profile.withColleagues];
+      for (const note of notes) {
+        expect(note.situation, `${profile.key}: ${note.text}`).toBeTruthy();
+        // 제목이 길어지면 훑어보는 구실을 못 합니다.
+        expect(note.situation.length, note.situation).toBeLessThanOrEqual(16);
+        expect(note.situation.length, note.situation).toBeGreaterThanOrEqual(2);
+        // 제목과 본문이 같은 말이면 두 번 읽게 됩니다.
+        expect(note.text, note.situation).not.toBe(note.situation);
+      }
+    }
+  });
+
+  it("한 프로필 안에서 상황 제목이 겹치지 않습니다", () => {
+    for (const profile of definition.resultProfiles) {
+      const notes = [...profile.shiningMoments, ...profile.underPressure, ...profile.withColleagues];
+      const situations = notes.map((note) => note.situation);
+      expect(new Set(situations).size, `${profile.key}: ${situations.join(" / ")}`).toBe(
+        situations.length,
+      );
     }
   });
 

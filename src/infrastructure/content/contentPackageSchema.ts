@@ -106,6 +106,8 @@ const collaborationProfileSchema = z.object({
 /** 장면이 붙은 서술 한 줄 (contentVersion 3.0.0) */
 const sceneNoteSchema = z.object({
   scene: z.string().min(1),
+  /** 짧은 상황 제목. 길어지면 제목 구실을 못 합니다 (DEC-054) */
+  situation: z.string().min(2).max(16),
   text: z.string().min(1),
 });
 

@@ -411,6 +411,110 @@
    * 어느 쪽이 어느 성향인지는 막대 위의 **색이 있는 양쪽 라벨**이 이미 알려 줍니다.
    * 트랙에서 색을 빼면 채움의 길이가 곧 세기가 됩니다.
    */
+  /* ---------- 교실에서 드러나는 모습 (DEC-054) ----------------------------
+     세 묶음이 한 덩어리로 읽히던 문제를 고칩니다. 강점·주의 신호·협업이
+     각각 다른 면으로 보여야 지금 무엇을 읽는 중인지 알 수 있습니다.
+
+     **색만으로 나누지 않습니다.** 왼쪽 인덱스 막대의 모양(실선/사선/점선)과
+     아이콘, 번호가 함께 달라져 색을 못 보는 사용자도 구분할 수 있습니다. */
+  .result-scene-group {
+    position: relative;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    padding-inline-start: calc(1.25rem + 6px);
+  }
+
+  .result-scene-group::before {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 6px;
+    border-start-start-radius: var(--radius-lg);
+    border-end-start-radius: var(--radius-lg);
+    content: "";
+  }
+
+  @media (min-width: 40rem) {
+    .result-scene-group {
+      padding-inline-start: calc(1.75rem + 6px);
+    }
+  }
+
+  .result-scene-group[data-scene-tone="strength"] {
+    background: color-mix(in oklch, var(--color-primary-soft), white 55%);
+    border-color: var(--color-primary-soft-border);
+  }
+  .result-scene-group[data-scene-tone="strength"]::before {
+    background: var(--color-primary);
+  }
+
+  .result-scene-group[data-scene-tone="pressure"] {
+    background: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+  }
+  /* 사선 = 주의 신호. 색이 아니라 결로 구분합니다. */
+  .result-scene-group[data-scene-tone="pressure"]::before {
+    background: repeating-linear-gradient(
+      135deg,
+      var(--color-accent) 0 4px,
+      color-mix(in oklch, var(--color-accent), white 60%) 4px 8px
+    );
+  }
+
+  .result-scene-group[data-scene-tone="colleague"] {
+    background: var(--color-surface);
+    border-color: var(--color-border-strong);
+  }
+  /* 끊긴 막대 = 여럿이 이어지는 자리 */
+  .result-scene-group[data-scene-tone="colleague"]::before {
+    background: repeating-linear-gradient(
+      to bottom,
+      var(--color-perspective-slate) 0 10px,
+      transparent 10px 16px
+    );
+  }
+
+  .result-scene-badge {
+    border: 1px solid currentColor;
+    background: var(--color-surface);
+  }
+  .result-scene-group[data-scene-tone="strength"] .result-scene-badge,
+  .result-scene-group[data-scene-tone="strength"] .result-scene-index {
+    color: var(--color-primary-active);
+  }
+  .result-scene-group[data-scene-tone="pressure"] .result-scene-badge,
+  .result-scene-group[data-scene-tone="pressure"] .result-scene-index {
+    color: var(--color-accent);
+  }
+  .result-scene-group[data-scene-tone="colleague"] .result-scene-badge,
+  .result-scene-group[data-scene-tone="colleague"] .result-scene-index {
+    color: var(--color-perspective-slate);
+  }
+
+  /* 상황 카드 — 제목이 먼저 걸리고 본문이 따라오게 합니다. */
+  .result-scene-item {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    padding: 0.875rem 1rem;
+  }
+
+  .result-scene-group[data-scene-tone="strength"] .result-scene-item {
+    border-color: var(--color-primary-soft-border);
+  }
+
+  .result-scene-situation {
+    text-wrap: balance;
+  }
+
+  /* 세 칸이 나란히 설 때 높이를 맞춰 기준선이 흔들리지 않게 합니다. */
+  @media (min-width: 48rem) {
+    .result-scene-list {
+      align-items: stretch;
+    }
+  }
+
   .result-axis-track {
     /* 균형 마커가 chart-neutral(sand-300)이라, 트랙은 한 단계 옅은 sand-200을 씁니다. */
     background: var(--color-surface-inset);

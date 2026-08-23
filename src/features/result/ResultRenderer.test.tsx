@@ -170,7 +170,8 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).toContain("·");
     expect(markup).toContain(found.value.typeCode.balancedNote);
     expect(markup).toContain(found.value.typeCode.crosswalk.unavailableNote);
-    expect(markup).toContain("두 방식 가운데 어느 쪽을 선택했는지 실제 장면");
+    // 균형 안내도 상황 제목이 붙은 장면 서술을 씁니다 (DEC-054).
+    expect(markup).toContain("두 방식이 갈렸던 날");
     expect(markup).toContain("균형으로 나온 관점 하나를 골라");
     expect(markup).not.toContain("몰입형과는,");
   });
@@ -293,8 +294,8 @@ describe("결과 페이지 정보 구조", () => {
     const { markup } = renderResult();
     const headings = [
       "한눈에 보는 나",
-      "강점이 드러날 수 있는 장면",
-      "바쁠 때 나타날 수 있는 모습",
+      "강점이 드러나는 장면",
+      "여유가 줄었을 때 나타나는 모습",
       "동료와 함께 일할 때",
       "함께할 때 잘 이어지는 점",
       "미리 맞춰 두면 좋은 점",
