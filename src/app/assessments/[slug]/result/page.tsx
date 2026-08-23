@@ -28,7 +28,7 @@ export default async function ResultPage({ params }: PageProps<"/assessments/[sl
   return (
     <AssessmentTheme presentation={presentation}>
       <SiteHeader />
-      <ResultView slug={found.value.slug} />
+      <ResultView slug={found.value.slug} presentation={presentation} />
       <SiteFooter />
     </AssessmentTheme>
   );

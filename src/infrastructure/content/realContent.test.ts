@@ -805,3 +805,73 @@ describe("채점과의 연결", () => {
     }
   });
 });
+
+describe("4렌즈 코드 (DEC-049)", () => {
+  const poles = definition.axes.flatMap((axis) => [axis.positive, axis.negative]);
+
+  it("여덟 극 모두에 글자가 있고 서로 겹치지 않습니다", () => {
+    const codes = poles.map((pole) => pole.code);
+
+    expect(codes).toHaveLength(8);
+    expect(codes.every((code) => code !== undefined)).toBe(true);
+    expect(new Set(codes).size).toBe(8);
+  });
+
+  it("글자가 자리 순서와 뜻이 맞습니다", () => {
+    const byShortLabel = new Map(poles.map((pole) => [pole.shortLabel, pole.code]));
+
+    expect(Object.fromEntries(byShortLabel)).toEqual({
+      교류형: "G",
+      몰입형: "D",
+      실제형: "A",
+      가능성형: "O",
+      원칙형: "R",
+      맥락형: "C",
+      계획형: "M",
+      유연형: "L",
+    });
+  });
+
+  it("환산 글자와 4렌즈 글자가 한 개도 겹치지 않습니다", () => {
+    // 겹치면 사용자가 같은 글자를 서로 반대 뜻으로 두 번 읽게 됩니다.
+    // 예: 우리 M(계획)과 환산 쪽 글자가 같으면 화면에서 구별이 안 됩니다.
+    const lensLetters = new Set(poles.map((pole) => pole.code));
+    for (const pole of poles) {
+      expect(lensLetters.has(pole.crosswalkCode), pole.shortLabel).toBe(false);
+    }
+  });
+
+  it("어떤 조합으로도 금지된 네 글자 코드가 만들어지지 않습니다 (AGENTS.md 1.1)", () => {
+    const [energy, lens, decision, rhythm] = definition.axes;
+    const sides = (index: number) => {
+      const axis = [energy, lens, decision, rhythm][index];
+      return [axis?.positive.code ?? "", axis?.negative.code ?? ""];
+    };
+
+    const combinations: string[] = [];
+    for (const a of sides(0))
+      for (const b of sides(1))
+        for (const c of sides(2)) for (const d of sides(3)) combinations.push(a + b + c + d);
+
+    expect(combinations).toHaveLength(16);
+    expect(new Set(combinations).size).toBe(16);
+
+    for (const code of combinations) {
+      expect(code, code).not.toMatch(/\b[EI][NS][TF][JP]\b/i);
+    }
+  });
+
+  it("균형 자리 글자가 극 글자와 구별됩니다", () => {
+    const balancedLetter = definition.typeCode?.balancedLetter;
+
+    expect(balancedLetter).toBe("·");
+    expect(poles.some((pole) => pole.code === balancedLetter)).toBe(false);
+  });
+
+  it("환산 안내에 근사임을 알리는 문구가 있습니다", () => {
+    const crosswalk = definition.typeCode?.crosswalk;
+
+    expect(crosswalk?.disclaimer).toBeTruthy();
+    expect(crosswalk?.unavailableNote).toBeTruthy();
+  });
+});

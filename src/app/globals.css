@@ -491,6 +491,50 @@
       );
   }
 
+  .result-hero-lens[data-weight="primary"] {
+    border-width: 2px;
+    box-shadow: inset 4px 0 0 var(--perspective-strong);
+  }
+
+  .result-crosswalk[open] .result-crosswalk-chevron {
+    transform: rotate(180deg);
+  }
+
+  .result-hero-lens[data-weight="shared"] {
+    box-shadow: inset 3px 0 0 var(--perspective-strong);
+  }
+
+  .result-hero-lens[data-balanced="true"] {
+    background:
+      repeating-linear-gradient(
+        135deg,
+        color-mix(in oklch, var(--color-chart-neutral), white 54%) 0 0.45rem,
+        var(--color-surface) 0.45rem 0.9rem
+      );
+    box-shadow: inset 3px 0 0 var(--color-chart-neutral);
+  }
+
+  .result-balance-key[data-direction="positive"] {
+    border-radius: var(--radius-xs);
+    background: var(--color-chart-positive);
+  }
+
+  .result-balance-key[data-direction="negative"] {
+    background: var(--color-chart-negative);
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+
+  .result-balance-key[data-direction="balanced"] {
+    border: 1px solid var(--color-foreground-body);
+    border-radius: var(--radius-none);
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--color-chart-neutral) 0 0.18rem,
+        var(--color-surface) 0.18rem 0.36rem
+      );
+  }
+
   .result-context-chart::before {
     position: absolute;
     inset-inline: 0;

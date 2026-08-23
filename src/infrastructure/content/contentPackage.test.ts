@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -329,6 +332,8 @@ describe("StaticAssessmentCatalog", () => {
     expect(presentation?.version).toBe(1);
     expect(presentation?.heroArtwork.src).toMatch(/^\/assessments\//);
     expect(presentation?.sectionArtwork).toHaveLength(4);
+    expect(presentation?.typeArtwork).toHaveLength(16);
+    expect(presentation?.balancedArtwork?.src).toContain("/types/balanced.svg");
     expect(presentation?.responseScaleGuide).toHaveLength(5);
   });
 
@@ -402,5 +407,69 @@ describe("검사 프레젠테이션 무결성", () => {
       }),
     );
     expect(detail).toContain("responseScaleGuide");
+  });
+
+  it("유형 선화 참조의 중복과 누락을 거부합니다", () => {
+    const detail = expectInvalidPackage(
+      broken((draft) => {
+        const presentation = draft.presentation as Record<string, unknown>;
+        const typeArtwork = presentation.typeArtwork as Record<string, unknown>[];
+        const first = typeArtwork[0];
+        const second = typeArtwork[1];
+        if (first !== undefined && second !== undefined) second.resultKey = first.resultKey;
+      }),
+    );
+    expect(detail).toContain("typeArtwork resultKey가 중복");
+    expect(detail).toContain("빠진 resultKey");
+  });
+
+  it("유형 선화와 균형 선화는 한 쌍으로 제공합니다", () => {
+    const detail = expectInvalidPackage(
+      broken((draft) => {
+        const presentation = draft.presentation as Record<string, unknown>;
+        delete presentation.balancedArtwork;
+      }),
+    );
+    expect(detail).toContain("함께 제공");
+  });
+
+  it("등록한 유형 선화 16종과 균형 선화가 모두 로컬 파일로 존재합니다", () => {
+    const presentation = staticAssessmentCatalog.findPresentationBySlug("teacher-style");
+    const typeArtwork = presentation?.typeArtwork ?? [];
+    const balancedArtwork = presentation?.balancedArtwork;
+    expect(typeArtwork).toHaveLength(16);
+    expect(balancedArtwork).toBeDefined();
+
+    const artwork = [
+      ...typeArtwork.map((item) => item.artwork),
+      ...(balancedArtwork === undefined ? [] : [balancedArtwork]),
+    ];
+    expect(new Set(artwork.map((item) => item.src)).size).toBe(17);
+    for (const item of artwork) {
+      expect(existsSync(resolve(process.cwd(), "public", item.src.slice(1))), item.src).toBe(true);
+    }
+  });
+
+  it("각 결과 프로필이 축 데이터에서 조립되는 4렌즈 코드 파일을 가리킵니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    const presentation = staticAssessmentCatalog.findPresentationBySlug("teacher-style");
+    if (!found.ok || presentation?.typeArtwork === undefined) {
+      throw new Error("테스트용 검사와 유형 선화를 불러오지 못했습니다.");
+    }
+
+    for (const profile of found.value.resultProfiles) {
+      const code = found.value.axes
+        .map((axis) => {
+          const side = profile.poles[axis.id] ?? axis.defaultPole;
+          return (side === "positive" ? axis.positive : axis.negative).code ?? "";
+        })
+        .join("")
+        .toLowerCase();
+      const artwork = presentation.typeArtwork.find(
+        (item) => item.resultKey === profile.key,
+      )?.artwork;
+
+      expect(artwork?.src).toMatch(new RegExp(`/${code}\\.svg$`));
+    }
   });
 });

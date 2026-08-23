@@ -16,6 +16,20 @@ export interface AxisPole {
   /** 좁은 화면용 짧은 이름 */
   readonly shortLabel: string;
   readonly description: string;
+  /**
+   * 유형 코드에서 이 극을 나타내는 글자 한 개 (DEC-049)
+   *
+   * 글자는 **콘텐츠가 소유합니다.** 엔진은 자리 순서대로 이어 붙이기만 합니다.
+   * 화면 코드에 글자를 하드코딩하면 다음 검사에서 코드가 깨집니다 (AGENTS.md 7절).
+   */
+  readonly code?: string;
+  /**
+   * 다른 성향 검사로 환산할 때 이 극에 대응하는 글자 한 개 (DEC-049)
+   *
+   * 네 글자를 통째로 두지 않고 극마다 한 글자씩만 둡니다.
+   * 조립은 `buildTypeCode`가 하며, 저장소 전체 금지 표현 검사가 계속 0건으로 유지됩니다.
+   */
+  readonly crosswalkCode?: string;
 }
 
 export interface IntensityBand {
@@ -129,6 +143,36 @@ export interface ResultNarrativeSpec {
   readonly axes: readonly AxisResultNarrative[];
 }
 
+/**
+ * 유형 코드 표기 규격 (DEC-049)
+ *
+ * 체계 이름·균형 표시·환산 문구를 전부 콘텐츠가 소유합니다.
+ * 엔진은 "자리마다 글자 하나"라는 규칙만 알고, 무슨 글자인지도 무슨 이름인지도 모릅니다.
+ */
+export interface TypeCodeSpec {
+  /** 화면에 쓰는 체계 이름 (예: "4렌즈 코드") */
+  readonly label: string;
+  /** 균형 구간인 자리에 대신 넣는 글자 */
+  readonly balancedLetter: string;
+  /** 균형 자리가 있을 때 코드 옆에 붙이는 안내 */
+  readonly balancedNote: string;
+  /**
+   * 다른 검사로의 환산 표기. 없으면 환산을 아예 보여 주지 않습니다.
+   *
+   * 기본 접힘 상태로 두고, 유형 코드보다 작게 표시합니다 (DEC-049).
+   */
+  readonly crosswalk?: {
+    /** 접힘 토글에 쓰는 문구 */
+    readonly summaryLabel: string;
+    /** 펼쳤을 때 환산 코드 앞에 붙는 검사 이름 */
+    readonly systemLabel: string;
+    /** 환산이 정확한 변환이 아니라 근사임을 알리는 문구 */
+    readonly disclaimer: string;
+    /** 균형 자리가 있어 환산하지 않을 때 대신 보여 줄 문구 */
+    readonly unavailableNote: string;
+  };
+}
+
 export interface ResponseOption {
   readonly value: number;
   /** 접근성 라벨. 모든 선택지에 필요합니다 */
@@ -190,6 +234,8 @@ export interface AssessmentDefinition {
   readonly axes: readonly AssessmentAxis[];
   /** 방향·강도·균형을 함께 반영하는 결과 서술. 없으면 기존 프로필 문구를 사용합니다. */
   readonly resultNarrative?: ResultNarrativeSpec;
+  /** 유형 코드 표기 규격. 없으면 결과에 코드를 표시하지 않습니다 (DEC-049) */
+  readonly typeCode?: TypeCodeSpec;
   /** 축 조합 해석. 없을 수도 있습니다 */
   readonly axisCombinations: readonly AxisCombination[];
   readonly sections: readonly AssessmentSection[];

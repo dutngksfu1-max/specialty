@@ -18,6 +18,7 @@ import { RetakeControls } from "@/features/result/RetakeControls";
 import { SaveImageButton } from "@/features/result/SaveImageButton";
 import { useAssessmentServices } from "@/features/shared/AssessmentRepositoryProvider";
 import { messageFor, type ErrorMessage } from "@/lib/errorMessages";
+import type { AssessmentPresentation } from "@/lib/assessmentPresentation";
 
 interface Loaded {
   readonly definition: AssessmentDefinition;
@@ -37,7 +38,13 @@ type State =
  * 저장된 데이터가 브라우저 안에만 있으므로 이 화면은 Client Component입니다.
  * 결과 키(resultKey)는 내부 식별자이므로 화면에 절대 출력하지 않습니다.
  */
-export function ResultView({ slug }: { readonly slug: string }) {
+export function ResultView({
+  slug,
+  presentation,
+}: {
+  readonly slug: string;
+  readonly presentation?: AssessmentPresentation;
+}) {
   const services = useAssessmentServices();
   const shareCardRef = useRef<HTMLDivElement | null>(null);
 
@@ -97,6 +104,7 @@ export function ResultView({ slug }: { readonly slug: string }) {
           profile={profile}
           nickname={nickname}
           signals={signals}
+          presentation={presentation}
         />
 
         <section className="mt-14 rounded-lg border border-border bg-surface p-5 sm:p-7 lg:flex lg:items-end lg:justify-between lg:gap-8">

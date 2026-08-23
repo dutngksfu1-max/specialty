@@ -1,4 +1,4 @@
-import type { SectionId } from "@/domain/shared/ids";
+import type { ResultKey, SectionId } from "@/domain/shared/ids";
 
 export const ASSESSMENT_PERSPECTIVE_TONES = [
   "energy",
@@ -62,6 +62,13 @@ export interface AssessmentPresentation {
     readonly sectionId: SectionId;
     readonly artwork: LocalArtwork;
   }[];
+  /** 방향 조합별 결과 선화. 결과 키는 조회에만 쓰고 화면에는 노출하지 않습니다. */
+  readonly typeArtwork?: readonly {
+    readonly resultKey: ResultKey;
+    readonly artwork: LocalArtwork;
+  }[];
+  /** 어느 한쪽으로 단정하지 않는 균형 구간 전용 선화입니다. */
+  readonly balancedArtwork?: LocalArtwork;
   /** 제공하면 소개 화면에서 각 응답 라벨과 함께 표시합니다. */
   readonly responseScaleGuide?: readonly ResponseScaleGuideItem[];
 }
@@ -95,4 +102,14 @@ export function findSectionArtwork(
   sectionId: SectionId,
 ): LocalArtwork | undefined {
   return presentation?.sectionArtwork.find((item) => item.sectionId === sectionId)?.artwork;
+}
+
+/** 결과 화면 조립 지점에서 균형 여부와 내부 결과 키에 맞는 선화를 고릅니다. */
+export function findTypeArtwork(
+  presentation: AssessmentPresentation | undefined,
+  resultKey: ResultKey,
+  hasBalancedAxis: boolean,
+): LocalArtwork | undefined {
+  if (hasBalancedAxis) return presentation?.balancedArtwork;
+  return presentation?.typeArtwork?.find((item) => item.resultKey === resultKey)?.artwork;
 }

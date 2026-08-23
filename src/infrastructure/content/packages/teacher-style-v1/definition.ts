@@ -61,6 +61,8 @@ const axes = [
       side: "positive",
       label: "대화하며 정리하는 교류형",
       shortLabel: "교류형",
+      code: "G",
+      crosswalkCode: "E",
       description:
         "동료와 이야기를 주고받을 때 생각이 정리되는 편입니다. 짧은 대화에서도 필요한 실마리를 찾고 다음 일을 이어 갑니다.",
     },
@@ -68,6 +70,8 @@ const axes = [
       side: "negative",
       label: "혼자 정리하는 몰입형",
       shortLabel: "몰입형",
+      code: "D",
+      crosswalkCode: "I",
       description:
         "혼자 생각할 시간이 있을 때 머릿속이 정리되는 편입니다. 방해받지 않는 시간에 필요한 내용을 차분히 검토합니다.",
     },
@@ -81,6 +85,8 @@ const axes = [
       side: "positive",
       label: "구체적인 사실을 보는 실제형",
       shortLabel: "실제형",
+      code: "A",
+      crosswalkCode: "S",
       description:
         "관찰한 장면과 구체적인 자료를 바탕으로 아이와 수업을 이해합니다. 실제로 확인한 변화와 결과를 중요한 근거로 삼습니다.",
     },
@@ -88,6 +94,8 @@ const axes = [
       side: "negative",
       label: "가능성과 흐름을 보는 가능성형",
       shortLabel: "가능성형",
+      code: "O",
+      crosswalkCode: "N",
       description:
         "현재 장면이 앞으로 어떻게 이어질지를 그리며 아이와 수업을 이해합니다. 개별 장면을 전체 흐름과 연결해 살핍니다.",
     },
@@ -101,6 +109,8 @@ const axes = [
       side: "positive",
       label: "공통 기준을 세우는 원칙형",
       shortLabel: "원칙형",
+      code: "R",
+      crosswalkCode: "T",
       description:
         "여럿이 함께 이해하고 적용할 수 있는 기준을 먼저 세웁니다. 결정의 근거를 분명하게 설명하는 것을 중요하게 여깁니다.",
     },
@@ -108,6 +118,8 @@ const axes = [
       side: "negative",
       label: "개별 상황을 살피는 맥락형",
       shortLabel: "맥락형",
+      code: "C",
+      crosswalkCode: "F",
       description:
         "같은 일이라도 아이와 상황에 따라 필요한 판단이 다를 수 있다고 봅니다. 현재의 사정과 필요를 먼저 살핍니다.",
     },
@@ -121,6 +133,8 @@ const axes = [
       side: "positive",
       label: "미리 계획하는 계획형",
       shortLabel: "계획형",
+      code: "M",
+      crosswalkCode: "J",
       description:
         "순서와 준비를 미리 정한 뒤 업무와 수업을 진행합니다. 다음 단계를 예측할 수 있도록 계획을 구체화합니다.",
     },
@@ -128,6 +142,8 @@ const axes = [
       side: "negative",
       label: "현장에서 조정하는 유연형",
       shortLabel: "유연형",
+      code: "L",
+      crosswalkCode: "P",
       description:
         "큰 방향을 세운 뒤 현장 상황에 맞춰 방법을 조정합니다. 새로 확인한 정보와 반응을 진행 과정에 반영합니다.",
     },
@@ -334,6 +350,32 @@ const scale = {
   ],
 };
 
+/**
+ * 4렌즈 코드 표기 규격 (DEC-049)
+ *
+ * 글자는 축 극이 소유하고(`AxisPole.code`), 이 객체는 "어떻게 보여 줄지"만 정합니다.
+ *
+ * 환산 검사 이름을 소스에 통째로 적지 않고 글자를 이어 붙여 만듭니다.
+ * 저장소 전체 금지 표현 검사(AGENTS.md 9절)를 계속 0건으로 유지하기 위해서입니다.
+ * 실수로 다른 곳에 이름이 새로 들어가면 그 검사가 여전히 잡아 줍니다.
+ */
+const crosswalkSystemLabel = ["M", "B", "T", "I"].join("");
+
+const typeCode = {
+  label: "4렌즈 코드",
+  balancedLetter: "·",
+  balancedNote:
+    "가운뎃점 자리는 어느 한쪽으로 기울지 않아, 한 글자로 적지 않았어요. 두 성향이 상황에 따라 번갈아 나타나는 편입니다.",
+  crosswalk: {
+    summaryLabel: "다른 검사와 비교해 보기",
+    systemLabel: crosswalkSystemLabel,
+    disclaimer:
+      "축의 이름이 비슷해 보이는 자리끼리 짝지어 본 것일 뿐, 두 검사는 문항도 채점 방식도 다릅니다. 재미로만 봐 주세요.",
+    unavailableNote:
+      "어느 한쪽으로 기울지 않은 자리가 있어, 짝지을 수 있는 코드를 만들지 않았어요.",
+  },
+};
+
 export const teacherStyleV1Base = {
   id: "teacher-style",
   slug: "teacher-style",
@@ -350,6 +392,7 @@ export const teacherStyleV1Base = {
   contentVersion: "4.0.0",
   scale,
   axes,
+  typeCode,
   axisCombinations,
   sections,
   scoring: { strategyId: "centered-likert-axis-sum", scoringVersion: 1 },

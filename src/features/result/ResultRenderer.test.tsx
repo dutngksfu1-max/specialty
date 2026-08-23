@@ -33,6 +33,7 @@ function renderResult(signals?: AssessmentSignals): {
     },
   } as unknown as ResultSnapshot;
   const narrative = resolveResultNarrative(found.value, snapshot.score.axisScores, profile);
+  const presentation = staticAssessmentCatalog.findPresentationBySlug(found.value.slug);
 
   return {
     markup: renderToStaticMarkup(
@@ -42,6 +43,7 @@ function renderResult(signals?: AssessmentSignals): {
         profile={profile}
         nickname="테스트 선생님"
         signals={signals}
+        presentation={presentation}
       />,
     ),
     narrative,
@@ -76,6 +78,7 @@ function renderBalancedResult(): string {
       snapshot={snapshot}
       profile={profile}
       nickname="테스트 선생님"
+      presentation={staticAssessmentCatalog.findPresentationBySlug(found.value.slug)}
     />,
   );
 }
@@ -90,6 +93,45 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup.indexOf(narrative.rhythm)).toBeLessThan(headerEnd);
     expect(markup).toContain("검사 결과 · 테스트 선생님");
     expect(markup).not.toContain("테스트 선생님 님");
+  });
+
+  it("4렌즈 코드와 자리별 뜻, 유형 선화를 결과 제목 가까이에 둡니다", () => {
+    const { markup } = renderResult();
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok || found.value.resultProfiles[0] === undefined) {
+      throw new Error("테스트용 결과 프로필을 불러오지 못했습니다.");
+    }
+
+    expect(markup).toContain("4렌즈 코드");
+    expect(markup).toContain(">G<");
+    expect(markup).toContain("교류형");
+    expect(markup).toContain("garm.svg");
+    expect(markup).toContain("나의 리듬을 닮은 작업대");
+    expect(markup).not.toContain(String(found.value.resultProfiles[0].key));
+  });
+
+  it("환산 표기는 기본 접힘이며 근사 안내를 함께 둡니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok || found.value.typeCode?.crosswalk === undefined) {
+      throw new Error("테스트용 코드 규격을 불러오지 못했습니다.");
+    }
+    const { markup } = renderResult();
+    const details = markup.match(/<details[^>]*>/)?.[0] ?? "";
+
+    expect(details).not.toBe("");
+    expect(details).not.toContain("open");
+    expect(markup).toContain(found.value.typeCode.crosswalk.summaryLabel);
+    expect(markup).toContain(found.value.typeCode.crosswalk.disclaimer);
+  });
+
+  it("밸런스 지도는 방향 글자와 스크린리더 설명을 함께 제공합니다", () => {
+    const { markup } = renderResult();
+
+    expect(markup).toContain("관점별 방향과 기울기 지도");
+    expect(markup).toContain("도형의 크기는 좋고 나쁨이 아니라");
+    expect(markup).toContain("result-balance-key");
+    expect(markup).toContain("<title>관점별 방향과 기울기 지도</title>");
+    expect(markup).toContain("<desc>");
   });
 
   it("결과의 네 장과 내부 바로가기가 서로 연결됩니다", () => {
@@ -115,9 +157,17 @@ describe("결과 페이지 정보 구조", () => {
 
   it("균형 구간이 있어도 산출된 교직 스타일을 끝까지 전달합니다", () => {
     const markup = renderBalancedResult();
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok || found.value.typeCode?.crosswalk === undefined) {
+      throw new Error("테스트용 코드 규격을 불러오지 못했습니다.");
+    }
 
     expect(markup).toContain("함께 정하고 꼼꼼히 준비하는 교실");
     expect(markup).not.toContain("결과를 나타내는 상징");
+    expect(markup).toContain("balanced.svg");
+    expect(markup).toContain("·");
+    expect(markup).toContain(found.value.typeCode.balancedNote);
+    expect(markup).toContain(found.value.typeCode.crosswalk.unavailableNote);
     expect(markup).toContain("두 방식 가운데 어느 쪽을 선택했는지 실제 장면");
     expect(markup).toContain("균형으로 나온 관점 하나를 골라");
     expect(markup).not.toContain("몰입형과는,");
@@ -195,7 +245,7 @@ describe("결과 페이지 정보 구조", () => {
   it("1·2위 차이가 작으면 주축이라고 부르지 않습니다", () => {
     const { markup } = renderResult();
 
-    expect(markup).toContain("비슷하게 도드라지는 두 관점");
+    expect(markup).toContain("함께 도드라짐");
     expect(markup).not.toContain(">주축<");
   });
 

@@ -9,7 +9,6 @@ import type {
 import { resolveAxisCombinations } from "@/domain/assessment/result/axisCombination";
 import {
   resolveAxisRanking,
-  type AxisRanking,
 } from "@/domain/assessment/result/axisRanking";
 import { emphasizeText } from "@/domain/assessment/result/emphasis";
 import {
@@ -25,8 +24,11 @@ import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 import type { AxisScore } from "@/domain/assessment/scoring/score";
 import { AxisBar } from "@/features/result/AxisBar";
 import { ResultNavigation } from "@/features/result/ResultNavigation";
-import { TypeEmblem } from "@/features/result/TypeEmblem";
-import { assessmentPerspectiveTone } from "@/lib/assessmentPresentation";
+import { ResultHero } from "@/features/result/ResultHero";
+import {
+  assessmentPerspectiveTone,
+  type AssessmentPresentation,
+} from "@/lib/assessmentPresentation";
 
 /**
  * 결과 본문 (DEC-038 · DEC-045 · Phase D)
@@ -61,11 +63,6 @@ function signedNumber(value: number, fractionDigits = 0): string {
 
 function contextLabel(context: string): string {
   return CONTEXT_LABELS[context] ?? context;
-}
-
-function withHonorific(nickname: string): string {
-  const trimmed = nickname.trim();
-  return trimmed.endsWith("님") ? trimmed : `${trimmed} 님`;
 }
 
 function ChapterHeading({
@@ -168,77 +165,6 @@ function AxisInsightCard({
         />
       </div>
 
-    </section>
-  );
-}
-
-function WeightCenter({
-  ranking,
-  axes,
-  scores,
-}: {
-  readonly ranking: AxisRanking;
-  readonly axes: readonly AssessmentAxis[];
-  readonly scores: readonly AxisScore[];
-}) {
-  const axisById = new Map(axes.map((axis) => [String(axis.id), axis]));
-  const scoreById = new Map(scores.map((score) => [String(score.axisId), score]));
-
-  return (
-    <section className="assessment-card mt-6 p-5 sm:p-7">
-      <div className="grid gap-6 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:items-start">
-        <div>
-          <p className="text-caption font-semibold text-accent">무게중심</p>
-          <h3 className="mt-2 text-h3 text-foreground sm:text-h3-lg">
-            {ranking.isTied ? "비슷하게 도드라지는 두 관점" : "내 안에서 도드라지는 관점"}
-          </h3>
-          <p className="mt-2 text-body-sm text-foreground-muted">
-            네 관점을 다른 사람과 견주지 않고, 내 응답 안에서만 나란히 놓았습니다.
-          </p>
-        </div>
-
-        <ol className="grid gap-4">
-          {ranking.ordered.map((ranked, index) => {
-            const axis = axisById.get(String(ranked.axisId));
-            const score = scoreById.get(String(ranked.axisId));
-            if (axis === undefined || score === undefined) return null;
-
-            const extent = Math.max(Math.abs(score.minScore), Math.abs(score.maxScore), 1);
-            const width = Math.min((ranked.absScore / extent) * 100, 100);
-            const rankLabel = ranking.isTied
-              ? index < 2
-                ? "비슷한 관점"
-                : undefined
-              : index === 0
-                ? "주축"
-                : index === 1
-                  ? "부축"
-                  : undefined;
-
-            return (
-              <li key={String(ranked.axisId)} className="min-w-0">
-                <div className="flex min-w-0 items-baseline justify-between gap-4 text-body-sm">
-                  <span className="min-w-0 font-semibold text-foreground">{axis.name}</span>
-                  <span className="shrink-0 text-caption text-foreground-muted">
-                    {rankLabel !== undefined && `${rankLabel} · `}
-                    <span className="tabular-nums">{ranked.absScore}</span>
-                  </span>
-                </div>
-                <div
-                  className="mt-2 h-2 overflow-hidden rounded-full bg-surface-inset"
-                  role="img"
-                  aria-label={`${axis.name}, 기울기 크기 ${ranked.absScore}`}
-                >
-                  <span
-                    className="result-ranking-fill block h-full rounded-full"
-                    style={{ width: `${width}%` }}
-                  />
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      </div>
     </section>
   );
 }
@@ -462,6 +388,7 @@ export function ResultRenderer({
   profile,
   nickname,
   signals,
+  presentation,
 }: {
   readonly definition: AssessmentDefinition;
   readonly snapshot: ResultSnapshot;
@@ -469,6 +396,7 @@ export function ResultRenderer({
   readonly nickname: string;
   /** 응답이 지워졌으면 없을 수 있으며, 없어도 기본 결과는 온전히 보여야 합니다. */
   readonly signals?: AssessmentSignals;
+  readonly presentation?: AssessmentPresentation;
 }) {
   const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
   const narrative = resolveResultNarrative(definition, snapshot.score.axisScores, profile);
@@ -494,42 +422,14 @@ export function ResultRenderer({
 
   return (
     <article>
-      {/* 닉네임 → 결과 제목 → 한 줄 설명 → 방향이 분명할 때만 엠블럼 → 교직 리듬 */}
-      <header className="assessment-card-deck hero-enter overflow-hidden rounded-(--radius-hero) border border-primary-soft-border bg-primary-soft p-6 sm:p-9 lg:p-10">
-        <div
-          className={`grid items-center gap-8 ${hasBalancedAxes ? "" : "md:grid-cols-[minmax(0,1fr)_auto]"}`}
-        >
-          <div>
-            <p className="text-caption font-semibold text-primary-active">
-              검사 결과 · {withHonorific(nickname)}
-            </p>
-            <h1 className="mt-3 max-w-prose text-display text-foreground sm:text-display-lg">
-              {narrative.title}
-            </h1>
-            <p className="mt-5 max-w-prose text-h3 font-medium text-foreground-body">
-              {narrative.oneLiner}
-            </p>
-          </div>
-
-          {!hasBalancedAxes && (
-            <div className="justify-self-start rounded-lg border border-primary-soft-border bg-surface p-4 md:justify-self-end">
-              <TypeEmblem
-                axisIds={definition.axes.map((axis) => axis.id)}
-                poles={profile.poles}
-                size={168}
-                label={`${narrative.title} 결과를 나타내는 상징`}
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="mt-8 grid gap-3 border-t border-primary-soft-border pt-6 md:grid-cols-[auto_minmax(0,1fr)] md:gap-7">
-          <p className="text-label text-primary-active">나의 교직 리듬</p>
-          <p className="max-w-prose text-body-lg text-foreground-body sm:text-body-lg-desktop">
-            <EmphasizedText text={narrative.rhythm} terms={emphasisTerms} />
-          </p>
-        </div>
-      </header>
+      <ResultHero
+        definition={definition}
+        snapshot={snapshot}
+        nickname={nickname}
+        narrative={narrative}
+        ranking={ranking}
+        presentation={presentation}
+      />
 
       <div className="mt-8 grid gap-8 lg:grid-cols-4">
         <div className="lg:col-start-4 lg:row-start-1">
@@ -566,12 +466,6 @@ export function ResultRenderer({
                 );
               })}
             </div>
-
-            <WeightCenter
-              ranking={ranking}
-              axes={definition.axes}
-              scores={snapshot.score.axisScores}
-            />
 
             {signals !== undefined && signals.contextSplits.length > 0 && (
               <section className="mt-10">

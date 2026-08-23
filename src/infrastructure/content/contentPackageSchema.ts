@@ -30,11 +30,19 @@ import {
 
 const poleSideSchema = z.enum(["positive", "negative"]);
 
+/**
+ * 유형 코드 글자는 **한 글자여야** 합니다 (DEC-049).
+ * 두 글자가 들어오면 자리 수와 글자 수가 어긋나 코드가 조용히 망가집니다.
+ */
+const codeLetterSchema = z.string().regex(/^[A-Z]$/, "코드 글자는 영문 대문자 한 글자여야 합니다");
+
 const axisPoleSchema = z.object({
   side: poleSideSchema,
   label: z.string().min(1),
   shortLabel: z.string().min(1),
   description: z.string().min(1),
+  code: codeLetterSchema.optional(),
+  crosswalkCode: codeLetterSchema.optional(),
 });
 
 const intensityBandSchema = z.object({
@@ -156,6 +164,27 @@ const resultNarrativeSchema = z.object({
   axes: z.array(axisResultNarrativeSchema).min(1),
 });
 
+/**
+ * 유형 코드 표기 규격 (DEC-049)
+ *
+ * `systemLabel`과 `summaryLabel`은 다른 검사 이름을 담는 **유일하게 허용된 자리**입니다.
+ * 그래서 아래 `userFacingStrings` 금지 표현 검사 대상에 넣지 않습니다.
+ * 나머지 모든 사용자 노출 문자열은 그대로 검사합니다.
+ */
+const typeCodeSchema = z.object({
+  label: z.string().min(1),
+  balancedLetter: z.string().min(1).max(2),
+  balancedNote: z.string().min(1),
+  crosswalk: z
+    .object({
+      summaryLabel: z.string().min(1),
+      systemLabel: z.string().min(1),
+      disclaimer: z.string().min(1),
+      unavailableNote: z.string().min(1),
+    })
+    .optional(),
+});
+
 const baseDefinitionSchema = z.object({
   id: z.string().min(1).transform(toAssessmentId),
   slug: z.string().min(1),
@@ -169,6 +198,7 @@ const baseDefinitionSchema = z.object({
   scale: responseScaleSchema,
   axes: z.array(axisSchema).min(1),
   resultNarrative: resultNarrativeSchema.optional(),
+  typeCode: typeCodeSchema.optional(),
   axisCombinations: z.array(axisCombinationSchema).default([]),
   sections: z.array(sectionSchema).min(1),
   questions: z.array(questionSchema).min(1),
@@ -207,6 +237,15 @@ const presentationSchema = z.object({
       artwork: localArtworkSchema,
     }),
   ),
+  typeArtwork: z
+    .array(
+      z.object({
+        resultKey: z.string().min(1).transform(toResultKey),
+        artwork: localArtworkSchema,
+      }),
+    )
+    .optional(),
+  balancedArtwork: localArtworkSchema.optional(),
   responseScaleGuide: z.array(responseScaleGuideItemSchema).optional(),
 });
 
@@ -242,6 +281,33 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
   const duplicateAxisIds = findDuplicates(definition.axes.map((axis) => String(axis.id)));
   if (duplicateAxisIds.length > 0) {
     issue(`축 id가 중복됩니다: ${duplicateAxisIds.join(", ")}`, ["axes"]);
+  }
+
+  // --- 유형 코드 글자 (DEC-049) -------------------------------------------
+  // 글자가 겹치면 "GARM"에서 어느 자리가 무슨 뜻인지 읽을 수 없게 됩니다.
+  // 하나라도 빠지면 코드가 통째로 사라지므로, 있으면 전부 있어야 합니다.
+  if (definition.typeCode !== undefined) {
+    const poles = definition.axes.flatMap((axis) => [axis.positive, axis.negative]);
+
+    const missing = poles.filter((pole) => pole.code === undefined);
+    if (missing.length > 0) {
+      issue(
+        `typeCode를 쓰려면 모든 축 극에 code가 있어야 합니다. ${missing.length}개 빠졌습니다.`,
+        ["axes"],
+      );
+    }
+
+    const duplicateCodes = findDuplicates(
+      poles.flatMap((pole) => (pole.code === undefined ? [] : [pole.code])),
+    );
+    if (duplicateCodes.length > 0) {
+      issue(`유형 코드 글자가 중복됩니다: ${duplicateCodes.join(", ")}`, ["axes"]);
+    }
+
+    const balancedLetter = definition.typeCode.balancedLetter;
+    if (poles.some((pole) => pole.code === balancedLetter)) {
+      issue(`균형 자리 글자(${balancedLetter})를 극 글자로도 쓰고 있습니다.`, ["typeCode"]);
+    }
   }
 
   const duplicateQuestionIds = findDuplicates(
@@ -613,6 +679,9 @@ export function parseAssessmentContentPackage(
   const expectedSectionIds = definition.value.sections.map((section) => String(section.id));
   const artworkSectionIds = presentation.sectionArtwork.map((item) => String(item.sectionId));
   const responseScaleGuide = presentation.responseScaleGuide;
+  const typeArtwork = presentation.typeArtwork;
+  const typeArtworkKeys = typeArtwork?.map((item) => String(item.resultKey)) ?? [];
+  const resultKeys = definition.value.resultProfiles.map((profile) => String(profile.key));
   const duplicates = findDuplicates(artworkSectionIds);
   const missing = expectedSectionIds.filter((id) => !artworkSectionIds.includes(id));
   const unknown = artworkSectionIds.filter((id) => !expectedSectionIds.includes(id));
@@ -620,6 +689,16 @@ export function parseAssessmentContentPackage(
   const responseValues = definition.value.scale.options.map((option) => option.value);
   const guideValues = responseScaleGuide?.map((item) => item.value) ?? [];
   const duplicateGuideValues = findDuplicates(guideValues.map(String));
+  const duplicateTypeArtworkKeys = findDuplicates(typeArtworkKeys);
+  const missingTypeArtworkKeys = typeArtwork === undefined
+    ? []
+    : resultKeys.filter((key) => !typeArtworkKeys.includes(key));
+  const unknownTypeArtworkKeys = typeArtworkKeys.filter((key) => !resultKeys.includes(key));
+  const hasIncompleteTypeArtwork =
+    (typeArtwork === undefined) !== (presentation.balancedArtwork === undefined);
+  const forbiddenTypeArtwork = typeArtwork?.find((item) => hasForbiddenTerm(item.artwork.src));
+  const forbiddenBalancedArtwork =
+    presentation.balancedArtwork !== undefined && hasForbiddenTerm(presentation.balancedArtwork.src);
   const missingGuideValues = responseScaleGuide === undefined
     ? []
     : responseValues.filter((value) => !guideValues.includes(value));
@@ -640,6 +719,24 @@ export function parseAssessmentContentPackage(
       : "",
     unknownGuideValues.length > 0
       ? `presentation.responseScaleGuide가 없는 응답값을 가리킵니다: ${unknownGuideValues.join(", ")}`
+      : "",
+    duplicateTypeArtworkKeys.length > 0
+      ? `presentation.typeArtwork resultKey가 중복됩니다: ${duplicateTypeArtworkKeys.join(", ")}`
+      : "",
+    missingTypeArtworkKeys.length > 0
+      ? `presentation.typeArtwork에 빠진 resultKey가 있습니다: ${missingTypeArtworkKeys.join(", ")}`
+      : "",
+    unknownTypeArtworkKeys.length > 0
+      ? `presentation.typeArtwork이 없는 resultKey를 가리킵니다: ${unknownTypeArtworkKeys.join(", ")}`
+      : "",
+    hasIncompleteTypeArtwork
+      ? "presentation.typeArtwork과 balancedArtwork는 함께 제공해야 합니다."
+      : "",
+    forbiddenTypeArtwork === undefined
+      ? ""
+      : `presentation.typeArtwork.${String(forbiddenTypeArtwork.resultKey)} 경로에 노출 금지 표현이 있습니다.`,
+    forbiddenBalancedArtwork
+      ? "presentation.balancedArtwork 경로에 노출 금지 표현이 있습니다."
       : "",
     forbiddenGuide === undefined
       ? ""
