@@ -1,14 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 import { resumeSession } from "@/application/assessment/resumeSession";
+import { loadCharacterGender } from "@/application/assessment/characterGender";
+import { loadNickname } from "@/application/assessment/nickname";
+import { loadSelfReportedCrosswalkCode } from "@/application/assessment/selfReportedCrosswalkCode";
+import { startAssessment } from "@/application/assessment/startAssessment";
 import { AssessmentArtwork } from "@/components/ui/AssessmentArtwork";
-import { buttonClasses } from "@/components/ui/Button";
+import { Button, buttonClasses } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { useAssessmentServices } from "@/features/shared/AssessmentRepositoryProvider";
+import { LandingEntryActionProvider } from "@/features/landing/LandingEntryAction";
 import type { AssessmentPresentation } from "@/lib/assessmentPresentation";
 import { assessmentThemeVariables } from "@/lib/assessmentPresentation";
 import { cn } from "@/lib/cn";
@@ -19,6 +25,7 @@ export interface AssessmentCardData {
   readonly summary: string;
   readonly description?: string;
   readonly estimatedMinutes: number;
+  readonly estimatedTimeLabel?: string;
   readonly questionCount: number;
   readonly sectionCount: number;
   readonly presentation?: AssessmentPresentation;
@@ -43,6 +50,48 @@ function ArtworkFallback() {
   );
 }
 
+function AssessmentStats({
+  assessment,
+  className,
+}: {
+  readonly assessment: AssessmentCardData;
+  readonly className?: string;
+}) {
+  return (
+    <dl
+      className={cn(
+        "grid grid-cols-3 overflow-hidden rounded-md border border-border bg-background",
+        className,
+      )}
+    >
+      <div className="p-3 sm:p-4">
+        <dt className="flex items-center gap-1 text-caption text-foreground-subtle">
+          <Icon name="book" className="size-4" />문항
+        </dt>
+        <dd className="mt-1 text-label tabular-nums text-foreground">
+          {assessment.questionCount}개
+        </dd>
+      </div>
+      <div className="border-l border-border p-3 sm:p-4">
+        <dt className="flex items-center gap-1 text-caption text-foreground-subtle">
+          <Icon name="layers" className="size-4" />챕터
+        </dt>
+        <dd className="mt-1 text-label tabular-nums text-foreground">
+          {assessment.sectionCount}개
+        </dd>
+      </div>
+      <div className="border-l border-border p-3 sm:p-4">
+        <dt className="flex items-center gap-1 text-caption text-foreground-subtle">
+          <Icon name="clock" className="size-4" />시간
+        </dt>
+        <dd className="mt-1 text-label tabular-nums text-foreground">
+          {assessment.estimatedTimeLabel ?? `약 ${assessment.estimatedMinutes}분`}
+        </dd>
+      </div>
+    </dl>
+  );
+}
+
 export function ActiveAssessmentCard({
   assessment,
   featured = false,
@@ -53,7 +102,10 @@ export function ActiveAssessmentCard({
   readonly children?: ReactNode;
 }) {
   const services = useAssessmentServices();
+  const router = useRouter();
   const [progress, setProgress] = useState<Progress>({ kind: "unknown" });
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => {
     if (services === null) return;
@@ -84,6 +136,64 @@ export function ActiveAssessmentCard({
     progress.hasCharacterGender;
   const artwork = assessment.presentation?.heroArtwork;
 
+  async function beginAssessment() {
+    if (services === null) return;
+    setBusy(true);
+    setFailure(null);
+
+    const [nickname, gender, selfReportedCode] = await Promise.all([
+      loadNickname(services),
+      loadCharacterGender(services),
+      loadSelfReportedCrosswalkCode(services),
+    ]);
+    if (!gender.ok || gender.value === null) {
+      setFailure("성별을 먼저 선택해 주세요.");
+      setBusy(false);
+      return;
+    }
+
+    const started = await startAssessment(services.deps, {
+      slug: assessment.slug,
+      nickname: nickname.ok ? nickname.value : "",
+      characterGender: gender.value,
+      selfReportedCrosswalkCode: selfReportedCode.ok ? selfReportedCode.value : null,
+    });
+    if (!started.ok) {
+      setFailure("검사를 시작하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      setBusy(false);
+      return;
+    }
+
+    const firstSection = [...started.value.definition.sections].sort(
+      (a, b) => a.order - b.order,
+    )[0];
+    router.push(
+      `/assessments/${assessment.slug}/run/${firstSection === undefined ? 1 : firstSection.order}`,
+    );
+  }
+
+  const entryAction =
+    isResumable && progress.kind === "inProgress" ? (
+      <Link
+        href={`/assessments/${assessment.slug}/run/${progress.nextSectionOrder}`}
+        className={buttonClasses("primary", "lg", "w-full whitespace-nowrap")}
+      >
+        이어서 하기 <Icon name="arrow-right" />
+      </Link>
+    ) : (
+      <Button
+        variant="primary"
+        size="lg"
+        className="w-full whitespace-nowrap"
+        disabled={services === null || busy || progress.kind === "unknown"}
+        aria-busy={busy}
+        onClick={() => void beginAssessment()}
+      >
+        {busy ? "준비 중" : "검사 시작하기"}
+        {!busy && <Icon name="arrow-right" />}
+      </Button>
+    );
+
   return (
     <section
       style={assessmentThemeVariables(assessment.presentation) as CSSProperties}
@@ -109,9 +219,21 @@ export function ActiveAssessmentCard({
         >
           {assessment.title}
         </h2>
-        <p className={cn("mt-4 max-w-[34rem] text-foreground-muted", featured ? "text-body-lg" : "text-body") }>
-          {assessment.summary}
-        </p>
+        {featured ? (
+          <div className="mt-4 flex max-w-md items-center justify-between gap-3">
+            <p className="min-w-0 text-body-lg text-foreground-muted">{assessment.summary}</p>
+            <Link
+              href={`/assessments/${assessment.slug}`}
+              className={buttonClasses("secondary", "sm", "shrink-0 whitespace-nowrap")}
+            >
+              검사 소개
+            </Link>
+          </div>
+        ) : (
+          <p className="mt-4 max-w-[34rem] text-body text-foreground-muted">
+            {assessment.summary}
+          </p>
+        )}
 
         {featured && assessment.description !== undefined && (
           <div className="mt-5 max-w-md border-y border-border py-4">
@@ -123,23 +245,18 @@ export function ActiveAssessmentCard({
           </div>
         )}
 
-        <dl className={cn("grid grid-cols-3 overflow-hidden rounded-md border border-border bg-background", featured ? "mt-4 max-w-md" : "mt-5")}>
-          <div className="p-3 sm:p-4">
-            <dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="book" className="size-4" />문항</dt>
-            <dd className="mt-1 text-label tabular-nums text-foreground">{assessment.questionCount}개</dd>
-          </div>
-          <div className="border-l border-border p-3 sm:p-4">
-            <dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="layers" className="size-4" />챕터</dt>
-            <dd className="mt-1 text-label tabular-nums text-foreground">{assessment.sectionCount}개</dd>
-          </div>
-          <div className="border-l border-border p-3 sm:p-4">
-            <dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="clock" className="size-4" />시간</dt>
-            <dd className="mt-1 text-label tabular-nums text-foreground">약 {assessment.estimatedMinutes}분</dd>
-          </div>
-        </dl>
+        {!featured && <AssessmentStats assessment={assessment} className="mt-5" />}
 
         {children !== undefined && (
-          <div className={cn("max-w-md", featured ? "mt-5 border-t border-border pt-5" : "mt-5")}>{children}</div>
+          <div className={cn("max-w-md", featured ? "mt-5 border-t border-border pt-5" : "mt-5")}>
+            {featured ? (
+              <LandingEntryActionProvider action={entryAction}>
+                {children}
+              </LandingEntryActionProvider>
+            ) : (
+              children
+            )}
+          </div>
         )}
 
         {progress.kind === "outdated" && (
@@ -149,7 +266,7 @@ export function ActiveAssessmentCard({
           </p>
         )}
 
-        <div className={cn("flex max-w-md flex-col gap-3 sm:flex-row", featured ? "mt-1" : "mt-auto pt-6")}>
+        {!featured && <div className="mt-auto flex max-w-md flex-col gap-3 pt-6 sm:flex-row">
           {isResumable && progress.kind === "inProgress" ? (
             <>
               <Link
@@ -167,7 +284,7 @@ export function ActiveAssessmentCard({
               검사 살펴보기 <Icon name="arrow-right" />
             </Link>
           )}
-        </div>
+        </div>}
 
         {isResumable && progress.kind === "inProgress" && (
           <p className="mt-3 flex items-center gap-2 text-body-sm text-foreground-muted" aria-live="polite">
@@ -188,6 +305,13 @@ export function ActiveAssessmentCard({
             imageClassName={featured ? "aspect-4/3" : "aspect-[16/10]"}
           />
         )}
+
+        {failure !== null && (
+          <p className="mt-3 flex gap-2 text-body-sm text-status-danger" aria-live="polite">
+            <Icon name="warning" /> {failure}
+          </p>
+        )}
+        {featured && <AssessmentStats assessment={assessment} className="mt-4" />}
       </div>
     </section>
   );

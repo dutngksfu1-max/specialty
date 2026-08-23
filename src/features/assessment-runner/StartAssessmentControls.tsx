@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { loadCharacterGender } from "@/application/assessment/characterGender";
 import { loadNickname } from "@/application/assessment/nickname";
+import { loadSelfReportedCrosswalkCode } from "@/application/assessment/selfReportedCrosswalkCode";
 import { resumeSession } from "@/application/assessment/resumeSession";
 import { startAssessment } from "@/application/assessment/startAssessment";
 import { Button, buttonClasses } from "@/components/ui/Button";
@@ -58,9 +59,10 @@ export function StartAssessmentControls({ slug }: { readonly slug: string }) {
     setBusy(true);
     setFailure(null);
 
-    const [remembered, rememberedGender] = await Promise.all([
+    const [remembered, rememberedGender, rememberedSelfReportedCode] = await Promise.all([
       loadNickname(services),
       loadCharacterGender(services),
+      loadSelfReportedCrosswalkCode(services),
     ]);
     if (!rememberedGender.ok) {
       setFailure(messageFor(rememberedGender.error).body);
@@ -78,6 +80,9 @@ export function StartAssessmentControls({ slug }: { readonly slug: string }) {
       slug,
       nickname,
       characterGender: rememberedGender.value,
+      selfReportedCrosswalkCode: rememberedSelfReportedCode.ok
+        ? rememberedSelfReportedCode.value
+        : null,
       restart,
     });
 

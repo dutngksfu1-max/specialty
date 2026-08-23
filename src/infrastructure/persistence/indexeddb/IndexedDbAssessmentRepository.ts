@@ -9,6 +9,7 @@ import {
   isCharacterGender,
   type CharacterGender,
 } from "@/domain/assessment/session/characterGender";
+import { isSelfReportedCrosswalkCode } from "@/domain/assessment/session/selfReportedCrosswalkCode";
 import type {
   AssessmentResponse,
   AssessmentSession,
@@ -20,6 +21,7 @@ import { STORE } from "@/infrastructure/persistence/indexeddb/schema";
 
 const NICKNAME_KEY = "nickname";
 const CHARACTER_GENDER_KEY = "character-gender";
+const SELF_REPORTED_CROSSWALK_CODE_KEY = "self-reported-crosswalk-code";
 
 /** 저장소 작업을 감싸 실패를 Result로 바꿉니다. 예외를 밖으로 던지지 않습니다. */
 async function guard<T>(
@@ -44,6 +46,9 @@ function isSession(value: unknown): value is AssessmentSession {
     (record.characterGender === undefined ||
       record.characterGender === null ||
       isCharacterGender(record.characterGender)) &&
+    (record.selfReportedCrosswalkCode === undefined ||
+      record.selfReportedCrosswalkCode === null ||
+      isSelfReportedCrosswalkCode(record.selfReportedCrosswalkCode)) &&
     typeof record.startedAt === "string" &&
     typeof record.versions === "object" &&
     record.versions !== null
@@ -70,6 +75,9 @@ function isSnapshot(value: unknown): value is ResultSnapshot {
     (record.characterGender === undefined ||
       record.characterGender === null ||
       isCharacterGender(record.characterGender)) &&
+    (record.selfReportedCrosswalkCode === undefined ||
+      record.selfReportedCrosswalkCode === null ||
+      isSelfReportedCrosswalkCode(record.selfReportedCrosswalkCode)) &&
     typeof record.completedAt === "string" &&
     score !== undefined &&
     Array.isArray(score.axisScores) &&
@@ -103,6 +111,11 @@ export class IndexedDbAssessmentRepository
       ...loaded.value,
       characterGender: isCharacterGender(loaded.value.characterGender)
         ? loaded.value.characterGender
+        : null,
+      selfReportedCrosswalkCode: isSelfReportedCrosswalkCode(
+        loaded.value.selfReportedCrosswalkCode,
+      )
+        ? loaded.value.selfReportedCrosswalkCode
         : null,
     });
   }
@@ -163,6 +176,11 @@ export class IndexedDbAssessmentRepository
       ...loaded.value,
       characterGender: isCharacterGender(loaded.value.characterGender)
         ? loaded.value.characterGender
+        : null,
+      selfReportedCrosswalkCode: isSelfReportedCrosswalkCode(
+        loaded.value.selfReportedCrosswalkCode,
+      )
+        ? loaded.value.selfReportedCrosswalkCode
         : null,
     });
   }
@@ -239,6 +257,30 @@ export class IndexedDbAssessmentRepository
     const saved = await guard("saveCharacterGender", async () => {
       const db = await getDb();
       await db.put(STORE.preferences, { key: CHARACTER_GENDER_KEY, value: gender });
+    });
+    return saved.ok ? ok(undefined) : err(saved.error);
+  }
+
+  async loadSelfReportedCrosswalkCode(): Promise<Result<string | null, AssessmentError>> {
+    const loaded = await guard("loadSelfReportedCrosswalkCode", async () => {
+      const db = await getDb();
+      return db.get(STORE.preferences, SELF_REPORTED_CROSSWALK_CODE_KEY);
+    });
+    if (!loaded.ok) return err(loaded.error);
+    const record = loaded.value;
+    return ok(
+      record !== undefined && isSelfReportedCrosswalkCode(record.value) ? record.value : null,
+    );
+  }
+
+  async saveSelfReportedCrosswalkCode(code: string | null): Promise<Result<void, AssessmentError>> {
+    const saved = await guard("saveSelfReportedCrosswalkCode", async () => {
+      const db = await getDb();
+      if (code === null) {
+        await db.delete(STORE.preferences, SELF_REPORTED_CROSSWALK_CODE_KEY);
+      } else {
+        await db.put(STORE.preferences, { key: SELF_REPORTED_CROSSWALK_CODE_KEY, value: code });
+      }
     });
     return saved.ok ? ok(undefined) : err(saved.error);
   }

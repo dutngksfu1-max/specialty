@@ -358,6 +358,7 @@ export interface AssessmentDefinition {
   readonly summary: string;
   readonly description: string;
   readonly estimatedMinutes: number;
+  readonly estimatedTimeLabel?: string; // 범위처럼 숫자 하나로 표현할 수 없는 화면 안내
   readonly status: "published" | "upcoming";
   readonly assessmentVersion: number;
   readonly contentVersion: string;       // "1.0.0"
@@ -418,6 +419,7 @@ export interface AssessmentSession {
   readonly assessmentId: AssessmentId;
   readonly nickname: string;                // 비어 있으면 "선생님"
   readonly characterGender: "male" | "female" | null; // null은 기존 저장 데이터 호환용
+  readonly selfReportedCrosswalkCode?: string | null; // 선택 입력, 이전 저장 데이터에는 없을 수 있음
   readonly startedAt: string;               // ISO 8601
   readonly updatedAt: string;
   readonly completedAt: string | null;
@@ -457,6 +459,7 @@ export interface ResultSnapshot {
   readonly sessionId: SessionId;
   readonly nickname: string;
   readonly characterGender: "male" | "female" | null;
+  readonly selfReportedCrosswalkCode?: string | null;
   readonly score: AssessmentScore;
   readonly versions: AssessmentSession["versions"];
   readonly completedAt: string;

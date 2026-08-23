@@ -91,28 +91,51 @@ function TypeCodePanel({
       */}
       {spec.crosswalk !== undefined && (
         <div className="result-crosswalk-body border-t border-border px-4 py-4 sm:px-5">
-          {typeCode.crosswalkCode === null ? (
-            <p className="text-body-sm text-foreground-body">{spec.crosswalk.unavailableNote}</p>
-          ) : (
-            <>
+          <>
               {/*
                 라벨이 값을 '담고' 있어야 합니다 (DEC-056).
                 라벨을 위, 값을 아래에 두어 담김을 형태로 보여 줍니다.
               */}
-              <div className="result-crosswalk-field overflow-hidden rounded-sm">
-                <p className="result-crosswalk-legend px-3 py-1.5 text-caption font-semibold">
-                  {spec.crosswalk.systemLabel}
-                </p>
-                <p className="result-crosswalk-code px-4 py-3 text-center text-h2 font-bold">
-                  {typeCode.crosswalkCode}
-                </p>
+              <div className="grid min-w-0 grid-cols-2 gap-3">
+                <div className="result-crosswalk-field min-w-0 overflow-hidden rounded-sm">
+                  <p className="result-crosswalk-legend px-3 py-1.5 text-caption font-semibold">
+                    {spec.crosswalk.systemLabel}
+                  </p>
+                  <p
+                    className={`bg-surface px-3 py-3 text-center font-bold ${
+                      typeCode.crosswalkCode === null
+                        ? "text-body-sm text-foreground-muted"
+                        : "result-crosswalk-code text-h2"
+                    }`}
+                  >
+                    {typeCode.crosswalkCode ?? "환산 안 함"}
+                  </p>
+                </div>
+                <div className="result-crosswalk-field min-w-0 overflow-hidden rounded-sm">
+                  <p className="result-crosswalk-legend px-3 py-1.5 text-caption font-semibold">
+                    {spec.crosswalk.selfReportedLabel}
+                  </p>
+                  <p
+                    className={`bg-surface px-3 py-3 text-center font-bold ${
+                      snapshot.selfReportedCrosswalkCode == null
+                        ? "text-body-sm text-foreground-muted"
+                        : "result-crosswalk-code text-h2"
+                    }`}
+                  >
+                    {snapshot.selfReportedCrosswalkCode ?? "입력 안 함"}
+                  </p>
+                </div>
               </div>
+              {typeCode.crosswalkCode === null && (
+                <p className="mt-3 text-body-sm text-foreground-body">
+                  {spec.crosswalk.unavailableNote}
+                </p>
+              )}
               {/* 근사라는 사실을 감추지 않습니다 (DEC-049). */}
               <p className="mt-3 text-caption text-foreground-subtle">
                 {spec.crosswalk.disclaimer}
               </p>
             </>
-          )}
         </div>
       )}
     </section>

@@ -69,7 +69,7 @@ export default async function AssessmentIntroPage({ params }: PageProps<"/assess
             <dl className="mt-7 grid grid-cols-3 divide-x divide-border border-y border-border py-4">
               <div className="px-2 first:pl-0"><dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="book" className="size-4" />문항</dt><dd className="mt-1 text-h3 tabular-nums text-foreground">{definition.questions.length}개</dd></div>
               <div className="px-3"><dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="layers" className="size-4" />챕터</dt><dd className="mt-1 text-h3 tabular-nums text-foreground">{sections.length}개</dd></div>
-              <div className="px-3 pr-0"><dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="clock" className="size-4" />시간</dt><dd className="mt-1 text-h3 tabular-nums text-foreground">약 {definition.estimatedMinutes}분</dd></div>
+              <div className="px-3 pr-0"><dt className="flex items-center gap-1 text-caption text-foreground-subtle"><Icon name="clock" className="size-4" />시간</dt><dd className="mt-1 text-h3 tabular-nums text-foreground">{definition.estimatedTimeLabel ?? `약 ${definition.estimatedMinutes}분`}</dd></div>
             </dl>
 
             <div className="mt-7">

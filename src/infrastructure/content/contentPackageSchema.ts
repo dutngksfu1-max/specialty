@@ -182,6 +182,8 @@ const typeCodeSchema = z.object({
   crosswalk: z
     .object({
       systemLabel: z.string().min(1),
+      selfReportedLabel: z.string().min(1),
+      selfReportedInputLabel: z.string().min(1),
       disclaimer: z.string().min(1),
       unavailableNote: z.string().min(1),
     })
@@ -195,6 +197,7 @@ const baseDefinitionSchema = z.object({
   summary: z.string().min(1),
   description: z.string().min(1),
   estimatedMinutes: z.number().int().positive(),
+  estimatedTimeLabel: z.string().min(1).optional(),
   status: z.enum(["published", "upcoming"]),
   assessmentVersion: z.number().int().positive(),
   contentVersion: z.string().min(1),
@@ -575,6 +578,9 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
     ["title", definition.title],
     ["summary", definition.summary],
     ["description", definition.description],
+    ...(definition.estimatedTimeLabel === undefined
+      ? []
+      : [["estimatedTimeLabel", definition.estimatedTimeLabel] as const]),
     ...definition.questions.map((question) => [`questions.${question.order}.text`, question.text] as const),
     ...definition.resultProfiles.map((profile) => [`resultProfiles.${profile.key}.title`, profile.title] as const),
     ...(definition.resultNarrative === undefined

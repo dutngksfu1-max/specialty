@@ -7,7 +7,10 @@ import { resolveResultNarrative } from "@/domain/assessment/result/narrative";
 import { ResultRenderer } from "@/features/result/ResultRenderer";
 import { staticAssessmentCatalog } from "@/infrastructure/content/StaticAssessmentCatalog";
 
-function renderResult(signals?: AssessmentSignals): {
+function renderResult(
+  signals?: AssessmentSignals,
+  selfReportedCrosswalkCode?: string,
+): {
   readonly markup: string;
   readonly narrative: ReturnType<typeof resolveResultNarrative>;
 } {
@@ -19,6 +22,7 @@ function renderResult(signals?: AssessmentSignals): {
 
   const snapshot = {
     characterGender: "female",
+    selfReportedCrosswalkCode,
     score: {
       resultKey: profile.key,
       axisScores: found.value.axes.map((axis) => ({
@@ -137,6 +141,20 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).toContain(found.value.typeCode.crosswalk.systemLabel);
     // 근사라는 사실을 감추지 않습니다 (DEC-049). 한 번 빠진 적이 있어 가드를 둡니다.
     expect(markup).toContain(found.value.typeCode.crosswalk.disclaimer);
+  });
+
+  it("교직 환산 코드와 사용자가 입력한 실제 코드를 같은 너비로 나란히 보여 줍니다", () => {
+    const reportedCode = ["I", "N", "F", "P"].join("");
+    const { markup } = renderResult(undefined, reportedCode);
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok || found.value.typeCode?.crosswalk === undefined) {
+      throw new Error("테스트용 코드 규격을 불러오지 못했습니다.");
+    }
+
+    expect(markup).toContain("grid-cols-2");
+    expect(markup).toContain(found.value.typeCode.crosswalk.systemLabel);
+    expect(markup).toContain(found.value.typeCode.crosswalk.selfReportedLabel);
+    expect(markup).toContain(reportedCode);
   });
 
   /**

@@ -15,6 +15,8 @@ export interface AssessmentSession {
   readonly nickname: string;
   /** 결과 캐릭터에만 반영합니다. null은 기존 저장 데이터 호환용입니다 (DEC-054). */
   readonly characterGender: CharacterGender | null;
+  /** 사용자가 직접 입력한 선택 코드. 이전 저장 데이터에는 없을 수 있습니다. */
+  readonly selfReportedCrosswalkCode?: string | null;
   /** ISO 8601 문자열 */
   readonly startedAt: string;
   readonly updatedAt: string;

@@ -16,6 +16,8 @@ export interface StartAssessmentInput {
   readonly nickname?: string;
   /** 결과 캐릭터 선택값. 비워 두면 기존 값을 유지합니다 (DEC-054). */
   readonly characterGender?: CharacterGender;
+  /** 사용자가 알고 있는 선택 코드. null이면 비운 상태를 저장합니다. */
+  readonly selfReportedCrosswalkCode?: string | null;
   /** true면 기존 세션·응답·결과를 지우고 처음부터 다시 시작합니다. (DEC-010) */
   readonly restart?: boolean;
 }
@@ -51,9 +53,14 @@ export async function startAssessment(
   if (canResume && existing.value !== null) {
     const nickname = input.nickname ?? existing.value.nickname;
     const characterGender = input.characterGender ?? existing.value.characterGender;
+    const selfReportedCrosswalkCode =
+      input.selfReportedCrosswalkCode === undefined
+        ? existing.value.selfReportedCrosswalkCode ?? null
+        : input.selfReportedCrosswalkCode;
     if (
       nickname === existing.value.nickname &&
-      characterGender === existing.value.characterGender
+      characterGender === existing.value.characterGender &&
+      selfReportedCrosswalkCode === (existing.value.selfReportedCrosswalkCode ?? null)
     ) {
       return ok({ definition, session: existing.value, isNew: false });
     }
@@ -62,6 +69,7 @@ export async function startAssessment(
       ...existing.value,
       nickname,
       characterGender,
+      selfReportedCrosswalkCode,
       updatedAt: deps.clock.now(),
     };
     const saved = await deps.repository.saveSession(updated);
@@ -79,6 +87,7 @@ export async function startAssessment(
     assessmentId: definition.id,
     nickname: input.nickname ?? "",
     characterGender: input.characterGender ?? null,
+    selfReportedCrosswalkCode: input.selfReportedCrosswalkCode ?? null,
     startedAt,
     updatedAt: startedAt,
     completedAt: null,

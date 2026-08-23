@@ -13,5 +13,7 @@ export interface PreferencesRepository {
   saveNickname(nickname: string): Promise<Result<void, AssessmentError>>;
   loadCharacterGender(): Promise<Result<CharacterGender | null, AssessmentError>>;
   saveCharacterGender(gender: CharacterGender): Promise<Result<void, AssessmentError>>;
+  loadSelfReportedCrosswalkCode(): Promise<Result<string | null, AssessmentError>>;
+  saveSelfReportedCrosswalkCode(code: string | null): Promise<Result<void, AssessmentError>>;
   clearAll(): Promise<Result<void, AssessmentError>>;
 }

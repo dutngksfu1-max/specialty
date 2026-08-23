@@ -373,7 +373,9 @@ const typeCode = {
   balancedNote:
     "가운뎃점 자리는 어느 한쪽으로 기울지 않아, 한 글자로 적지 않았어요. 두 성향이 상황에 따라 번갈아 나타나는 편입니다.",
   crosswalk: {
-    systemLabel: `추정 ${crosswalkSystemLabel}`,
+    systemLabel: `교직 ${crosswalkSystemLabel}`,
+    selfReportedLabel: `실제 ${crosswalkSystemLabel}`,
+    selfReportedInputLabel: `내 ${crosswalkSystemLabel}`,
     disclaimer:
       "축의 이름이 비슷해 보이는 자리끼리 짝지어 본 것일 뿐, 두 검사는 문항도 채점 방식도 다릅니다. 재미로만 봐 주세요.",
     unavailableNote:
@@ -389,7 +391,8 @@ export const teacherStyleV1Base = {
   description:
     "어디에서 힘을 얻고, 무엇이 먼저 눈에 들어오며, 판단할 때 무엇을 먼저 살피고, 일을 어떤 순서와 방식으로 이어 가는지 네 가지 관점으로 살펴봅니다. 맞고 틀린 답은 없고, 어느 쪽이 더 좋은 스타일인 것도 아니에요. 나와 동료가 서로 어떻게 다른지를 이야기해 보는 데 쓰시면 좋습니다.",
   // 48문항 기준. 이전에는 이 값(5)과 안내 문구(10분)가 서로 어긋나 있어 함께 맞췄습니다.
-  estimatedMinutes: 12,
+  estimatedMinutes: 5,
+  estimatedTimeLabel: "약 5분",
   status: "published",
   // 축과 문항이 통째로 바뀌었습니다. 버전을 올려야 예전 응답이 조용히 섞이지 않고
   // "새로 시작" 안내를 받습니다 (architecture 7.3).

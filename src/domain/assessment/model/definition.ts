@@ -173,6 +173,10 @@ export interface TypeCodeSpec {
   readonly crosswalk?: {
     /** 환산 코드 위에 붙는 검사 이름 */
     readonly systemLabel: string;
+    /** 사용자가 알고 있는 실제 코드를 입력할 때 쓰는 라벨 */
+    readonly selfReportedLabel: string;
+    /** 랜딩 입력란의 라벨 */
+    readonly selfReportedInputLabel: string;
     /** 환산이 정확한 변환이 아니라 근사임을 알리는 문구 */
     readonly disclaimer: string;
     /** 균형 자리가 있어 환산하지 않을 때 대신 보여 줄 문구 */
@@ -234,6 +238,8 @@ export interface AssessmentDefinition {
   readonly summary: string;
   readonly description: string;
   readonly estimatedMinutes: number;
+  /** 화면에 보여 줄 소요 시간. 범위 안내처럼 숫자 하나로 표현할 수 없을 때 사용합니다. */
+  readonly estimatedTimeLabel?: string;
   readonly status: "published" | "upcoming";
   readonly assessmentVersion: number;
   readonly contentVersion: string;

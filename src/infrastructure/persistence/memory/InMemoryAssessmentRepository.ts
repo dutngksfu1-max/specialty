@@ -27,6 +27,7 @@ export class InMemoryAssessmentRepository
   private readonly results = new Map<string, ResultSnapshot>();
   private nickname: string | null = null;
   private characterGender: CharacterGender | null = null;
+  private selfReportedCrosswalkCode: string | null = null;
 
   async loadSession(
     assessmentId: AssessmentId,
@@ -82,6 +83,7 @@ export class InMemoryAssessmentRepository
     this.results.clear();
     this.nickname = null;
     this.characterGender = null;
+    this.selfReportedCrosswalkCode = null;
     return ok(undefined);
   }
 
@@ -100,6 +102,15 @@ export class InMemoryAssessmentRepository
 
   async saveCharacterGender(gender: CharacterGender): Promise<Result<void, AssessmentError>> {
     this.characterGender = gender;
+    return ok(undefined);
+  }
+
+  async loadSelfReportedCrosswalkCode(): Promise<Result<string | null, AssessmentError>> {
+    return ok(this.selfReportedCrosswalkCode);
+  }
+
+  async saveSelfReportedCrosswalkCode(code: string | null): Promise<Result<void, AssessmentError>> {
+    this.selfReportedCrosswalkCode = code;
     return ok(undefined);
   }
 

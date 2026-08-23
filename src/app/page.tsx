@@ -32,12 +32,13 @@ export default function HomePage() {
                 summary: featured.summary,
                 description: featured.description,
                 estimatedMinutes: featured.estimatedMinutes,
+                estimatedTimeLabel: featured.estimatedTimeLabel,
                 questionCount: featured.questions.length,
                 sectionCount: featured.sections.length,
                 presentation: featuredPresentation,
               }}
             >
-              <NicknameEntry />
+              <NicknameEntry slug={featured.slug} crosswalk={featured.typeCode?.crosswalk} />
             </ActiveAssessmentCard>
           </>
         ) : published.length > 1 ? (
@@ -45,7 +46,12 @@ export default function HomePage() {
             <section className="max-w-2xl">
               <p className="text-label text-primary-active">나에게 맞는 탐색을 골라 보세요</p>
               <h2 className="mt-3 text-h1 text-foreground sm:text-h1-lg">오늘은 어떤 교직 장면을 들여다볼까요?</h2>
-              <div className="mt-7 max-w-md"><NicknameEntry /></div>
+              <div className="mt-7 max-w-md">
+                <NicknameEntry
+                  slug={published[0]?.slug}
+                  crosswalk={published[0]?.typeCode?.crosswalk}
+                />
+              </div>
             </section>
             <div className="mt-10 grid gap-6 md:grid-cols-2">
               {published.map((definition) => (
@@ -57,6 +63,7 @@ export default function HomePage() {
                     summary: definition.summary,
                     description: definition.description,
                     estimatedMinutes: definition.estimatedMinutes,
+                    estimatedTimeLabel: definition.estimatedTimeLabel,
                     questionCount: definition.questions.length,
                     sectionCount: definition.sections.length,
                     presentation: staticAssessmentCatalog.findPresentationBySlug(definition.slug),

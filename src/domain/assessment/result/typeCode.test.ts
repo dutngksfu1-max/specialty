@@ -69,6 +69,8 @@ const spec: TypeCodeSpec = {
   balancedNote: "이 자리는 균형입니다.",
   crosswalk: {
     systemLabel: "다른 검사",
+    selfReportedLabel: "직접 입력",
+    selfReportedInputLabel: "내 코드",
     disclaimer: "근사입니다.",
     unavailableNote: "환산하지 않았습니다.",
   },

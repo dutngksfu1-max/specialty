@@ -65,6 +65,7 @@ export async function completeAssessment(
     sessionId: session.id,
     nickname: session.nickname,
     characterGender: session.characterGender,
+    selfReportedCrosswalkCode: session.selfReportedCrosswalkCode ?? null,
     score: score.value,
     versions: session.versions,
     completedAt,
