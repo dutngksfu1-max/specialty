@@ -171,7 +171,7 @@ const resultNarrativeSchema = z.object({
 /**
  * 유형 코드 표기 규격 (DEC-049)
  *
- * `systemLabel`과 `summaryLabel`은 다른 검사 이름을 담는 **유일하게 허용된 자리**입니다.
+ * `systemLabel`은 다른 검사 이름을 담는 **유일하게 허용된 자리**입니다.
  * 그래서 아래 `userFacingStrings` 금지 표현 검사 대상에 넣지 않습니다.
  * 나머지 모든 사용자 노출 문자열은 그대로 검사합니다.
  */
@@ -181,7 +181,6 @@ const typeCodeSchema = z.object({
   balancedNote: z.string().min(1),
   crosswalk: z
     .object({
-      summaryLabel: z.string().min(1),
       systemLabel: z.string().min(1),
       disclaimer: z.string().min(1),
       unavailableNote: z.string().min(1),

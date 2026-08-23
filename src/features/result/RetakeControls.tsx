@@ -32,7 +32,7 @@ export function RetakeControls({ slug }: { readonly slug: string }) {
         triggerLabel="다시 검사하기"
         triggerIcon="restart"
         triggerVariant="secondary"
-        triggerSize="lg"
+        triggerSize="sm"
         triggerClassName="w-full sm:w-auto"
         title="다시 검사할까요?"
         description="지금 결과와 응답이 지워지고 새로 시작합니다. 필요하다면 먼저 결과 이미지를 저장해 주세요."

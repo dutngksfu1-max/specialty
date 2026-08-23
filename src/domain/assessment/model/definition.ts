@@ -168,12 +168,10 @@ export interface TypeCodeSpec {
   /**
    * 다른 검사로의 환산 표기. 없으면 환산을 아예 보여 주지 않습니다.
    *
-   * 기본 접힘 상태로 두고, 유형 코드보다 작게 표시합니다 (DEC-049).
+   * 접지 않고 늘 보이되, 유형 코드보다 작게 표시합니다 (DEC-057).
    */
   readonly crosswalk?: {
-    /** 접힘 토글에 쓰는 문구 */
-    readonly summaryLabel: string;
-    /** 펼쳤을 때 환산 코드 앞에 붙는 검사 이름 */
+    /** 환산 코드 위에 붙는 검사 이름 */
     readonly systemLabel: string;
     /** 환산이 정확한 변환이 아니라 근사임을 알리는 문구 */
     readonly disclaimer: string;

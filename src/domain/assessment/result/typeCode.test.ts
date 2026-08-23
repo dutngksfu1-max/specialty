@@ -68,7 +68,6 @@ const spec: TypeCodeSpec = {
   balancedLetter: "·",
   balancedNote: "이 자리는 균형입니다.",
   crosswalk: {
-    summaryLabel: "비교해 보기",
     systemLabel: "다른 검사",
     disclaimer: "근사입니다.",
     unavailableNote: "환산하지 않았습니다.",

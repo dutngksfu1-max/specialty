@@ -2,6 +2,7 @@ allowBuilds:
   # @serwist/turbopack가 끌어오는 패키지입니다.
   # 네이티브 바이너리(@swc/core-win32-x64-msvc)가 이미 설치되어 빌드 스크립트가 필요 없습니다.
   '@swc/core': false
+  core-js: set this to true or false
   # 윈도우에서 Service Worker를 번들할 때 쓰는 네이티브 바이너리를 내려받습니다.
   esbuild: true
   sharp: false

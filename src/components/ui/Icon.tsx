@@ -11,6 +11,7 @@ export type IconName =
   | "clock"
   | "compass"
   | "device"
+  | "download"
   | "home"
   | "layers"
   | "lock"
@@ -29,6 +30,7 @@ const paths: Record<IconName, ReactNode> = {
   clock: <path d="M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />,
   compass: <path d="m15.5 8.5-2 5-5 2 2-5 5-2ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />,
   device: <path d="M7 3.5h10a1.5 1.5 0 0 1 1.5 1.5v14a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5ZM10 17.5h4" />,
+  download: <path d="M12 4v12m0 0-4-4m4 4 4-4M5 17v2h14v-2" />,
   home: <path d="m4 11 8-7 8 7v8.5h-5.5v-6h-5v6H4V11Z" />,
   layers: <path d="m4 9 8-5 8 5-8 5-8-5Zm1 5 7 4 7-4" />,
   lock: <path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12v10H6V10Zm6 4v2" />,

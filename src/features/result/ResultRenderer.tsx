@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 
 import { Icon, type IconName } from "@/components/ui/Icon";
 import type {
@@ -415,6 +415,7 @@ export function ResultRenderer({
   nickname,
   signals,
   presentation,
+  heroRef,
 }: {
   readonly definition: AssessmentDefinition;
   readonly snapshot: ResultSnapshot;
@@ -423,6 +424,8 @@ export function ResultRenderer({
   /** 응답이 지워졌으면 없을 수 있으며, 없어도 기본 결과는 온전히 보여야 합니다. */
   readonly signals?: AssessmentSignals;
   readonly presentation?: AssessmentPresentation;
+  /** Hero 영역 캡처를 위한 ref — ResultHero에 그대로 전달합니다 */
+  readonly heroRef?: RefObject<HTMLElement | null>;
 }) {
   const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
   const narrative = resolveResultNarrative(definition, snapshot.score.axisScores, profile);
@@ -459,6 +462,7 @@ export function ResultRenderer({
         ranking={ranking}
         presentation={presentation}
         unreadableAxisIds={unreadableAxisIds}
+        heroRef={heroRef}
       />
 
       <div className="mt-8 grid gap-8 lg:grid-cols-4">

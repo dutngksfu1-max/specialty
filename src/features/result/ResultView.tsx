@@ -16,6 +16,7 @@ import { ResultRenderer } from "@/features/result/ResultRenderer";
 import { ResultShareCard } from "@/features/result/ResultShareCard";
 import { RetakeControls } from "@/features/result/RetakeControls";
 import { SaveImageButton } from "@/features/result/SaveImageButton";
+import { SavePdfButton } from "@/features/result/SavePdfButton";
 import { useAssessmentServices } from "@/features/shared/AssessmentRepositoryProvider";
 import { messageFor, type ErrorMessage } from "@/lib/errorMessages";
 import type { AssessmentPresentation } from "@/lib/assessmentPresentation";
@@ -46,6 +47,15 @@ export function ResultView({
   readonly presentation?: AssessmentPresentation;
 }) {
   const services = useAssessmentServices();
+  /**
+   * heroRef — 화면에 보이는 ResultHero의 header 요소를 가리킵니다.
+   * PNG 이미지 저장과 PDF 다운로드 모두 이 ref를 사용합니다.
+   */
+  const heroRef = useRef<HTMLElement | null>(null);
+  /**
+   * shareCardRef — 화면 밖의 전용 캡처 카드 (SNS 공유 등에 향후 활용).
+   * 현재 PNG 저장은 heroRef를 사용하므로, 이 ref는 ShareCard 유지 용도로만 남깁니다.
+   */
   const shareCardRef = useRef<HTMLDivElement | null>(null);
 
   const [state, setState] = useState<State>({ kind: "loading" });
@@ -105,6 +115,7 @@ export function ResultView({
           nickname={nickname}
           signals={signals}
           presentation={presentation}
+          heroRef={heroRef}
         />
 
         <section className="mt-14 rounded-lg border border-border bg-surface p-5 sm:p-7 lg:flex lg:items-end lg:justify-between lg:gap-8">
@@ -119,17 +130,19 @@ export function ResultView({
             </div>
           </div>
 
+          {/* PDF 다운로드 → 이미지 저장 → 다시 검사 → 처음으로 순서 */}
           <div className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-start lg:mt-0 lg:justify-end">
-            <SaveImageButton targetRef={shareCardRef} nickname={nickname} />
+            <SavePdfButton heroRef={heroRef} nickname={nickname} />
+            <SaveImageButton targetRef={heroRef} nickname={nickname} />
             <RetakeControls slug={slug} />
-            <Link href="/" className={buttonClasses("ghost", "md", "w-full sm:w-auto")}>
+            <Link href="/" className={buttonClasses("ghost", "sm", "w-full sm:w-auto")}>
               <Icon name="home" /> 처음으로
             </Link>
           </div>
         </section>
       </main>
 
-      {/* 화면 밖에서 대기하는 캡처용 카드. 이 노드만 이미지로 만듭니다. */}
+      {/* 화면 밖에서 대기하는 캡처용 카드. 향후 SNS 공유 등에 활용 가능합니다. */}
       <ResultShareCard
         ref={shareCardRef}
         definition={definition}

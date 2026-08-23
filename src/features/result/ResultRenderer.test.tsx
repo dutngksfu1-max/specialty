@@ -86,13 +86,16 @@ function renderBalancedResult(): string {
 }
 
 describe("결과 페이지 정보 구조", () => {
-  it("첫 설명과 긴 교직 리듬을 같은 결과 헤더에서 연속해 읽습니다", () => {
+  it("중복된 한 줄 설명 대신 교직 리듬을 결과 제목 가까이 한 번만 보여 줍니다", () => {
     const { markup, narrative } = renderResult();
 
     const headerEnd = markup.indexOf("결과 순서");
-    expect(markup.indexOf(narrative.oneLiner)).toBeGreaterThan(-1);
-    expect(markup.indexOf(narrative.rhythm)).toBeGreaterThan(markup.indexOf(narrative.oneLiner));
+    expect(markup).not.toContain(narrative.oneLiner);
+    expect(markup.split(narrative.rhythm)).toHaveLength(2);
     expect(markup.indexOf(narrative.rhythm)).toBeLessThan(headerEnd);
+    expect(markup).toContain('data-result-rhythm="summary"');
+    expect(markup).toContain("result-rhythm-label");
+    expect(markup.split("나의 교직 리듬")).toHaveLength(2);
     expect(markup).toContain("검사 결과 · 테스트 선생님");
     expect(markup).not.toContain("테스트 선생님 님");
   });
@@ -108,29 +111,64 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).toContain(">G<");
     expect(markup).toContain("교류형");
     expect(markup).toContain("garm-female.jpg");
-    expect(markup).toContain("나의 유형을 닮은 캐릭터");
+    expect(markup).toContain("나를 상징하는 캐릭터");
+    expect(markup).not.toContain("나의 유형을 닮은 캐릭터");
+    const characterLabel = markup.match(/<figcaption[^>]*>[\s\S]*?<\/figcaption>/)?.[0] ?? "";
+    expect(characterLabel).toContain("rounded-sm");
+    expect(characterLabel).toContain("bg-accent-soft");
+    expect(markup.indexOf('data-result-character-label="true"')).toBeLessThan(
+      markup.indexOf('data-result-character-frame="true"'),
+    );
+    expect(markup).toContain("minmax(18rem,0.8fr)");
+    expect(markup).toContain("max-w-84");
     expect(markup).not.toContain(String(found.value.resultProfiles[0].key));
   });
 
-  it("환산 표기는 기본 접힘이며 근사 안내를 함께 둡니다", () => {
+  it("환산 표기가 접힘 없이 바로 보이고 근사 안내를 함께 둡니다 (DEC-057)", () => {
     const found = staticAssessmentCatalog.findBySlug("teacher-style");
     if (!found.ok || found.value.typeCode?.crosswalk === undefined) {
       throw new Error("테스트용 코드 규격을 불러오지 못했습니다.");
     }
     const { markup } = renderResult();
-    const details = markup.match(/<details[^>]*>/)?.[0] ?? "";
 
-    expect(details).not.toBe("");
-    expect(details).not.toContain("open");
-    expect(markup).toContain(found.value.typeCode.crosswalk.summaryLabel);
+    // 펼치기 토글을 되살리지 않습니다.
+    expect(markup).not.toContain("<details");
+    expect(markup).not.toContain("result-crosswalk-chevron");
+    expect(markup).toContain(found.value.typeCode.crosswalk.systemLabel);
+    // 근사라는 사실을 감추지 않습니다 (DEC-049). 한 번 빠진 적이 있어 가드를 둡니다.
     expect(markup).toContain(found.value.typeCode.crosswalk.disclaimer);
+  });
+
+  /**
+   * 환산 표기 디자인 (DEC-056)
+   *
+   * 라벨과 코드가 좌우로 나란한 두 칸이라 같은 급으로 읽혔고,
+   * raw 팔레트로 검정 슬래브를 깔아 페이지에서 혼자 튀었습니다.
+   */
+  it("환산 표기가 라벨 안에 값이 담긴 형태이고 semantic 토큰만 씁니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok || found.value.typeCode?.crosswalk === undefined) {
+      throw new Error("테스트용 코드 규격을 불러오지 못했습니다.");
+    }
+    const { markup } = renderResult();
+    const start = markup.indexOf('<div class="result-crosswalk-body');
+    const body = start < 0 ? "" : markup.slice(start, start + 1200);
+
+    expect(body).not.toBe("");
+    // 라벨이 위, 코드가 아래 — 담김을 형태로 보여 줍니다
+    expect(body).toContain("result-crosswalk-field");
+    expect(body).toContain("result-crosswalk-legend");
+    expect(body).toContain("result-crosswalk-code");
+    // raw 팔레트 직접 사용 금지 (design.md 3.1)
+    expect(body, body).not.toMatch(/(bg|text|border)-(sand|sage|clay)-\d{2,3}/);
   });
 
   it("밸런스 지도는 방향 글자와 스크린리더 설명을 함께 제공합니다", () => {
     const { markup } = renderResult();
 
     expect(markup).toContain("관점별 방향과 기울기 지도");
-    expect(markup).toContain("도형의 크기는 좋고 나쁨이 아니라");
+    // 시각 안내 문구는 제거했습니다 (DEC-055). 뜻은 SVG <desc>가 계속 전달합니다.
+    expect(markup).not.toContain("도형의 크기는 좋고 나쁨이 아니라");
     expect(markup).toContain("result-balance-key");
     expect(markup).toContain("<title>관점별 방향과 기울기 지도</title>");
     expect(markup).toContain("<desc>");
@@ -170,6 +208,8 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).toContain("·");
     expect(markup).toContain(found.value.typeCode.balancedNote);
     expect(markup).toContain(found.value.typeCode.crosswalk.unavailableNote);
+    expect(markup).toContain('data-result-rhythm="summary"');
+    expect(markup.split("나의 교직 리듬")).toHaveLength(2);
     // 균형 안내도 상황 제목이 붙은 장면 서술을 씁니다 (DEC-054).
     expect(markup).toContain("두 방식이 갈렸던 날");
     expect(markup).toContain("균형으로 나온 관점 하나를 골라");
@@ -246,7 +286,8 @@ describe("결과 페이지 정보 구조", () => {
   it("신호가 없어도 기본 결과는 온전히 보이고 빈 신호 영역은 남기지 않습니다", () => {
     const { markup, narrative } = renderResult();
 
-    expect(markup).toContain(narrative.oneLiner);
+    expect(markup).not.toContain(narrative.oneLiner);
+    expect(markup).toContain(narrative.rhythm);
     expect(markup).toContain("한눈에 보는 나");
     expect(markup).not.toContain("장면에 따라 달라지는 점");
     expect(markup).not.toContain("응답 폭");
@@ -306,6 +347,42 @@ describe("결과 페이지 정보 구조", () => {
     const positions = headings.map((heading) => markup.lastIndexOf(heading));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+});
+
+/**
+ * 렌즈 카드 정렬 (DEC-055)
+ *
+ * 예전에는 도드라지는 축에만 col-span-2와 요약 문단을 줘서, 2-1-1로 어긋나고
+ * 카드마다 정보량이 달라 보였습니다. 눈으로는 잘 안 잡히는 회귀라 기계가 지킵니다.
+ */
+describe("렌즈 카드 정렬 (DEC-055)", () => {
+  it("어떤 카드도 두 칸을 차지하지 않습니다 — 한 줄에 두 장씩", () => {
+    const { markup } = renderResult();
+    // 카드 요소만 골라냅니다. result-hero-lens-headline 같은 자식 클래스와 겹치지 않게
+    // 카드에만 붙는 data-result-hero-tone 속성을 기준으로 잡습니다.
+    const cards = markup.match(/<li[^>]*data-result-hero-tone[^>]*>/g) ?? [];
+
+    expect(cards).toHaveLength(4);
+    for (const card of cards) {
+      expect(card, card).not.toContain("col-span-2");
+    }
+  });
+
+  it("네 카드가 모두 같은 구조를 갖습니다 — 요약 문단이 빠지지 않습니다", () => {
+    const { markup, narrative } = renderResult();
+
+    for (const axis of narrative.axes) {
+      expect(markup, String(axis.axisId)).toContain(axis.reading.summary);
+      expect(markup, String(axis.axisId)).toContain(axis.reading.headline);
+    }
+  });
+
+  it("긴 제목이 어절 단위로만 끊기도록 줄바꿈 규칙을 답니다", () => {
+    const { markup } = renderResult();
+
+    expect(markup).toContain("result-hero-lens-headline");
+    expect(markup).toContain("result-hero-lens-text");
   });
 });
 

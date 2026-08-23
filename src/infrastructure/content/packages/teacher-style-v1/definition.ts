@@ -373,8 +373,7 @@ const typeCode = {
   balancedNote:
     "가운뎃점 자리는 어느 한쪽으로 기울지 않아, 한 글자로 적지 않았어요. 두 성향이 상황에 따라 번갈아 나타나는 편입니다.",
   crosswalk: {
-    summaryLabel: "다른 검사와 비교해 보기",
-    systemLabel: crosswalkSystemLabel,
+    systemLabel: `추정 ${crosswalkSystemLabel}`,
     disclaimer:
       "축의 이름이 비슷해 보이는 자리끼리 짝지어 본 것일 뿐, 두 검사는 문항도 채점 방식도 다릅니다. 재미로만 봐 주세요.",
     unavailableNote:

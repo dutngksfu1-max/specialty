@@ -248,10 +248,6 @@ export function ResultBalanceMap({
         </svg>
       </div>
 
-      <figcaption className="mt-2 text-center text-caption text-foreground-muted">
-        도형의 크기는 좋고 나쁨이 아니라, 어느 방향이 얼마나 분명한지를 나타냅니다.
-      </figcaption>
-
       <ul className="mt-5 grid gap-3 sm:grid-cols-2">
         {axes.map((axis) => {
           const score = scoreById.get(axis.id);
