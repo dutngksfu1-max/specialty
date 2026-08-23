@@ -333,7 +333,8 @@ describe("StaticAssessmentCatalog", () => {
     expect(presentation?.heroArtwork.src).toMatch(/^\/assessments\//);
     expect(presentation?.sectionArtwork).toHaveLength(4);
     expect(presentation?.typeArtwork).toHaveLength(16);
-    expect(presentation?.balancedArtwork?.src).toContain("/types/balanced.svg");
+    expect(presentation?.balancedArtwork?.male.src).toContain("/types/balanced-male.jpg");
+    expect(presentation?.balancedArtwork?.female.src).toContain("/types/balanced-female.jpg");
     expect(presentation?.responseScaleGuide).toHaveLength(5);
   });
 
@@ -433,7 +434,7 @@ describe("검사 프레젠테이션 무결성", () => {
     expect(detail).toContain("함께 제공");
   });
 
-  it("등록한 유형 선화 16종과 균형 선화가 모두 로컬 파일로 존재합니다", () => {
+  it("등록한 유형별 남녀 32종과 균형 남녀 2종이 모두 로컬 파일로 존재합니다", () => {
     const presentation = staticAssessmentCatalog.findPresentationBySlug("teacher-style");
     const typeArtwork = presentation?.typeArtwork ?? [];
     const balancedArtwork = presentation?.balancedArtwork;
@@ -441,16 +442,19 @@ describe("검사 프레젠테이션 무결성", () => {
     expect(balancedArtwork).toBeDefined();
 
     const artwork = [
-      ...typeArtwork.map((item) => item.artwork),
-      ...(balancedArtwork === undefined ? [] : [balancedArtwork]),
+      ...typeArtwork.flatMap((item) => [item.artwork.male, item.artwork.female]),
+      ...(balancedArtwork === undefined
+        ? []
+        : [balancedArtwork.male, balancedArtwork.female]),
     ];
-    expect(new Set(artwork.map((item) => item.src)).size).toBe(17);
+    expect(artwork).toHaveLength(34);
+    expect(new Set(artwork.map((item) => item.src)).size).toBe(34);
     for (const item of artwork) {
       expect(existsSync(resolve(process.cwd(), "public", item.src.slice(1))), item.src).toBe(true);
     }
   });
 
-  it("각 결과 프로필이 축 데이터에서 조립되는 4렌즈 코드 파일을 가리킵니다", () => {
+  it("각 결과 프로필의 남녀 캐릭터가 축 데이터에서 조립되는 4렌즈 코드 파일을 가리킵니다", () => {
     const found = staticAssessmentCatalog.findBySlug("teacher-style");
     const presentation = staticAssessmentCatalog.findPresentationBySlug("teacher-style");
     if (!found.ok || presentation?.typeArtwork === undefined) {
@@ -465,11 +469,12 @@ describe("검사 프레젠테이션 무결성", () => {
         })
         .join("")
         .toLowerCase();
-      const artwork = presentation.typeArtwork.find(
+      const artworkSet = presentation.typeArtwork.find(
         (item) => item.resultKey === profile.key,
       )?.artwork;
 
-      expect(artwork?.src).toMatch(new RegExp(`/${code}\\.svg$`));
+      expect(artworkSet?.male.src).toMatch(new RegExp(`/${code}-male\\.jpg$`));
+      expect(artworkSet?.female.src).toMatch(new RegExp(`/${code}-female\\.jpg$`));
     }
   });
 });

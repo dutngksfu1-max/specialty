@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { loadCharacterGender } from "@/application/assessment/characterGender";
 import { loadNickname } from "@/application/assessment/nickname";
 import { resumeSession } from "@/application/assessment/resumeSession";
 import { startAssessment } from "@/application/assessment/startAssessment";
@@ -16,7 +17,12 @@ import { messageFor } from "@/lib/errorMessages";
 type Existing =
   | { readonly kind: "unknown" }
   | { readonly kind: "none" }
-  | { readonly kind: "inProgress"; readonly nextSectionOrder: number; readonly answered: number }
+  | {
+      readonly kind: "inProgress";
+      readonly nextSectionOrder: number;
+      readonly answered: number;
+      readonly hasCharacterGender: boolean;
+    }
   | { readonly kind: "outdated" };
 
 export function StartAssessmentControls({ slug }: { readonly slug: string }) {
@@ -36,6 +42,7 @@ export function StartAssessmentControls({ slug }: { readonly slug: string }) {
           kind: "inProgress",
           nextSectionOrder: result.value.nextSectionOrder,
           answered: result.value.responses.length,
+          hasCharacterGender: result.value.session.characterGender !== null,
         });
         return;
       }
@@ -51,9 +58,28 @@ export function StartAssessmentControls({ slug }: { readonly slug: string }) {
     setBusy(true);
     setFailure(null);
 
-    const remembered = await loadNickname(services);
+    const [remembered, rememberedGender] = await Promise.all([
+      loadNickname(services),
+      loadCharacterGender(services),
+    ]);
+    if (!rememberedGender.ok) {
+      setFailure(messageFor(rememberedGender.error).body);
+      setBusy(false);
+      return false;
+    }
+    if (rememberedGender.value === null) {
+      setFailure("처음 화면의 닉네임 입력 옆에서 캐릭터 성별을 먼저 선택해 주세요.");
+      setBusy(false);
+      return false;
+    }
+
     const nickname = remembered.ok ? remembered.value : "";
-    const started = await startAssessment(services.deps, { slug, nickname, restart });
+    const started = await startAssessment(services.deps, {
+      slug,
+      nickname,
+      characterGender: rememberedGender.value,
+      restart,
+    });
 
     if (!started.ok) {
       setFailure(messageFor(started.error).body);
@@ -66,7 +92,10 @@ export function StartAssessmentControls({ slug }: { readonly slug: string }) {
     return true;
   }
 
-  const hasProgress = existing.kind === "inProgress" && existing.answered > 0;
+  const hasProgress =
+    existing.kind === "inProgress" &&
+    existing.answered > 0 &&
+    existing.hasCharacterGender;
 
   return (
     <div className="mobile-safe-action fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface px-4 pt-3 shadow-elev-1 md:static md:mt-8 md:border-0 md:bg-transparent md:p-0 md:shadow-none">

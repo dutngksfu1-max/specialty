@@ -76,6 +76,22 @@ describe("척도는 진짜 라디오여야 합니다 (design.md 10.2)", () => {
   });
 });
 
+describe("캐릭터 성별 선택은 진짜 라디오여야 합니다 (DEC-054)", () => {
+  const nicknameEntry = read("features/landing/NicknameEntry.tsx");
+
+  it("닉네임 입력과 같은 컴포넌트에서 fieldset·legend·radio를 씁니다", () => {
+    expect(nicknameEntry).toContain("<fieldset");
+    expect(nicknameEntry).toContain("<legend");
+    expect(nicknameEntry).toContain('type="radio"');
+    expect(nicknameEntry).toContain('name="characterGender"');
+  });
+
+  it("성별 선택 터치 영역과 focus-visible 표시를 유지합니다", () => {
+    expect(nicknameEntry).toContain("min-h-13");
+    expect(nicknameEntry).toContain("peer-focus-visible:outline-2");
+  });
+});
+
 describe("확대와 언어 설정", () => {
   const layout = read("app/layout.tsx");
 

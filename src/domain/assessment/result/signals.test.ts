@@ -242,3 +242,56 @@ describe("자료가 모자랄 때", () => {
     expect(computeSignals(definition, responses)).toEqual(computeSignals(definition, responses));
   });
 });
+
+/**
+ * S6 응답 분화 (DEC-053)
+ *
+ * 축 점수는 `정방향 − 역방향`이라, 두 묶음에 같은 값을 주면 반드시 0이 됩니다.
+ * 그 0을 '균형'이라고 부르면 답을 고르지 않은 사람에게 해석을 지어내게 됩니다.
+ */
+describe("응답 분화와 '읽기 어려움' 축 (DEC-053)", () => {
+  it("모든 문항에 같은 값을 찍으면 0점이 되고, 그 축은 균형이 아니라 '읽기 어려움'입니다", () => {
+    const definition = oneAxis();
+    const signals = computeSignals(
+      definition,
+      respond(definition, { "axis-a": [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4] }),
+    );
+
+    expect(signals.differentiation[0]?.isDifferentiated).toBe(false);
+    expect(signals.unreadableAxisIds).toHaveLength(1);
+  });
+
+  it("척도를 넓게 쓴 사람이 0점이면 진짜 대칭입니다 — '읽기 어려움'이 아닙니다", () => {
+    const definition = oneAxis();
+    // 정방향 6문항과 역방향 6문항에 정확히 반대로 답하면 합이 0이 아니라 최대치가 됩니다.
+    // 여기서는 같은 방향 안에서 극단을 섞어 합을 0으로 만듭니다.
+    const signals = computeSignals(
+      definition,
+      respond(definition, { "axis-a": [5, 1, 5, 1, 5, 1, 5, 1, 5, 1, 5, 1] }),
+    );
+
+    expect(signals.differentiation[0]?.isDifferentiated).toBe(true);
+    expect(signals.unreadableAxisIds).toHaveLength(0);
+  });
+
+  it("3과 4만 오간 응답도 분화되지 않은 것으로 봅니다", () => {
+    const definition = oneAxis();
+    const signals = computeSignals(
+      definition,
+      respond(definition, { "axis-a": [3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4] }),
+    );
+
+    expect(signals.differentiation[0]?.isDifferentiated).toBe(false);
+  });
+
+  it("방향이 이미 나온 축은 분화되지 않았어도 '읽기 어려움'이 아닙니다", () => {
+    const definition = oneAxis();
+    // 정방향 6문항 5점 / 역방향 6문항 1점 — 폭은 넓고 점수도 0이 아닙니다.
+    const signals = computeSignals(
+      definition,
+      respond(definition, { "axis-a": [5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 1, 1] }),
+    );
+
+    expect(signals.unreadableAxisIds).toHaveLength(0);
+  });
+});

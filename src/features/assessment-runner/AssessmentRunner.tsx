@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { loadCharacterGender } from "@/application/assessment/characterGender";
 import { completeAssessment } from "@/application/assessment/completeAssessment";
 import { getPartState } from "@/application/assessment/getPartState";
 import { loadNickname } from "@/application/assessment/nickname";
@@ -325,10 +326,18 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
 
   async function restart(): Promise<boolean> {
     if (services === null || !(await flushSaves())) return false;
-    const remembered = await loadNickname(services);
+    const [remembered, rememberedGender] = await Promise.all([
+      loadNickname(services),
+      loadCharacterGender(services),
+    ]);
+    if (!rememberedGender.ok || rememberedGender.value === null) {
+      setSaveError("처음 화면에서 캐릭터 성별을 선택한 뒤 다시 시도해 주세요.");
+      return false;
+    }
     const started = await startAssessment(services.deps, {
       slug,
       nickname: remembered.ok ? remembered.value : "",
+      characterGender: rememberedGender.value,
       restart: true,
     });
     if (!started.ok) {

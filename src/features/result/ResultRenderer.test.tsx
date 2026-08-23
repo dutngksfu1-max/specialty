@@ -18,6 +18,7 @@ function renderResult(signals?: AssessmentSignals): {
   if (profile === undefined) throw new Error("테스트용 결과 프로필이 없습니다.");
 
   const snapshot = {
+    characterGender: "female",
     score: {
       resultKey: profile.key,
       axisScores: found.value.axes.map((axis) => ({
@@ -57,6 +58,7 @@ function renderBalancedResult(): string {
   if (profile === undefined) throw new Error("테스트용 결과 프로필이 없습니다.");
 
   const snapshot = {
+    characterGender: "male",
     score: {
       resultKey: profile.key,
       axisScores: found.value.axes.map((axis) => ({
@@ -105,8 +107,8 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).toContain("4렌즈 코드");
     expect(markup).toContain(">G<");
     expect(markup).toContain("교류형");
-    expect(markup).toContain("garm.svg");
-    expect(markup).toContain("나의 리듬을 닮은 작업대");
+    expect(markup).toContain("garm-female.jpg");
+    expect(markup).toContain("나의 유형을 닮은 캐릭터");
     expect(markup).not.toContain(String(found.value.resultProfiles[0].key));
   });
 
@@ -164,7 +166,7 @@ describe("결과 페이지 정보 구조", () => {
 
     expect(markup).toContain("함께 정하고 꼼꼼히 준비하는 교실");
     expect(markup).not.toContain("결과를 나타내는 상징");
-    expect(markup).toContain("balanced.svg");
+    expect(markup).toContain("balanced-male.jpg");
     expect(markup).toContain("·");
     expect(markup).toContain(found.value.typeCode.balancedNote);
     expect(markup).toContain(found.value.typeCode.crosswalk.unavailableNote);
@@ -215,6 +217,13 @@ describe("결과 페이지 정보 구조", () => {
         id: "high",
         reasons: [],
       })),
+      differentiation: found.value.axes.map((axis) => ({
+        axisId: axis.id,
+        distinctValues: 4,
+        valueRange: 4,
+        isDifferentiated: true,
+      })),
+      unreadableAxisIds: [],
     };
 
     const { markup } = renderResult(signals);
@@ -296,5 +305,79 @@ describe("결과 페이지 정보 구조", () => {
     const positions = headings.map((heading) => markup.lastIndexOf(heading));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+});
+
+/**
+ * 0점을 '진짜 대칭'과 '읽기 어려움'으로 나눠 보여 줍니다 (DEC-053)
+ *
+ * 답을 고르지 않은 분께 "두 방식을 비슷하게 쓰시네요"라고 말하지 않기 위한 가드입니다.
+ */
+describe("응답이 갈리지 않은 축 표시 (DEC-053)", () => {
+  function renderWithUnreadableAxes(): string {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok) throw new Error("테스트용 검사를 불러오지 못했습니다.");
+    const profile = found.value.resultProfiles[0];
+    if (profile === undefined) throw new Error("테스트용 결과 프로필이 없습니다.");
+
+    const snapshot = {
+      characterGender: "male",
+      score: {
+        resultKey: profile.key,
+        axisScores: found.value.axes.map((axis) => ({
+          axisId: axis.id,
+          rawScore: 0,
+          minScore: -24,
+          maxScore: 24,
+          normalized: 0.5,
+          direction: "positive" as const,
+          isBalanced: true,
+          intensityBandId: "balanced",
+        })),
+      },
+    } as unknown as ResultSnapshot;
+
+    const signals: AssessmentSignals = {
+      consistency: [],
+      contextSplits: [],
+      responseStyle: { id: "centered", extremeRate: 0, middleRate: 1, answeredCount: 48 },
+      confidence: [],
+      differentiation: found.value.axes.map((axis) => ({
+        axisId: axis.id,
+        distinctValues: 1,
+        valueRange: 0,
+        isDifferentiated: false,
+      })),
+      unreadableAxisIds: found.value.axes.map((axis) => axis.id),
+    };
+
+    return renderToStaticMarkup(
+      <ResultRenderer
+        definition={found.value}
+        snapshot={snapshot}
+        profile={profile}
+        nickname="테스트 선생님"
+        presentation={staticAssessmentCatalog.findPresentationBySlug(found.value.slug)}
+        signals={signals}
+      />,
+    );
+  }
+
+  it("응답이 갈리지 않은 축은 '균형'이 아니라 읽기 어려웠다고 알려 줍니다", () => {
+    const markup = renderWithUnreadableAxes();
+    const spec = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!spec.ok) throw new Error("검사를 불러오지 못했습니다.");
+    const label = spec.value.resultNarrative?.unreadableAxisLabel;
+    if (label === undefined) throw new Error("읽기 어려움 문구가 없습니다.");
+
+    expect(markup).toContain(label);
+    expect(markup).not.toContain("균형 관점");
+  });
+
+  it("같은 0점이어도 응답이 갈렸으면 균형으로 보여 줍니다", () => {
+    // signals 없이 그리면 예전처럼 전부 균형입니다 — 응답을 지운 뒤에도 결과가 깨지면 안 됩니다.
+    const markup = renderBalancedResult();
+
+    expect(markup).toContain("균형 관점");
   });
 });

@@ -34,6 +34,7 @@ const session: AssessmentSession = {
   id: toSessionId("session-1"),
   assessmentId: ASSESSMENT_ID,
   nickname: "테스트",
+  characterGender: "female",
   startedAt: "2026-08-19T09:00:00.000Z",
   updatedAt: "2026-08-19T09:00:00.000Z",
   completedAt: null,
@@ -104,6 +105,7 @@ describe("IndexedDbAssessmentRepository", () => {
       assessmentId: ASSESSMENT_ID,
       sessionId: session.id,
       nickname: "테스트",
+      characterGender: "female",
       score: { axisScores: [], resultKey: "pppp" as ResultSnapshot["score"]["resultKey"] },
       versions: session.versions,
       completedAt: "2026-08-19T09:30:00.000Z",
@@ -128,6 +130,7 @@ describe("IndexedDbAssessmentRepository", () => {
       assessmentId: ASSESSMENT_ID,
       sessionId: session.id,
       nickname: "테스트",
+      characterGender: "female",
       score: { axisScores: [], resultKey: "pppp" as ResultSnapshot["score"]["resultKey"] },
       versions: session.versions,
       completedAt: "2026-08-19T09:30:00.000Z",
@@ -153,14 +156,26 @@ describe("IndexedDbAssessmentRepository", () => {
     expect(loaded.value).toBe("3반 김선생");
   });
 
-  it("clearAll은 닉네임까지 지웁니다 (DEC-015)", async () => {
+  it("결과 캐릭터 성별을 브라우저 설정으로 저장하고 복구합니다", async () => {
+    expect((await repository.loadCharacterGender()).ok).toBe(true);
+
+    await repository.saveCharacterGender("male");
+    const loaded = await repository.loadCharacterGender();
+    if (!loaded.ok) throw new Error("캐릭터 성별을 불러오지 못했습니다.");
+    expect(loaded.value).toBe("male");
+  });
+
+  it("clearAll은 닉네임과 캐릭터 성별까지 지웁니다 (DEC-015 · DEC-054)", async () => {
     await repository.saveSession(session);
     await repository.saveNickname("3반 김선생");
+    await repository.saveCharacterGender("female");
 
     expect((await repository.clearAll()).ok).toBe(true);
 
     const nickname = await repository.loadNickname();
+    const characterGender = await repository.loadCharacterGender();
     expect(nickname.ok && nickname.value).toBeNull();
+    expect(characterGender.ok && characterGender.value).toBeNull();
   });
 
   it("저장 데이터가 손상되면 DRAFT_CORRUPTED", async () => {

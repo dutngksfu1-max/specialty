@@ -401,13 +401,19 @@
   }
 
   /* Result data visualizations (Phase D) */
+  /*
+   * 트랙은 중립색입니다 (DEC-053).
+   *
+   * 예전에는 왼쪽 절반을 초록, 오른쪽 절반을 주황으로 칠했습니다. 그런데 채움도 같은 색이라
+   * −1이든 −24든 "초록 영역은 늘 왼쪽 절반"으로 보였습니다. 세기가 명암 차이로만 남아
+   * 약한 기울기가 가득 찬 막대로 읽혔습니다.
+   *
+   * 어느 쪽이 어느 성향인지는 막대 위의 **색이 있는 양쪽 라벨**이 이미 알려 줍니다.
+   * 트랙에서 색을 빼면 채움의 길이가 곧 세기가 됩니다.
+   */
   .result-axis-track {
-    background:
-      linear-gradient(
-        90deg,
-        color-mix(in oklch, var(--color-chart-negative), white 72%) 0 50%,
-        color-mix(in oklch, var(--color-chart-positive), white 72%) 50% 100%
-      );
+    /* 균형 마커가 chart-neutral(sand-300)이라, 트랙은 한 단계 옅은 sand-200을 씁니다. */
+    background: var(--color-surface-inset);
     box-shadow:
       inset 0 0 0 1px var(--color-border-strong),
       0 1px 0 color-mix(in oklch, white, transparent 35%);
@@ -465,7 +471,6 @@
 
   .result-axis-marker[data-direction="negative"] {
     background: var(--color-chart-negative);
-    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   }
 
   .result-axis-marker[data-direction="positive"] {

@@ -417,6 +417,7 @@ export interface AssessmentSession {
   readonly id: SessionId;
   readonly assessmentId: AssessmentId;
   readonly nickname: string;                // 비어 있으면 "선생님"
+  readonly characterGender: "male" | "female" | null; // null은 기존 저장 데이터 호환용
   readonly startedAt: string;               // ISO 8601
   readonly updatedAt: string;
   readonly completedAt: string | null;
@@ -455,6 +456,7 @@ export interface ResultSnapshot {
   readonly assessmentId: AssessmentId;
   readonly sessionId: SessionId;
   readonly nickname: string;
+  readonly characterGender: "male" | "female" | null;
   readonly score: AssessmentScore;
   readonly versions: AssessmentSession["versions"];
   readonly completedAt: string;
@@ -681,7 +683,7 @@ Object stores
 ├─ responses   keyPath: ["sessionId", "questionId"]
 │              index  : "bySession" → "sessionId"
 ├─ results     keyPath: "assessmentId"
-└─ preferences keyPath: "key"                   (닉네임 등)
+└─ preferences keyPath: "key"                   (닉네임·캐릭터 성별 등)
 ```
 
 **동작 규칙**

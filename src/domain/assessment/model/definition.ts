@@ -121,6 +121,15 @@ export interface ResultNarrativeSpec {
   readonly balancedTitle: string;
   readonly balancedOneLiner: string;
   readonly balancedAxisNote: string;
+  /**
+   * 0점이지만 응답이 갈리지 않아 방향을 읽을 수 없는 축에 쓰는 문구 (DEC-053)
+   *
+   * 이 축은 **균형이 아닙니다.** 답을 고르지 않은 사람에게 "두 성향을 고루 쓰시네요"라고
+   * 말하는 것은 해석이 아니라 지어내기입니다. 없으면 화면은 균형과 같게 다룹니다.
+   */
+  readonly unreadableAxisNote?: string;
+  /** 위 축의 짧은 표식. 화면에서 '균형' 자리에 대신 들어갑니다 */
+  readonly unreadableAxisLabel?: string;
   /** 본문 흐름을 끊지 않고 해석 범위만 짧게 알리는 문구 */
   readonly scopeNote: string;
   /**

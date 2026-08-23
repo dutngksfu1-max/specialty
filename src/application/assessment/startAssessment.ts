@@ -1,6 +1,7 @@
 import type { AssessmentError } from "@/domain/assessment/errors/assessmentError";
 import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
 import type { AssessmentSession } from "@/domain/assessment/session/session";
+import type { CharacterGender } from "@/domain/assessment/session/characterGender";
 import { err, ok, type Result } from "@/domain/shared/result";
 
 import {
@@ -13,6 +14,8 @@ export interface StartAssessmentInput {
   readonly slug: string;
   /** 비워 두면 기존 닉네임을 유지합니다. (DEC-009) */
   readonly nickname?: string;
+  /** 결과 캐릭터 선택값. 비워 두면 기존 값을 유지합니다 (DEC-054). */
+  readonly characterGender?: CharacterGender;
   /** true면 기존 세션·응답·결과를 지우고 처음부터 다시 시작합니다. (DEC-010) */
   readonly restart?: boolean;
 }
@@ -47,13 +50,18 @@ export async function startAssessment(
 
   if (canResume && existing.value !== null) {
     const nickname = input.nickname ?? existing.value.nickname;
-    if (nickname === existing.value.nickname) {
+    const characterGender = input.characterGender ?? existing.value.characterGender;
+    if (
+      nickname === existing.value.nickname &&
+      characterGender === existing.value.characterGender
+    ) {
       return ok({ definition, session: existing.value, isNew: false });
     }
 
     const updated: AssessmentSession = {
       ...existing.value,
       nickname,
+      characterGender,
       updatedAt: deps.clock.now(),
     };
     const saved = await deps.repository.saveSession(updated);
@@ -70,6 +78,7 @@ export async function startAssessment(
     id: deps.idGenerator.newSessionId(),
     assessmentId: definition.id,
     nickname: input.nickname ?? "",
+    characterGender: input.characterGender ?? null,
     startedAt,
     updatedAt: startedAt,
     completedAt: null,

@@ -53,13 +53,18 @@ beforeEach(() => {
 
 describe("startAssessment", () => {
   it("새 세션을 만들고 버전 스냅샷을 남깁니다", async () => {
-    const started = await startAssessment(deps, { slug: SLUG, nickname: "테스트" });
+    const started = await startAssessment(deps, {
+      slug: SLUG,
+      nickname: "테스트",
+      characterGender: "female",
+    });
 
     expect(started.ok).toBe(true);
     if (!started.ok) return;
 
     expect(started.value.isNew).toBe(true);
     expect(started.value.session.nickname).toBe("테스트");
+    expect(started.value.session.characterGender).toBe("female");
     expect(started.value.session.startedAt).toBe("2026-08-19T09:00:00.000Z");
     expect(started.value.session.completedAt).toBeNull();
     // 콘텐츠 버전이 올라가도 깨지지 않도록, 지금 검사 정의와 같은지를 확인합니다.
@@ -80,6 +85,27 @@ describe("startAssessment", () => {
 
     expect(second.value.isNew).toBe(false);
     expect(second.value.session.id).toBe(first.value.session.id);
+  });
+
+  it("기존 세션의 응답을 유지하면서 캐릭터 성별을 갱신합니다", async () => {
+    const first = await startAssessment(deps, { slug: SLUG });
+    if (!first.ok) throw new Error("시작 실패");
+    await saveResponse(deps, {
+      slug: SLUG,
+      questionId: definitionOf(deps).questions[0]!.id,
+      value: 4,
+    });
+
+    const updated = await startAssessment(deps, {
+      slug: SLUG,
+      characterGender: "male",
+    });
+    expect(updated.ok).toBe(true);
+    if (!updated.ok) return;
+    expect(updated.value.isNew).toBe(false);
+    expect(updated.value.session.id).toBe(first.value.session.id);
+    expect(updated.value.session.characterGender).toBe("male");
+    expect(repository.countResponses(first.value.session.id)).toBe(1);
   });
 
   it("restart면 이전 응답까지 지우고 새 세션을 만듭니다 (DEC-010)", async () => {
@@ -208,7 +234,11 @@ describe("getPartState", () => {
 
 describe("resumeSession", () => {
   it("저장된 응답을 그대로 복구하고 이어서 할 Part를 알려 줍니다", async () => {
-    await startAssessment(deps, { slug: SLUG, nickname: "테스트" });
+    await startAssessment(deps, {
+      slug: SLUG,
+      nickname: "테스트",
+      characterGender: "female",
+    });
 
     const part1 = await getPartState(deps, { slug: SLUG, sectionOrder: 1 });
     if (!part1.ok) throw new Error("조회 실패");
@@ -284,7 +314,11 @@ describe("completeAssessment", () => {
   });
 
   it("전부 3점이면 모든 축이 균형이고 defaultPole 조합으로 확정됩니다", async () => {
-    await startAssessment(deps, { slug: SLUG, nickname: "테스트" });
+    await startAssessment(deps, {
+      slug: SLUG,
+      nickname: "테스트",
+      characterGender: "female",
+    });
     await answerAll(3);
 
     clock.set("2026-08-19T09:12:00.000Z");
@@ -296,6 +330,7 @@ describe("completeAssessment", () => {
     const { snapshot } = completed.value;
     expect(snapshot.completedAt).toBe("2026-08-19T09:12:00.000Z");
     expect(snapshot.nickname).toBe("테스트");
+    expect(snapshot.characterGender).toBe("female");
     expect(snapshot.score.axisScores).toHaveLength(4);
     expect(snapshot.score.axisScores.every((axis) => axis.rawScore === 0)).toBe(true);
     expect(snapshot.score.axisScores.every((axis) => axis.isBalanced)).toBe(true);

@@ -8,6 +8,7 @@ import type {
 import type { AxisRanking } from "@/domain/assessment/result/axisRanking";
 import { buildTypeCode } from "@/domain/assessment/result/typeCode";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
+import type { AxisId } from "@/domain/shared/ids";
 import { Icon } from "@/components/ui/Icon";
 import { ResultBalanceMap } from "@/features/result/ResultBalanceMap";
 import {
@@ -121,16 +122,24 @@ function LensSummary({
   narrative,
   definition,
   ranking,
+  isUnreadable = false,
 }: {
   readonly index: number;
   readonly narrative: ResolvedAxisNarrative;
   readonly definition: AssessmentDefinition;
   readonly ranking: AxisRanking;
+  /** 0점이지만 응답이 갈리지 않은 축. '균형'과 구별해 표시합니다 (DEC-053) */
+  readonly isUnreadable?: boolean;
 }) {
   const axis = definition.axes.find((candidate) => candidate.id === narrative.axisId);
   const score = ranking.ordered.find((candidate) => candidate.axisId === narrative.axisId);
   const rankIndex = ranking.ordered.findIndex((candidate) => candidate.axisId === narrative.axisId);
   const isBalanced = definition.resultNarrative !== undefined && !narrative.isDirectional;
+  // 문구는 콘텐츠가 소유합니다. 콘텐츠가 주지 않으면 예전처럼 균형으로 다룹니다.
+  const unreadableLabel = definition.resultNarrative?.unreadableAxisLabel;
+  const unreadableNote = definition.resultNarrative?.unreadableAxisNote;
+  const showsUnreadable =
+    isUnreadable && unreadableLabel !== undefined && unreadableNote !== undefined;
   const side = narrative.reading.direction === "negative" ? "negative" : "positive";
   const pole = side === "positive" ? axis?.positive : axis?.negative;
   const letter =
@@ -164,24 +173,40 @@ function LensSummary({
           <div className="min-w-0">
             <p className="text-caption text-foreground-muted">{axis?.name}</p>
             <p className="text-body-sm font-semibold text-foreground">
-              {isBalanced ? "균형" : pole?.shortLabel}
+              {showsUnreadable ? unreadableLabel : isBalanced ? "균형" : pole?.shortLabel}
             </p>
           </div>
         </div>
         {(isBalanced || isPrimary || isSharedLead) && (
           <span className="shrink-0 rounded-xs border border-border-strong bg-surface px-2 py-1 text-caption font-semibold text-foreground-muted">
-            {isBalanced ? "균형 관점" : isPrimary ? "가장 도드라짐" : "함께 도드라짐"}
+            {showsUnreadable
+              ? unreadableLabel
+              : isBalanced
+                ? "균형 관점"
+                : isPrimary
+                  ? "가장 도드라짐"
+                  : "함께 도드라짐"}
           </span>
         )}
       </div>
 
-      <h3 className="mt-4 text-h3 text-foreground">{narrative.reading.headline}</h3>
-      {showSummary && (
-        <p className="mt-2 text-body-sm text-foreground-body">{narrative.reading.summary}</p>
+      {/*
+        응답이 갈리지 않은 축에는 균형 문구를 쓰지 않습니다 (DEC-053).
+        "두 방식을 비슷하게 쓰신다"는 말은 답을 고르지 않은 분께는 지어낸 해석입니다.
+      */}
+      {showsUnreadable ? (
+        <p className="mt-4 text-body-sm text-foreground-body">{unreadableNote}</p>
+      ) : (
+        <>
+          <h3 className="mt-4 text-h3 text-foreground">{narrative.reading.headline}</h3>
+          {showSummary && (
+            <p className="mt-2 text-body-sm text-foreground-body">{narrative.reading.summary}</p>
+          )}
+          <p className="mt-3 border-t border-border pt-3 text-body-sm text-foreground-muted">
+            {narrative.reading.rhythm}
+          </p>
+        </>
       )}
-      <p className="mt-3 border-t border-border pt-3 text-body-sm text-foreground-muted">
-        {narrative.reading.rhythm}
-      </p>
       {score !== undefined && <span className="sr-only">기울기 크기 {score.absScore}</span>}
     </li>
   );
@@ -194,6 +219,7 @@ export function ResultHero({
   narrative,
   ranking,
   presentation,
+  unreadableAxisIds,
 }: {
   readonly definition: AssessmentDefinition;
   readonly snapshot: ResultSnapshot;
@@ -201,12 +227,15 @@ export function ResultHero({
   readonly narrative: ResolvedResultNarrative;
   readonly ranking: AxisRanking;
   readonly presentation?: AssessmentPresentation;
+  /** 0점이지만 응답이 갈리지 않아 방향을 읽을 수 없는 축 (DEC-053) */
+  readonly unreadableAxisIds?: ReadonlySet<AxisId>;
 }) {
   const hasBalancedAxes = narrative.balancedAxisIds.size > 0;
   const artwork = findTypeArtwork(
     presentation,
     snapshot.score.resultKey,
     hasBalancedAxes,
+    snapshot.characterGender,
   );
 
   return (
@@ -239,7 +268,7 @@ export function ResultHero({
               className="h-auto w-full"
             />
             <figcaption className="mt-1 text-center text-caption font-semibold text-primary-active">
-              나의 리듬을 닮은 작업대
+              나의 유형을 닮은 캐릭터
             </figcaption>
           </figure>
         )}
@@ -260,6 +289,7 @@ export function ResultHero({
                 narrative={item}
                 definition={definition}
                 ranking={ranking}
+                isUnreadable={unreadableAxisIds?.has(item.axisId) ?? false}
               />
             ))}
           </ol>

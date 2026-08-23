@@ -11,7 +11,7 @@
 지금 결과 첫 카드는 **제목 한 줄 + 설명 한 줄 + 리듬 문단** 뿐이라, 40문항을 푼 보상치고 너무 조용합니다.
 
 여기를 **"내 유형을 한 장으로 알아보는 면"** 으로 다시 만들어 주세요.
-새로 들어오는 재료는 세 가지입니다 — **4렌즈 코드(알파벳 4글자)**, **16유형 전용 캐릭터**, **4축 밸런스 인포그래픽**.
+새로 들어오는 재료는 세 가지입니다 — **4렌즈 코드(알파벳 4글자)**, **유형·성별 전용 캐릭터 34종**, **4축 밸런스 인포그래픽**.
 
 ---
 
@@ -20,7 +20,7 @@
 ### 완전히 당신이 정합니다 (묻지 말고 결정하세요)
 
 - 히어로 내부 레이아웃·그리드·카드 분할 방식과 개수
-- **캐릭터 16종의 조형 방향** — 무엇을 그릴지, 어떤 은유를 쓸지, 인물인지 사물인지 풍경인지
+- **캐릭터 34종의 조형 방향** — 16유형 남녀와 균형 남녀를 어떤 자세·소품으로 구분할지
 - **밸런스 인포그래픽의 형태** — 사각형 레이더인지 팔각형인지 다른 형태인지
 - 코드 뱃지의 조판·크기·위치
 - 타이포 스케일 운용, 강조 방법, 여백 리듬
@@ -88,7 +88,7 @@
   (문구 자체는 데이터로 들어옵니다 — 4장 참조)
 - 균형 자리가 있어도 **코드는 항상 표시합니다.** 숨기지 마세요
 
-### 3.3 유형별 캐릭터 16종 — 5장 참조
+### 3.3 유형별 남녀 32종 + 균형 남녀 2종 — 5장 참조
 
 ### 3.4 "나온 유형 요소 설명" 블록
 
@@ -193,11 +193,11 @@ buildTypeCode(
 
 ---
 
-## 5. 캐릭터 16종 — 제작 규격
+## 5. 캐릭터 34종 — 제작 규격
 
 ### 5.1 무엇을 만드는가
 
-16개 유형 각각에 대응하는 **정지 일러스트 1종씩, 총 16개.** SVG.
+16개 유형 각각에 대응하는 **남성·여성 정지 일러스트 2종씩 32개**, 균형 결과용 남성·여성 2개를 더해 **총 34개.** 로컬 래스터 이미지.
 
 ### 5.2 조형 방향은 당신이 정합니다
 
@@ -219,7 +219,7 @@ docs/design.md  3장(색) · 5.4(카드 덱 문법) · 13장(금지 패턴)
 - 얼굴·표정 없음. 사물과 풍경의 은유
 
 **당신이 결정할 것**: 인물 실루엣인가, 사물 은유인가, 풍경인가, 도구·교실 오브제인가.
-16종이 **한 세트로 보이면서 서로 구별되는** 방법도 당신이 설계합니다.
+34종이 **한 세트로 보이면서 유형별로 구별되고, 같은 유형의 남녀는 한 쌍으로 보이는** 방법도 당신이 설계합니다.
 (예: 공통 무대 + 요소 4개 조합 / 공통 실루엣 + 자세·소품 변주 / 공통 구도 + 오브제 교체 — 무엇이든)
 
 ### 5.3 반드시 지킬 것
@@ -229,15 +229,18 @@ docs/design.md  3장(색) · 5.4(카드 덱 문법) · 13장(금지 패턴)
 | **귀엽게 만들지 않습니다.** 큰 눈·볼터치·과장된 머리 비율·둥근 마스코트 금지 | 사용자는 초등교사입니다. 아이용 캐릭터로 읽히면 검사의 신뢰가 깎입니다 |
 | **차분한 성인 톤.** 절제된 선, 조용한 색 | 현재 디자인의 인상과 이어져야 합니다 |
 | **색만으로 16종을 구분하지 않습니다.** 형태가 달라야 합니다 | 색각 이상 사용자에게 정보가 사라집니다 (`AGENTS.md` 5장) |
-| **성별·연령·인종이 특정되지 않게** 합니다 | 모든 선생님이 자기 것으로 받아야 합니다 |
-| **금지 표현 없음.** 파일명·`id`·주석·`alt` 어디에도 기존 성격유형 검사 4글자 코드나 그 명칭을 쓰지 않습니다 | `AGENTS.md` 1.1. 파일명은 4렌즈 코드를 쓰세요 (`garm.svg`) |
+| **사용자가 고른 성별은 분명히 드러냅니다.** 같은 유형의 남녀는 행동·소품을 동일하게 유지합니다 | 성별 선택은 결과 캐릭터 표현에만 쓰며 역할 고정관념을 만들지 않습니다 |
+| **성별 외 연령대·인종은 특정하지 않습니다** | 넓은 성인 교사가 자기 것으로 받아들일 수 있어야 합니다 |
+| **금지 표현 없음.** 파일명·`id`·주석·`alt` 어디에도 기존 성격유형 검사 4글자 코드나 그 명칭을 쓰지 않습니다 | `AGENTS.md` 1.1. 파일명은 4렌즈 코드를 쓰세요 (`garm-male.jpg`) |
 | **외부 이미지·폰트·CDN 요청 0건** | 오프라인(PWA)에서 결과가 깨지면 안 됩니다 |
 
 ### 5.4 파일·주입 규격
 
 ```
-public/assessments/teacher-style/types/garm.svg      # 16개, 4렌즈 코드 소문자
-public/assessments/teacher-style/types/balanced.svg  # 균형 자리 있을 때 1개
+public/assessments/teacher-style/types/garm-male.jpg       # 유형별 남성 16개
+public/assessments/teacher-style/types/garm-female.jpg     # 유형별 여성 16개
+public/assessments/teacher-style/types/balanced-male.jpg   # 균형 남성 1개
+public/assessments/teacher-style/types/balanced-female.jpg # 균형 여성 1개
 ```
 
 **주입은 `presentation.ts` 를 통해서만.** 기존 `sectionArtwork` 와 같은 모양으로 추가하세요.
@@ -245,21 +248,26 @@ public/assessments/teacher-style/types/balanced.svg  # 균형 자리 있을 때 
 ```ts
 // src/infrastructure/content/packages/teacher-style-v1/presentation.ts
 typeArtwork: [
-  { resultKey: "pppp", artwork: { src: "/assessments/teacher-style/types/garm.svg",
-                                  width: 240, height: 200, alt: "" } },
+  { resultKey: "pppp", artwork: {
+      male: { src: "/assessments/teacher-style/types/garm-male.jpg", width: 480, height: 640, alt: "" },
+      female: { src: "/assessments/teacher-style/types/garm-female.jpg", width: 480, height: 640, alt: "" },
+  } },
   // … 16개
 ],
-balancedArtwork: { src: "…/types/balanced.svg", width: 240, height: 200, alt: "" },
+balancedArtwork: {
+  male: { src: "…/types/balanced-male.jpg", width: 480, height: 640, alt: "" },
+  female: { src: "…/types/balanced-female.jpg", width: 480, height: 640, alt: "" },
+},
 ```
 
 > `resultKey` ↔ 4렌즈 코드 대응은 `src/infrastructure/content/packages/teacher-style-v1/profiles.ts` 머리말의
 > 자리 순서를 그대로 따릅니다 (`p`=positive → G/A/R/M, `n`=negative → D/O/C/L).
 
-**`ResultRenderer.tsx` 안에 16개 SVG를 `switch` 로 넣지 마세요.** 그 순간 `AGENTS.md` 7장이 깨집니다.
+**`ResultRenderer.tsx` 안에 34개 이미지를 `switch` 로 넣지 마세요.** 그 순간 `AGENTS.md` 7장이 깨집니다.
 
 ### 5.5 배치 규칙
 
-- 균형 자리가 하나라도 있으면 **16종 캐릭터 대신 `balancedArtwork`** 를 씁니다
+- 균형 자리가 하나라도 있으면 **유형 캐릭터 대신 선택 성별의 `balancedArtwork`** 를 씁니다
   (한쪽 방향으로 단정하지 않는다 — DEC-046)
 - 캐릭터는 장식이 아니라 **정보**입니다. `alt` 는 비우고(`alt=""`), 옆 텍스트가 의미를 전달하게 하세요
 - 360px에서 캐릭터가 화면을 다 잡아먹지 않아야 합니다. 폭에 따라 크기가 줄거나 배치가 바뀝니다
@@ -310,7 +318,7 @@ balancedArtwork: { src: "…/types/balanced.svg", width: 240, height: 200, alt: 
 | 하지 마세요 | 대신 |
 |---|---|
 | `features/` 에 `resultKey`/`axisId` 별 `switch`·객체 리터럴 | 데이터로 주입받아 순회 |
-| `features/` 에 16개 SVG 인라인 | `public/` + `presentation.ts` 참조 |
+| `features/` 에 34개 캐릭터를 인라인 | `public/` + `presentation.ts` 참조 |
 | 글자 `"G"` 를 컴포넌트에 하드코딩 | `AxisPole.code` 사용 |
 | 축이 4개라고 가정한 그리드 | `definition.axes.length` 로 대응. 4개가 아니어도 죽지 않아야 합니다 |
 | 채점·코드 조립 함수를 `async` 로 | 동기 순수 함수 |
@@ -381,7 +389,7 @@ grep -rEni "\b[EI][NS][TF][JP]\b" src/ public/
 
 - [ ] 히어로에서 4렌즈 코드가 자리별 해설과 함께 읽힙니다
 - [ ] 균형 자리가 `·` 로 표시되고, 왜 비었는지 안내가 있습니다
-- [ ] 16종 캐릭터 + 균형용 1종이 `public/` 에 있고 `presentation.ts` 로 주입됩니다
+- [ ] 유형별 남녀 32종 + 균형 남녀 2종이 `public/` 에 있고 `presentation.ts` 로 주입됩니다
 - [ ] `features/` 안에 `resultKey`·`axisId`·글자 하드코딩이 0건입니다
 - [ ] 밸런스 인포그래픽이 방향과 강도를 색 없이도 읽게 합니다
 - [ ] MBTI 환산이 기본 접힘이고, 4렌즈 코드보다 작습니다
@@ -400,6 +408,6 @@ grep -rEni "\b[EI][NS][TF][JP]\b" src/ public/
 | 문서·위치 | 기존 | 변경 |
 |---|---|---|
 | `AGENTS.md` 1.1 | 기존 성격유형 검사 명칭·4글자 코드 전면 금지 | 지정된 환산 필드(`AxisPole.crosswalkCode`)와 접힌 환산 UI에서만 허용 |
-| `AGENTS.md` 6장 | 결과에 "마스코트 캐릭터" 넣지 않음 | 유형 캐릭터 16종 허용. 단 5.3의 톤 규격을 지킴 |
+| `AGENTS.md` 6장 | 결과에 "마스코트 캐릭터" 넣지 않음 | 유형·성별 캐릭터 34종 허용. 단 5.3의 톤 규격을 지킴 |
 | `design.md` 9장 | "별도 결과 삽화를 추가하지 않습니다" | 유형 캐릭터와 밸런스 인포그래픽 허용 |
 | `docs/decisions.md` | — | `DEC-049 4렌즈 코드` · `DEC-050 유형 캐릭터` 신규 등록 |

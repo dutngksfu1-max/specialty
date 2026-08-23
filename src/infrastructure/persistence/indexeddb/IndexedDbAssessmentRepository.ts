@@ -5,6 +5,10 @@ import {
 import type { AssessmentRepository } from "@/domain/assessment/ports/assessmentRepository";
 import type { PreferencesRepository } from "@/domain/assessment/ports/preferencesRepository";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
+import {
+  isCharacterGender,
+  type CharacterGender,
+} from "@/domain/assessment/session/characterGender";
 import type {
   AssessmentResponse,
   AssessmentSession,
@@ -15,6 +19,7 @@ import { getDb } from "@/infrastructure/persistence/indexeddb/db";
 import { STORE } from "@/infrastructure/persistence/indexeddb/schema";
 
 const NICKNAME_KEY = "nickname";
+const CHARACTER_GENDER_KEY = "character-gender";
 
 /** 저장소 작업을 감싸 실패를 Result로 바꿉니다. 예외를 밖으로 던지지 않습니다. */
 async function guard<T>(
@@ -36,6 +41,9 @@ function isSession(value: unknown): value is AssessmentSession {
     typeof record.id === "string" &&
     typeof record.assessmentId === "string" &&
     typeof record.nickname === "string" &&
+    (record.characterGender === undefined ||
+      record.characterGender === null ||
+      isCharacterGender(record.characterGender)) &&
     typeof record.startedAt === "string" &&
     typeof record.versions === "object" &&
     record.versions !== null
@@ -59,6 +67,9 @@ function isSnapshot(value: unknown): value is ResultSnapshot {
   return (
     typeof record.assessmentId === "string" &&
     typeof record.sessionId === "string" &&
+    (record.characterGender === undefined ||
+      record.characterGender === null ||
+      isCharacterGender(record.characterGender)) &&
     typeof record.completedAt === "string" &&
     score !== undefined &&
     Array.isArray(score.axisScores) &&
@@ -88,7 +99,12 @@ export class IndexedDbAssessmentRepository
     if (!isSession(loaded.value)) {
       return err(assessmentError("DRAFT_CORRUPTED", "세션 데이터 모양이 올바르지 않습니다."));
     }
-    return ok(loaded.value);
+    return ok({
+      ...loaded.value,
+      characterGender: isCharacterGender(loaded.value.characterGender)
+        ? loaded.value.characterGender
+        : null,
+    });
   }
 
   async saveSession(session: AssessmentSession): Promise<Result<void, AssessmentError>> {
@@ -143,7 +159,12 @@ export class IndexedDbAssessmentRepository
     if (!isSnapshot(loaded.value)) {
       return err(assessmentError("DRAFT_CORRUPTED", "결과 데이터 모양이 올바르지 않습니다."));
     }
-    return ok(loaded.value);
+    return ok({
+      ...loaded.value,
+      characterGender: isCharacterGender(loaded.value.characterGender)
+        ? loaded.value.characterGender
+        : null,
+    });
   }
 
   async clearAssessment(assessmentId: AssessmentId): Promise<Result<void, AssessmentError>> {
@@ -199,6 +220,25 @@ export class IndexedDbAssessmentRepository
     const saved = await guard("saveNickname", async () => {
       const db = await getDb();
       await db.put(STORE.preferences, { key: NICKNAME_KEY, value: nickname });
+    });
+    return saved.ok ? ok(undefined) : err(saved.error);
+  }
+
+  async loadCharacterGender(): Promise<Result<CharacterGender | null, AssessmentError>> {
+    const loaded = await guard("loadCharacterGender", async () => {
+      const db = await getDb();
+      return db.get(STORE.preferences, CHARACTER_GENDER_KEY);
+    });
+    if (!loaded.ok) return err(loaded.error);
+
+    const record = loaded.value;
+    return ok(record !== undefined && isCharacterGender(record.value) ? record.value : null);
+  }
+
+  async saveCharacterGender(gender: CharacterGender): Promise<Result<void, AssessmentError>> {
+    const saved = await guard("saveCharacterGender", async () => {
+      const db = await getDb();
+      await db.put(STORE.preferences, { key: CHARACTER_GENDER_KEY, value: gender });
     });
     return saved.ok ? ok(undefined) : err(saved.error);
   }

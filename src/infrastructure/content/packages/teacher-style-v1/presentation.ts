@@ -1,3 +1,20 @@
+function characterArtwork(code: string) {
+  return {
+    male: {
+      src: `/assessments/teacher-style/types/${code}-male.jpg`,
+      width: 480,
+      height: 640,
+      alt: "",
+    },
+    female: {
+      src: `/assessments/teacher-style/types/${code}-female.jpg`,
+      width: 480,
+      height: 640,
+      alt: "",
+    },
+  } as const;
+}
+
 export const teacherStylePresentation = {
   version: 1,
   palette: {
@@ -32,29 +49,24 @@ export const teacherStylePresentation = {
     },
   ],
   typeArtwork: [
-    { resultKey: "pppp", artwork: { src: "/assessments/teacher-style/types/garm.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "pppn", artwork: { src: "/assessments/teacher-style/types/garl.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "ppnp", artwork: { src: "/assessments/teacher-style/types/gacm.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "ppnn", artwork: { src: "/assessments/teacher-style/types/gacl.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "pnpp", artwork: { src: "/assessments/teacher-style/types/gorm.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "pnpn", artwork: { src: "/assessments/teacher-style/types/gorl.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "pnnp", artwork: { src: "/assessments/teacher-style/types/gocm.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "pnnn", artwork: { src: "/assessments/teacher-style/types/gocl.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "nppp", artwork: { src: "/assessments/teacher-style/types/darm.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "nppn", artwork: { src: "/assessments/teacher-style/types/darl.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "npnp", artwork: { src: "/assessments/teacher-style/types/dacm.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "npnn", artwork: { src: "/assessments/teacher-style/types/dacl.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "nnpp", artwork: { src: "/assessments/teacher-style/types/dorm.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "nnpn", artwork: { src: "/assessments/teacher-style/types/dorl.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "nnnp", artwork: { src: "/assessments/teacher-style/types/docm.svg", width: 240, height: 200, alt: "" } },
-    { resultKey: "nnnn", artwork: { src: "/assessments/teacher-style/types/docl.svg", width: 240, height: 200, alt: "" } },
+    { resultKey: "pppp", artwork: characterArtwork("garm") },
+    { resultKey: "pppn", artwork: characterArtwork("garl") },
+    { resultKey: "ppnp", artwork: characterArtwork("gacm") },
+    { resultKey: "ppnn", artwork: characterArtwork("gacl") },
+    { resultKey: "pnpp", artwork: characterArtwork("gorm") },
+    { resultKey: "pnpn", artwork: characterArtwork("gorl") },
+    { resultKey: "pnnp", artwork: characterArtwork("gocm") },
+    { resultKey: "pnnn", artwork: characterArtwork("gocl") },
+    { resultKey: "nppp", artwork: characterArtwork("darm") },
+    { resultKey: "nppn", artwork: characterArtwork("darl") },
+    { resultKey: "npnp", artwork: characterArtwork("dacm") },
+    { resultKey: "npnn", artwork: characterArtwork("dacl") },
+    { resultKey: "nnpp", artwork: characterArtwork("dorm") },
+    { resultKey: "nnpn", artwork: characterArtwork("dorl") },
+    { resultKey: "nnnp", artwork: characterArtwork("docm") },
+    { resultKey: "nnnn", artwork: characterArtwork("docl") },
   ],
-  balancedArtwork: {
-    src: "/assessments/teacher-style/types/balanced.svg",
-    width: 240,
-    height: 200,
-    alt: "",
-  },
+  balancedArtwork: characterArtwork("balanced"),
   responseScaleGuide: [
     {
       value: 1,

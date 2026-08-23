@@ -1,5 +1,10 @@
 import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
 import {
+  resolveDifferentiation,
+  resolveUnreadableAxisIds,
+  type AxisDifferentiation,
+} from "@/domain/assessment/result/differentiation";
+import {
   centerResponse,
   maxAbsDeviation,
   resolveIntensity,
@@ -112,6 +117,15 @@ export interface AssessmentSignals {
   readonly contextSplits: readonly AxisContextSplit[];
   readonly responseStyle: ResponseStyle;
   readonly confidence: readonly AxisConfidence[];
+  /** S6 — 축마다 응답이 실제로 갈렸는가 (DEC-053) */
+  readonly differentiation: readonly AxisDifferentiation[];
+  /**
+   * 0점이면서 응답이 갈리지 않은 축 (DEC-053)
+   *
+   * 이 축들은 **균형이 아닙니다.** 방향을 읽을 근거가 없는 것이라,
+   * 화면은 '균형'이 아니라 '이 관점은 읽기 어려웠다'로 다뤄야 합니다.
+   */
+  readonly unreadableAxisIds: readonly AxisId[];
 }
 
 // ── 계산 ────────────────────────────────────────────────────────────────────
@@ -175,6 +189,8 @@ export function computeSignals(
   const contextSplits: AxisContextSplit[] = [];
   /** 균형 구간인지 판단하려면 축 점수가 필요합니다. aligned 합이 곧 rawScore입니다. */
   const isBalancedAxis = new Map<AxisId, boolean>();
+  /** 0점인 축을 '진짜 대칭'과 '읽기 어려움'으로 나눌 때 씁니다 (DEC-053). */
+  const rawScoreByAxis = new Map<AxisId, number>();
 
   for (const axis of definition.axes) {
     const mine = definition.questions.filter((question) => question.axisId === axis.id);
@@ -199,6 +215,7 @@ export function computeSignals(
     if (aligned.length === 0) continue;
 
     const rawScore = aligned.reduce((sum, point) => sum + point, 0);
+    rawScoreByAxis.set(axis.id, rawScore);
     const band = resolveIntensity(Math.abs(rawScore), axis.intensityBands);
     isBalancedAxis.set(axis.id, !band.directional);
 
@@ -235,12 +252,15 @@ export function computeSignals(
   }
 
   const responseStyle = computeResponseStyle(definition, answerByQuestion);
+  const differentiation = resolveDifferentiation(definition, responses);
 
   return {
     consistency,
     contextSplits,
     responseStyle,
     confidence: resolveConfidence(definition, consistency, responseStyle, isBalancedAxis),
+    differentiation,
+    unreadableAxisIds: [...resolveUnreadableAxisIds(differentiation, rawScoreByAxis)],
   };
 }
 

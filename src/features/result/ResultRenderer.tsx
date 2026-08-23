@@ -401,6 +401,9 @@ export function ResultRenderer({
   const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
   const narrative = resolveResultNarrative(definition, snapshot.score.axisScores, profile);
   const hasBalancedAxes = narrative.balancedAxisIds.size > 0;
+  // 0점이지만 응답이 갈리지 않은 축입니다. 균형과 구별해서 다룹니다 (DEC-053).
+  // 응답이 지워졌으면 signals가 없고, 그때는 예전처럼 전부 균형으로 봅니다.
+  const unreadableAxisIds = new Set(signals?.unreadableAxisIds ?? []);
   const guidance =
     hasBalancedAxes && definition.resultNarrative !== undefined
       ? definition.resultNarrative.balancedGuidance
@@ -429,6 +432,7 @@ export function ResultRenderer({
         narrative={narrative}
         ranking={ranking}
         presentation={presentation}
+        unreadableAxisIds={unreadableAxisIds}
       />
 
       <div className="mt-8 grid gap-8 lg:grid-cols-4">

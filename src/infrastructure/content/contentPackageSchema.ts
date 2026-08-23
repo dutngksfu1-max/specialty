@@ -158,6 +158,8 @@ const resultNarrativeSchema = z.object({
   balancedTitle: z.string().min(1),
   balancedOneLiner: z.string().min(1),
   balancedAxisNote: z.string().min(1),
+  unreadableAxisNote: z.string().min(1).optional(),
+  unreadableAxisLabel: z.string().min(1).max(12).optional(),
   scopeNote: z.string().min(1),
   emphasisTerms: z.array(z.string().min(2)).default([]),
   balancedGuidance: resultGuidanceSchema,
@@ -216,6 +218,11 @@ const localArtworkSchema = z.object({
   alt: z.literal(""),
 });
 
+const characterArtworkSetSchema = z.object({
+  male: localArtworkSchema,
+  female: localArtworkSchema,
+});
+
 const responseScaleGuideItemSchema = z.object({
   value: z.number().int(),
   criterion: z.string().min(1),
@@ -241,11 +248,11 @@ const presentationSchema = z.object({
     .array(
       z.object({
         resultKey: z.string().min(1).transform(toResultKey),
-        artwork: localArtworkSchema,
+        artwork: characterArtworkSetSchema,
       }),
     )
     .optional(),
-  balancedArtwork: localArtworkSchema.optional(),
+  balancedArtwork: characterArtworkSetSchema.optional(),
   responseScaleGuide: z.array(responseScaleGuideItemSchema).optional(),
 });
 
@@ -696,9 +703,15 @@ export function parseAssessmentContentPackage(
   const unknownTypeArtworkKeys = typeArtworkKeys.filter((key) => !resultKeys.includes(key));
   const hasIncompleteTypeArtwork =
     (typeArtwork === undefined) !== (presentation.balancedArtwork === undefined);
-  const forbiddenTypeArtwork = typeArtwork?.find((item) => hasForbiddenTerm(item.artwork.src));
+  const forbiddenTypeArtwork = typeArtwork?.find(
+    (item) =>
+      hasForbiddenTerm(item.artwork.male.src) ||
+      hasForbiddenTerm(item.artwork.female.src),
+  );
   const forbiddenBalancedArtwork =
-    presentation.balancedArtwork !== undefined && hasForbiddenTerm(presentation.balancedArtwork.src);
+    presentation.balancedArtwork !== undefined &&
+    (hasForbiddenTerm(presentation.balancedArtwork.male.src) ||
+      hasForbiddenTerm(presentation.balancedArtwork.female.src));
   const missingGuideValues = responseScaleGuide === undefined
     ? []
     : responseValues.filter((value) => !guideValues.includes(value));

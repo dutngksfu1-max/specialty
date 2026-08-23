@@ -25,26 +25,32 @@
  *
  * 축당 12문항 × 최대 편차 2 = 최대 24점입니다.
  *
- * **균형 구간 0~5는 방향을 단정할지 말지를 가르는 안전장치입니다**(DEC-046).
- * 그래서 이 경계만은 범위 대비 비율(0~20%)을 그대로 유지하고, 방향이 정해진
- * 나머지 구간만 넷으로 쪼갭니다. 안전성은 그대로 두고 해상도만 올리는 방식입니다.
+ * **균형은 정확히 0점, 즉 진짜 동점일 때만입니다** (DEC-052).
+ *
+ * 예전에는 0~5를 균형으로 봤는데, 이 폭이 응답 잡음의 표준편차(약 4.9점)와 거의 같았습니다.
+ * 축 점수는 정방향 6문항에서 역방향 6문항을 뺀 값이라, 아무렇게나 답해도 대부분 0 근처에 모입니다.
+ * 그래서 ±5를 균형으로 부르면 **잡음 구간을 통째로 균형이라고 부르게 됩니다.**
+ * 실제로 무작위 응답에서 축 하나가 균형으로 판정될 확률이 73%, 네 축 모두 균형이 28%였습니다.
+ *
+ * 한쪽으로 조금이라도 기울면 그 방향을 알려 주고, **얼마나 기울었는지는 구간으로 말합니다.**
+ * 약한 기울기를 숨기는 대신 약하다고 말하는 쪽이 정직합니다.
  *
  * **구간이 올라가면 확신이 아니라 구체성이 올라갑니다** (docs/PRD-result-v2.md 6.3).
  * "확실히 그렇습니다"가 아니라 "몇 개의 장면에서 나타나는가"가 달라집니다.
  * 검증 데이터 없이 5구간을 쓰는 것을 정당화하는 규율이므로, 문구를 고칠 때 반드시 지킵니다.
  *
- *   균형       0 ~ 5     방향을 정하지 않음
- *   조금 뚜렷   6 ~ 10    한 장면에서 보임
- *   뚜렷      11 ~ 14    여러 장면에서 비슷하게
- *   강함      15 ~ 19    장면이 바뀌어도 같은 선택
- *   매우 뚜렷  20 ~ 24    거의 모든 장면에서
+ *   균형        0        정방향과 역방향이 정확히 맞선 진짜 동점
+ *   조금 뚜렷   1 ~ 6     한 장면에서 보임
+ *   뚜렷       7 ~ 12    여러 장면에서 비슷하게
+ *   강함      13 ~ 18    장면이 바뀌어도 같은 선택
+ *   매우 뚜렷  19 ~ 24    거의 모든 장면에서
  */
 const intensityBands = [
-  { id: "balanced", label: "균형", minAbsScore: 0, maxAbsScore: 5, directional: false },
-  { id: "leaning", label: "조금 뚜렷", minAbsScore: 6, maxAbsScore: 10, directional: true },
-  { id: "clear", label: "뚜렷", minAbsScore: 11, maxAbsScore: 14, directional: true },
-  { id: "strong", label: "강함", minAbsScore: 15, maxAbsScore: 19, directional: true },
-  { id: "defining", label: "매우 뚜렷", minAbsScore: 20, maxAbsScore: 24, directional: true },
+  { id: "balanced", label: "균형", minAbsScore: 0, maxAbsScore: 0, directional: false },
+  { id: "leaning", label: "조금 뚜렷", minAbsScore: 1, maxAbsScore: 6, directional: true },
+  { id: "clear", label: "뚜렷", minAbsScore: 7, maxAbsScore: 12, directional: true },
+  { id: "strong", label: "강함", minAbsScore: 13, maxAbsScore: 18, directional: true },
+  { id: "defining", label: "매우 뚜렷", minAbsScore: 19, maxAbsScore: 24, directional: true },
 ];
 
 /**

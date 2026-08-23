@@ -27,7 +27,12 @@ export interface AssessmentCardData {
 type Progress =
   | { readonly kind: "unknown" }
   | { readonly kind: "none" }
-  | { readonly kind: "inProgress"; readonly nextSectionOrder: number; readonly answered: number }
+  | {
+      readonly kind: "inProgress";
+      readonly nextSectionOrder: number;
+      readonly answered: number;
+      readonly hasCharacterGender: boolean;
+    }
   | { readonly kind: "outdated" };
 
 function ArtworkFallback() {
@@ -61,6 +66,7 @@ export function ActiveAssessmentCard({
           kind: "inProgress",
           nextSectionOrder: result.value.nextSectionOrder,
           answered: result.value.responses.length,
+          hasCharacterGender: result.value.session.characterGender !== null,
         });
         return;
       }
@@ -72,7 +78,10 @@ export function ActiveAssessmentCard({
     };
   }, [services, assessment.slug]);
 
-  const isResumable = progress.kind === "inProgress" && progress.answered > 0;
+  const isResumable =
+    progress.kind === "inProgress" &&
+    progress.answered > 0 &&
+    progress.hasCharacterGender;
   const artwork = assessment.presentation?.heroArtwork;
 
   return (

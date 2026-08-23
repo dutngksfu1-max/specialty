@@ -1,4 +1,5 @@
 import type { AssessmentId, QuestionId, SessionId } from "@/domain/shared/ids";
+import type { CharacterGender } from "@/domain/assessment/session/characterGender";
 
 /** docs/architecture.md 4.4 */
 export interface AssessmentVersions {
@@ -12,6 +13,8 @@ export interface AssessmentSession {
   readonly assessmentId: AssessmentId;
   /** 비어 있으면 화면에서 '선생님'으로 표시합니다 (DEC-009) */
   readonly nickname: string;
+  /** 결과 캐릭터에만 반영합니다. null은 기존 저장 데이터 호환용입니다 (DEC-054). */
+  readonly characterGender: CharacterGender | null;
   /** ISO 8601 문자열 */
   readonly startedAt: string;
   readonly updatedAt: string;

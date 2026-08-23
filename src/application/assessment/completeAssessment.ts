@@ -64,6 +64,7 @@ export async function completeAssessment(
     assessmentId: definition.id,
     sessionId: session.id,
     nickname: session.nickname,
+    characterGender: session.characterGender,
     score: score.value,
     versions: session.versions,
     completedAt,

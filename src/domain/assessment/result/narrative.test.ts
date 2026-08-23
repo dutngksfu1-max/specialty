@@ -80,27 +80,57 @@ describe("정확히 0점일 때는 한쪽으로 기울여 말하지 않습니다
     }
   });
 
-  it("0이 아닌 균형 점수는 작은 기울기를 보여 줍니다", () => {
+  /**
+   * DEC-052 — 1점만 기울어도 균형이 아닙니다.
+   *
+   * 예전에는 0~5를 균형으로 봤는데, 그 폭이 응답 잡음의 표준편차(약 4.9점)와 거의 같아
+   * 무작위로 답해도 축의 73%가 균형으로 판정됐습니다. 이제 균형은 진짜 동점(0)뿐입니다.
+   */
+  it("1점만 기울어도 균형이 아니고 방향을 알려 줍니다 (DEC-052)", () => {
     const { definition, profile } = loadDefinition();
-    // 균형 구간(0~5) 안이지만 0은 아닌 점수
-    const result = resolveResultNarrative(definition, scores([3, -3, 3, -3]), profile);
+    const result = resolveResultNarrative(definition, scores([1, -1, 1, -1]), profile);
 
+    expect(result.balancedAxisIds.size).toBe(0);
     for (const axis of result.axes) {
+      expect(axis.isDirectional, String(axis.axisId)).toBe(true);
       expect(axis.reading.direction, String(axis.axisId)).not.toBe("balanced");
-      expect(axis.reading.summary, String(axis.axisId)).toMatch(/조금 더 가까워요/);
+    }
+  });
+
+  it("예전 균형 구간(1~5)이 이제는 전부 방향 구간입니다 (DEC-052)", () => {
+    const { definition, profile } = loadDefinition();
+
+    for (const rawScore of [1, 2, 3, 4, 5]) {
+      const result = resolveResultNarrative(definition, scores([rawScore, 0, 0, 0]), profile);
+      const first = result.axes[0];
+      if (first === undefined) throw new Error("축 서술이 없습니다.");
+
+      expect(first.isDirectional, `rawScore ${rawScore}`).toBe(true);
+      expect(first.reading.direction, `rawScore ${rawScore}`).toBe("positive");
     }
   });
 });
 
 describe("강도·균형을 반영한 결과 서술", () => {
-  it("모든 축이 균형 구간이어도 산출된 종합 교직 스타일을 전달합니다", () => {
+  it("네 축이 모두 정확히 0점이어도 산출된 종합 교직 스타일을 전달합니다", () => {
     const { definition, profile } = loadDefinition();
-    const result = resolveResultNarrative(definition, scores([0, 1, -2, 4]), profile);
+    const result = resolveResultNarrative(definition, scores([0, 0, 0, 0]), profile);
 
     expect(result.title).toBe(profile.title);
     expect(result.balancedAxisIds.size).toBe(4);
     expect(result.oneLiner).not.toContain("차이");
     expect(result.rhythm).not.toContain("차이");
+  });
+
+  it("0점 축만 균형으로 셉니다 — 약하게 기운 축은 균형이 아닙니다 (DEC-052)", () => {
+    const { definition, profile } = loadDefinition();
+    const result = resolveResultNarrative(definition, scores([0, 1, -2, 4]), profile);
+
+    // 예전 규칙이라면 네 축 모두 균형이었습니다. 이제는 0점인 첫 축 하나뿐입니다.
+    expect(result.balancedAxisIds.size).toBe(1);
+    const [firstAxis] = definition.axes;
+    if (firstAxis === undefined) throw new Error("축이 없습니다.");
+    expect(result.balancedAxisIds.has(firstAxis.id)).toBe(true);
   });
 
   it("강도별 축 해석은 구분하되 핵심 카드는 종합 프로필을 유지합니다", () => {

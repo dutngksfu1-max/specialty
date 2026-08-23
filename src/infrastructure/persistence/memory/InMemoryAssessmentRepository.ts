@@ -7,6 +7,7 @@ import type {
   AssessmentSession,
 } from "@/domain/assessment/session/session";
 import type { AssessmentId, QuestionId, SessionId } from "@/domain/shared/ids";
+import type { CharacterGender } from "@/domain/assessment/session/characterGender";
 import { ok, type Result } from "@/domain/shared/result";
 
 /**
@@ -25,6 +26,7 @@ export class InMemoryAssessmentRepository
   private readonly responses = new Map<string, Map<string, AssessmentResponse>>();
   private readonly results = new Map<string, ResultSnapshot>();
   private nickname: string | null = null;
+  private characterGender: CharacterGender | null = null;
 
   async loadSession(
     assessmentId: AssessmentId,
@@ -79,6 +81,7 @@ export class InMemoryAssessmentRepository
     this.responses.clear();
     this.results.clear();
     this.nickname = null;
+    this.characterGender = null;
     return ok(undefined);
   }
 
@@ -88,6 +91,15 @@ export class InMemoryAssessmentRepository
 
   async saveNickname(nickname: string): Promise<Result<void, AssessmentError>> {
     this.nickname = nickname;
+    return ok(undefined);
+  }
+
+  async loadCharacterGender(): Promise<Result<CharacterGender | null, AssessmentError>> {
+    return ok(this.characterGender);
+  }
+
+  async saveCharacterGender(gender: CharacterGender): Promise<Result<void, AssessmentError>> {
+    this.characterGender = gender;
     return ok(undefined);
   }
 
