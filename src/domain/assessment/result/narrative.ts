@@ -91,10 +91,20 @@ export function resolveResultNarrative(
       .map((item) => item.axisId),
   );
 
+  /*
+    균형 축이 하나라도 있으면 프로필 제목을 쓰지 않습니다 (AGENTS.md 6장 · DEC-046).
+
+    균형 축의 방향은 `axis.defaultPole`이 임의로 채운 값이라, 그 부호로 고른 프로필의
+    제목을 그대로 내보내면 동전 던지기로 정해진 이름을 결과라고 말하게 됩니다.
+    장면·협업·행동 문구는 이미 균형 전용 안내로 바뀌고 있었는데 제목만 남아 있어,
+    같은 화면에서 앞뒤가 어긋나 있었습니다 (DEC-062에서 맞춤).
+  */
+  const isBalanced = balancedAxisIds.size > 0;
+
   return {
-    title: profile.title,
-    oneLiner: profile.oneLiner,
-    rhythm: profile.rhythm,
+    title: isBalanced ? spec.balancedTitle : profile.title,
+    oneLiner: isBalanced ? spec.balancedOneLiner : profile.oneLiner,
+    rhythm: isBalanced ? spec.balancedRhythm ?? profile.rhythm : profile.rhythm,
     axes: resolved,
     balancedAxisIds,
   };

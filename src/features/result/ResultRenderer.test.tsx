@@ -207,20 +207,38 @@ describe("결과 페이지 정보 구조", () => {
       (match) => match[1],
     );
 
-    expect(tones).toEqual(["energy", "lens", "decision", "rhythm"]);
+    // 요약 보기와 자세히 보기가 같은 네 장을 깊이만 달리해 쓰므로 두 벌이 나옵니다 (DEC-062).
+    expect(tones).toEqual([
+      "energy",
+      "lens",
+      "decision",
+      "rhythm",
+      "energy",
+      "lens",
+      "decision",
+      "rhythm",
+    ]);
     expect(markup).toContain("result-axis-card-grid");
     expect(markup).toContain("md:auto-rows-fr");
     expect(markup).toContain("result-axis-card-chart");
   });
 
-  it("균형 구간이 있어도 산출된 교직 스타일을 끝까지 전달합니다", () => {
+  it("균형 구간이면 유형 제목 대신 균형 전용 제목으로 끝까지 이어 갑니다", () => {
     const markup = renderBalancedResult();
     const found = staticAssessmentCatalog.findBySlug("teacher-style");
     if (!found.ok || found.value.typeCode?.crosswalk === undefined) {
       throw new Error("테스트용 코드 규격을 불러오지 못했습니다.");
     }
+    const spec = found.value.resultNarrative;
+    if (spec === undefined) throw new Error("결과 서술이 없습니다.");
 
-    expect(markup).toContain("함께 정하고 꼼꼼히 준비하는 선생님");
+    /*
+      균형 축의 방향은 defaultPole이 임의로 채웁니다 (DEC-046 · DEC-062).
+      장면·협업·행동은 이미 균형 전용 안내를 쓰고 있었는데 제목만 유형 이름이라
+      같은 화면에서 앞뒤가 어긋나 있었습니다.
+    */
+    expect(markup).toContain(spec.balancedTitle);
+    expect(markup).not.toContain("함께 정하고 꼼꼼히 준비하는 선생님");
     expect(markup).not.toContain("결과를 나타내는 상징");
     expect(markup).toContain("balanced-male.jpg");
     expect(markup).toContain("·");
@@ -231,7 +249,7 @@ describe("결과 페이지 정보 구조", () => {
     // 균형 안내도 상황 제목이 붙은 장면 서술을 씁니다 (DEC-054).
     expect(markup).toContain("두 방식이 갈렸던 날");
     expect(markup).toContain("균형으로 나온 관점 하나를 골라");
-    expect(markup).not.toContain("몰입형과는,");
+    expect(markup).not.toContain("혼자 정리하는 동료와는,");
   });
 
   it("새 신호가 있으면 장면 차이만 필요한 곳에 보여 줍니다", () => {
@@ -374,14 +392,14 @@ describe("결과 페이지 정보 구조", () => {
  * 예전에는 도드라지는 축에만 col-span-2와 요약 문단을 줘서, 2-1-1로 어긋나고
  * 카드마다 정보량이 달라 보였습니다. 눈으로는 잘 안 잡히는 회귀라 기계가 지킵니다.
  */
-describe("렌즈 카드 정렬 (DEC-055)", () => {
+describe("관점 카드 정렬 (DEC-055 · DEC-062)", () => {
   it("어떤 카드도 두 칸을 차지하지 않습니다 — 한 줄에 두 장씩", () => {
     const { markup } = renderResult();
-    // 카드 요소만 골라냅니다. result-hero-lens-headline 같은 자식 클래스와 겹치지 않게
-    // 카드에만 붙는 data-result-hero-tone 속성을 기준으로 잡습니다.
-    const cards = markup.match(/<li[^>]*data-result-hero-tone[^>]*>/g) ?? [];
+    // 카드에만 붙는 data-perspective-tone 속성으로 카드 요소만 골라냅니다.
+    // 요약·자세히 두 벌이라 여덟 장입니다.
+    const cards = markup.match(/<section[^>]*data-perspective-tone[^>]*>/g) ?? [];
 
-    expect(cards).toHaveLength(4);
+    expect(cards).toHaveLength(8);
     for (const card of cards) {
       expect(card, card).not.toContain("col-span-2");
     }
@@ -389,18 +407,22 @@ describe("렌즈 카드 정렬 (DEC-055)", () => {
 
   it("네 카드가 모두 같은 구조를 갖습니다 — 요약 문단이 빠지지 않습니다", () => {
     const { markup, narrative } = renderResult();
+    // 요약 문단에는 강조가 걸려 태그가 섞이므로, 글자만 남겨 놓고 비교합니다.
+    const plain = markup.replace(/<[^>]+>/g, "");
 
     for (const axis of narrative.axes) {
-      expect(markup, String(axis.axisId)).toContain(axis.reading.summary);
-      expect(markup, String(axis.axisId)).toContain(axis.reading.headline);
+      expect(plain, String(axis.axisId)).toContain(axis.reading.summary);
+      expect(plain, String(axis.axisId)).toContain(axis.reading.headline);
+      // 축 서술 세 줄은 서로 다른 일을 합니다. 장면 예시(rhythm)까지 자세히 보기에 있어야 합니다.
+      expect(plain, String(axis.axisId)).toContain(axis.reading.rhythm);
     }
   });
 
   it("긴 제목이 어절 단위로만 끊기도록 줄바꿈 규칙을 답니다", () => {
     const { markup } = renderResult();
 
-    expect(markup).toContain("result-hero-lens-headline");
-    expect(markup).toContain("result-hero-lens-text");
+    expect(markup).toContain("result-axis-card-title");
+    expect(markup).toContain("result-axis-card-summary");
   });
 });
 
@@ -475,5 +497,56 @@ describe("응답이 갈리지 않은 축 표시 (DEC-053)", () => {
     const markup = renderBalancedResult();
 
     expect(markup).toContain("균형 관점");
+  });
+});
+
+/**
+ * 요약 보기 / 자세히 보기 (DEC-062)
+ *
+ * 결과가 2,000자에 가까워 "언제 다 읽나" 소리가 나왔습니다. 기본은 요약이고,
+ * 더 읽고 싶은 분만 자세히 보기로 들어갑니다. 두 갈래 모두 같은 콘텐츠에서 나오므로
+ * 요약에만 있는 해석은 없어야 합니다.
+ */
+describe("요약 보기와 자세히 보기 (DEC-062)", () => {
+  it("두 갈래를 탭으로 고르고, 기본은 요약입니다", () => {
+    const { markup } = renderResult();
+
+    expect(markup).toContain('role="tablist"');
+    expect(markup).toContain("요약 보기");
+    expect(markup).toContain("자세히 보기");
+    expect(markup).toContain('data-result-view="summary"');
+  });
+
+  it("고르지 않은 갈래도 DOM에 남습니다 — 전환할 때 다시 그리지 않도록", () => {
+    const { markup } = renderResult();
+
+    expect(markup).toContain('data-result-view="detail"');
+  });
+
+  it("요약 보기는 묶음마다 장면을 하나씩만 보여 줍니다", () => {
+    const { markup } = renderResult();
+    const summary = markup.slice(
+      markup.indexOf('data-result-view="summary"'),
+      markup.indexOf('data-result-view="detail"'),
+    );
+
+    for (const tone of ["strength", "pressure", "colleague"]) {
+      const picked = summary.match(new RegExp(`data-summary-scene="${tone}"`, "g")) ?? [];
+      expect(picked, tone).toHaveLength(1);
+    }
+  });
+
+  it("Hero는 관점 카드를 더 갖지 않습니다 — 같은 문장을 두 번 읽지 않게", () => {
+    const { markup } = renderResult();
+
+    expect(markup).not.toContain("나온 유형 요소 설명");
+    expect(markup).not.toContain("result-hero-lens");
+  });
+
+  it("두 관점 해석은 두 장까지만 펼칩니다", () => {
+    const { markup } = renderResult();
+    const cards = markup.match(/두 관점 렌즈/g) ?? [];
+
+    expect(cards.length).toBeLessThanOrEqual(2);
   });
 });

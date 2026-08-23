@@ -118,8 +118,16 @@ export interface AxisResultNarrative {
 
 /** 검사별 결과 서술 규격. 채점 엔진은 이 문구를 알지 못합니다. */
 export interface ResultNarrativeSpec {
+  /**
+   * 균형 축이 하나라도 있을 때 쓰는 제목 (DEC-046 · DEC-062)
+   *
+   * 균형 축의 방향은 `axis.defaultPole`이 임의로 채웁니다. 그렇게 뽑힌 16개 프로필의
+   * 제목을 그대로 쓰면, 사실상 동전 던지기로 정해진 이름을 "당신"이라고 부르게 됩니다.
+   */
   readonly balancedTitle: string;
   readonly balancedOneLiner: string;
+  /** 균형 축이 있을 때의 교직 리듬. 없으면 화면은 프로필 리듬으로 되돌아갑니다 */
+  readonly balancedRhythm?: string;
   readonly balancedAxisNote: string;
   /**
    * 0점이지만 응답이 갈리지 않아 방향을 읽을 수 없는 축에 쓰는 문구 (DEC-053)

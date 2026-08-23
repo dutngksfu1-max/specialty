@@ -344,6 +344,26 @@
     }
   }
 
+  /* ---------- 관점 카드 줄바꿈 (DEC-055 · DEC-062) ----------------------
+     한 줄에 두 장씩 놓으면 카드가 좁아져 제목이 두 줄로 넘어갑니다.
+     넘어가는 것 자체는 막을 수 없으니, **넘어갈 때 보기 좋게** 만듭니다.
+
+       keep-all  — 한글을 어절 단위로만 끊습니다. 낱말 중간에서 잘리지 않습니다
+       balance   — 두 줄의 길이를 고르게 나눕니다. "긴 줄 + 한 단어"를 막습니다
+       pretty    — 본문에서 마지막 줄에 한 단어만 남는 것을 줄입니다 */
+  .result-axis-card-title {
+    text-wrap: balance;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  .result-axis-card-summary,
+  .result-axis-card-scene {
+    text-wrap: pretty;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
   .assessment-perspective-icon {
     display: grid;
     width: 2rem;
@@ -624,30 +644,6 @@
       );
   }
 
-  .result-hero-lens[data-weight="primary"] {
-    border-width: 2px;
-    box-shadow: inset 4px 0 0 var(--perspective-strong);
-  }
-
-  /* ---------- 렌즈 카드 줄바꿈 (DEC-055) --------------------------------
-     한 줄에 두 장씩 놓으면 카드가 좁아져 제목이 두 줄로 넘어갑니다.
-     넘어가는 것 자체는 막을 수 없으니, **넘어갈 때 보기 좋게** 만듭니다.
-
-       keep-all  — 한글을 어절 단위로만 끊습니다. 낱말 중간에서 잘리지 않습니다
-       balance   — 두 줄의 길이를 고르게 나눕니다. "긴 줄 + 한 단어"를 막습니다
-       pretty    — 본문에서 마지막 줄에 한 단어만 남는 것을 줄입니다 */
-  .result-hero-lens-headline {
-    text-wrap: balance;
-    word-break: keep-all;
-    overflow-wrap: break-word;
-  }
-
-  .result-hero-lens-text {
-    text-wrap: pretty;
-    word-break: keep-all;
-    overflow-wrap: break-word;
-  }
-
   /* ---------- 환산 표기 (DEC-056 · DEC-057) -----------------------------
      이 블록은 **4렌즈 코드보다 조용해야 합니다** (DEC-049).
      예전에는 raw 팔레트(sand-800)로 검정 슬래브를 깔아, 웜 아이보리 페이지에서
@@ -680,20 +676,6 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.4em;
     text-indent: 0.4em;
-  }
-
-  .result-hero-lens[data-weight="shared"] {
-    box-shadow: inset 3px 0 0 var(--perspective-strong);
-  }
-
-  .result-hero-lens[data-balanced="true"] {
-    background:
-      repeating-linear-gradient(
-        135deg,
-        color-mix(in oklch, var(--color-chart-neutral), white 54%) 0 0.45rem,
-        var(--color-surface) 0.45rem 0.9rem
-      );
-    box-shadow: inset 3px 0 0 var(--color-chart-neutral);
   }
 
   .result-balance-key[data-direction="positive"] {

@@ -750,19 +750,23 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
   it("'미리 맞춰 두면 좋은 점'에 구체적인 조율 방법이 들어 있습니다", () => {
     for (const profile of definition.resultProfiles) {
       for (const item of profile.collaboration.needsTuning) {
-        // 어떤 스타일과의 이야기인지 밝히고("~형과는"),
+        // 어떤 동료와의 이야기인지 밝히고("~하는 동료와는"),
         // "~해 두면 / ~해 주면" 형태로 구체적인 방법을 한 번은 제안해야 합니다.
-        expect(item, item).toMatch(/형과는/);
+        // 분류 라벨("~형")을 그대로 쓰지 않습니다. 읽는 분이 라벨 뜻을 되짚지 않아도 되게,
+        // 그 동료가 실제로 어떻게 일하는지를 적습니다.
+        expect(item, item).toMatch(/동료와는/);
+        expect(item, item).not.toMatch(/[가-힣]형과는/);
         // "~해 두면 / ~해 주면 / ~하면" 처럼 조건절이 있어야 실제로 해 볼 수 있는 조언입니다.
         expect(item, item).toMatch(/[가-힣]면[\s,]/);
       }
     }
   });
 
-  it("'함께할 때 잘 이어지는 점'도 어떤 스타일인지 밝힙니다", () => {
+  it("'함께할 때 잘 이어지는 점'도 어떤 동료인지 밝힙니다", () => {
     for (const profile of definition.resultProfiles) {
       for (const item of profile.collaboration.naturalFit) {
-        expect(item, item).toMatch(/형과는/);
+        expect(item, item).toMatch(/동료와는/);
+        expect(item, item).not.toMatch(/[가-힣]형과는/);
       }
     }
   });

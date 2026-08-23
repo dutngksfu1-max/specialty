@@ -112,14 +112,41 @@ describe("정확히 0점일 때는 한쪽으로 기울여 말하지 않습니다
 });
 
 describe("강도·균형을 반영한 결과 서술", () => {
-  it("네 축이 모두 정확히 0점이어도 산출된 종합 교직 스타일을 전달합니다", () => {
+  /*
+    균형 축이 있으면 프로필 제목을 쓰지 않습니다 (AGENTS.md 6장 · DEC-046 · DEC-062).
+    균형 축의 방향은 defaultPole이 임의로 채우므로, 그 부호로 고른 제목은 결과가 아니라
+    동전 던지기입니다. 대신 콘텐츠가 가진 균형 전용 문구를 씁니다.
+  */
+  it("네 축이 모두 정확히 0점이면 균형 전용 제목을 씁니다", () => {
     const { definition, profile } = loadDefinition();
     const result = resolveResultNarrative(definition, scores([0, 0, 0, 0]), profile);
+    const spec = definition.resultNarrative;
+    if (spec === undefined) throw new Error("결과 서술이 없습니다.");
 
-    expect(result.title).toBe(profile.title);
+    expect(result.title).toBe(spec.balancedTitle);
+    expect(result.title).not.toBe(profile.title);
     expect(result.balancedAxisIds.size).toBe(4);
     expect(result.oneLiner).not.toContain("차이");
     expect(result.rhythm).not.toContain("차이");
+  });
+
+  it("한 축만 균형이어도 프로필 제목을 쓰지 않습니다", () => {
+    const { definition, profile } = loadDefinition();
+    const result = resolveResultNarrative(definition, scores([0, 9, 14, -15]), profile);
+    const spec = definition.resultNarrative;
+    if (spec === undefined) throw new Error("결과 서술이 없습니다.");
+
+    expect(result.balancedAxisIds.size).toBe(1);
+    expect(result.title).toBe(spec.balancedTitle);
+  });
+
+  it("균형 축이 없으면 그대로 프로필 제목입니다", () => {
+    const { definition, profile } = loadDefinition();
+    const result = resolveResultNarrative(definition, scores([-8, 9, 14, -15]), profile);
+
+    expect(result.balancedAxisIds.size).toBe(0);
+    expect(result.title).toBe(profile.title);
+    expect(result.rhythm).toBe(profile.rhythm);
   });
 
   it("0점 축만 균형으로 셉니다 — 약하게 기운 축은 균형이 아닙니다 (DEC-052)", () => {
@@ -133,13 +160,11 @@ describe("강도·균형을 반영한 결과 서술", () => {
     expect(result.balancedAxisIds.has(firstAxis.id)).toBe(true);
   });
 
-  it("강도별 축 해석은 구분하되 핵심 카드는 종합 프로필을 유지합니다", () => {
+  it("강도가 달라지면 축 해석도 달라집니다", () => {
     const { definition, profile } = loadDefinition();
     const clear = resolveResultNarrative(definition, scores([-8, 0, 0, 0]), profile);
     const strong = resolveResultNarrative(definition, scores([-16, 0, 0, 0]), profile);
 
-    expect(clear.title).toBe(profile.title);
-    expect(strong.title).toBe(profile.title);
     expect(clear.axes[0]?.reading.rhythm).not.toBe(strong.axes[0]?.reading.rhythm);
   });
 

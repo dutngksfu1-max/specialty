@@ -158,6 +158,7 @@ const axisResultNarrativeSchema = z.object({
 
 const resultNarrativeSchema = z.object({
   balancedTitle: z.string().min(1),
+  balancedRhythm: z.string().min(1).optional(),
   balancedOneLiner: z.string().min(1),
   balancedAxisNote: z.string().min(1),
   unreadableAxisNote: z.string().min(1).optional(),
