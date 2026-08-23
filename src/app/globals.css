@@ -583,6 +583,23 @@
     background: var(--color-chart-positive);
   }
 
+  .result-axis-card .result-axis-fill[data-direction="negative"],
+  .result-axis-card .result-axis-fill[data-direction="positive"],
+  .result-axis-card .result-axis-marker[data-direction="negative"],
+  .result-axis-card .result-axis-marker[data-direction="positive"] {
+    background: var(--perspective-strong);
+  }
+
+  .result-axis-card .result-axis-marker[data-direction="negative"],
+  .result-axis-card .result-axis-marker[data-direction="positive"] {
+    box-shadow: 0 0 0 1px var(--perspective-border);
+  }
+
+  .result-axis-card .text-chart-negative,
+  .result-axis-card .text-chart-positive {
+    color: var(--perspective-strong);
+  }
+
   .result-axis-marker[data-direction="balanced"] {
     background:
       repeating-linear-gradient(

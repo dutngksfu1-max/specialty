@@ -19,6 +19,26 @@ function clampPercent(value: number): number {
   return Math.min(Math.max(value, 0), 100);
 }
 
+/**
+ * Keep zero and both score limits fixed while making small differences around
+ * the center easier to compare. This affects presentation only; scoring and
+ * intensity bands continue to use the unmodified raw score.
+ */
+export function visualMarkerPercent(
+  score: Pick<AxisScore, "rawScore" | "minScore" | "maxScore">,
+): number {
+  if (score.rawScore === 0) return 50;
+
+  const extent = score.rawScore > 0 ? score.maxScore : Math.abs(score.minScore);
+  if (extent <= 0) return 50;
+
+  const strength = Math.min(Math.abs(score.rawScore) / extent, 1);
+  const visualStrength = Math.pow(strength, 0.6);
+  const direction = score.rawScore > 0 ? 1 : -1;
+
+  return clampPercent(50 + direction * visualStrength * 50);
+}
+
 function signedScore(value: number): string {
   return value > 0 ? `+${value}` : String(value);
 }
@@ -37,7 +57,7 @@ export function AxisBar({
 }) {
   const size = SIZE[variant];
   const band = axis.intensityBands.find((candidate) => candidate.id === intensityBandId);
-  const markerPercent = clampPercent(score.normalized * 100);
+  const markerPercent = visualMarkerPercent(score);
   const showsDirection = band?.directional ?? !score.isBalanced;
   const isExactCenter = score.rawScore === 0;
 
@@ -54,14 +74,13 @@ export function AxisBar({
   const fillLeft = score.direction === "negative" ? markerPercent : 50;
   const fillWidth = Math.abs(markerPercent - 50);
 
-  const range = score.maxScore - score.minScore;
   const balancedLeft =
-    band !== undefined && !band.directional && range > 0
-      ? clampPercent(((-band.maxAbsScore - score.minScore) / range) * 100)
+    band !== undefined && !band.directional
+      ? visualMarkerPercent({ ...score, rawScore: -band.maxAbsScore })
       : 50;
   const balancedRight =
-    band !== undefined && !band.directional && range > 0
-      ? clampPercent(((band.maxAbsScore - score.minScore) / range) * 100)
+    band !== undefined && !band.directional
+      ? visualMarkerPercent({ ...score, rawScore: band.maxAbsScore })
       : 50;
 
   return (
