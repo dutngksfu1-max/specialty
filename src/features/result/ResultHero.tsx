@@ -38,24 +38,36 @@ function TypeCodePanel({
   const spokenCode = typeCode.slots
     .map((slot, index) => {
       const axis = axisById.get(slot.axisId);
+      const place = `${index + 1}번째 ${axis?.name ?? "관점"}`;
+      // 균형 자리도 "비움"이 아니라 "둘 다"로 읽어 줍니다 (DEC-064).
       return slot.isBalanced
-        ? `${index + 1}번째 ${axis?.name ?? "관점"}은 균형이라 비움`
-        : `${index + 1}번째 ${axis?.name ?? "관점"}은 ${slot.poleLabel ?? "현재 방향"} ${slot.letter}`;
+        ? `${place}은 ${slot.poleLabels.join("과 ")} 어느 쪽으로도 기울지 않아 ${slot.letters.join(", ")} 둘 다`
+        : `${place}은 ${slot.poleLabels[0] ?? "현재 방향"} ${slot.letters[0] ?? ""}`;
     })
     .join(", ");
+
+  const crosswalkCodes = typeCode.crosswalkCodes;
+  const hasCrosswalk = crosswalkCodes.length > 0;
 
   return (
     <section className="mt-6 overflow-hidden rounded-lg border border-primary-soft-border bg-surface">
       <div className="p-4 sm:p-5">
         <p className="text-caption font-semibold text-primary-active">{spec.label}</p>
         <p className="sr-only">{spokenCode}</p>
+        {/*
+          균형 자리는 비우지 않고 두 글자를 함께 적습니다 (DEC-064).
+          자리 수는 그대로 넷이라 코드 길이와 축 개수가 계속 맞습니다.
+          균형 칸만 넓어지므로 최소 너비를 걸지 않고 좌우 여백으로 늘립니다 — 360px에서도 넘치지 않습니다.
+        */}
         <div aria-hidden="true" className="mt-3 flex min-w-0 flex-wrap gap-2">
           {typeCode.slots.map((slot) => (
             <span
               key={String(slot.axisId)}
-              className="grid min-w-12 place-items-center rounded-xs border border-border-strong bg-background px-2 py-1 text-display font-bold tabular-nums text-foreground"
+              className={`grid place-items-center rounded-xs border border-border-strong bg-background py-1 font-bold tabular-nums text-foreground ${
+                slot.isBalanced ? "px-2.5 text-h2" : "min-w-12 px-2 text-display"
+              }`}
             >
-              {slot.letter}
+              {slot.letters.join(spec.balancedSeparator)}
             </span>
           ))}
         </div>
@@ -65,8 +77,12 @@ function TypeCodePanel({
             const axis = axisById.get(slot.axisId);
             return (
               <li key={String(slot.axisId)} className="text-caption text-foreground-muted">
-                <strong className="font-bold text-foreground">{slot.letter}</strong>{" "}
-                {slot.isBalanced ? `${axis?.name ?? "관점"} 균형` : slot.poleLabel}
+                <strong className="font-bold text-foreground">
+                  {slot.letters.join(spec.balancedSeparator)}
+                </strong>{" "}
+                {slot.isBalanced
+                  ? `${axis?.name ?? "관점"} — ${slot.poleLabels.join("·")} 둘 다`
+                  : slot.poleLabels[0]}
               </li>
             );
           })}
@@ -95,15 +111,30 @@ function TypeCodePanel({
                   <p className="result-crosswalk-legend px-3 py-1.5 text-caption font-semibold">
                     {spec.crosswalk.systemLabel}
                   </p>
-                  <p
-                    className={`bg-surface px-3 py-3 text-center font-bold ${
-                      typeCode.crosswalkCode === null
-                        ? "text-body-sm text-foreground-muted"
-                        : "result-crosswalk-code text-h2"
-                    }`}
-                  >
-                    {typeCode.crosswalkCode ?? "환산 안 함"}
-                  </p>
+                  {/*
+                    균형 자리가 있으면 후보가 여러 개입니다 (DEC-064).
+                    어느 하나를 고르지 않고 모두 같은 무게로 세로로 쌓습니다 —
+                    앞의 것이 더 맞는 답처럼 보이면 안 되기 때문입니다.
+                    좁은 화면에서 두 코드를 한 줄에 넣으면 넘치므로 줄로 나눕니다.
+                  */}
+                  {hasCrosswalk ? (
+                    <ul className="grid gap-1 bg-surface px-3 py-3">
+                      {crosswalkCodes.map((code) => (
+                        <li
+                          key={code}
+                          className={`result-crosswalk-code text-center font-bold ${
+                            crosswalkCodes.length > 1 ? "text-h3" : "text-h2"
+                          }`}
+                        >
+                          {code}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="bg-surface px-3 py-3 text-center text-body-sm font-bold text-foreground-muted">
+                      환산 안 함
+                    </p>
+                  )}
                 </div>
                 <div className="result-crosswalk-field min-w-0 overflow-hidden rounded-sm">
                   <p className="result-crosswalk-legend px-3 py-1.5 text-caption font-semibold">
@@ -120,9 +151,15 @@ function TypeCodePanel({
                   </p>
                 </div>
               </div>
-              {typeCode.crosswalkCode === null && (
+              {!hasCrosswalk && (
                 <p className="mt-3 text-body-sm text-foreground-body">
                   {spec.crosswalk.unavailableNote}
+                </p>
+              )}
+              {crosswalkCodes.length > 1 && (
+                <p className="mt-3 text-body-sm text-foreground-body">
+                  기울지 않은 자리가 있어 어느 쪽으로도 읽힐 수 있어요. {crosswalkCodes.length}개
+                  모두 나와 가까운 코드입니다.
                 </p>
               )}
               {/* 근사라는 사실을 감추지 않습니다 (DEC-049). */}

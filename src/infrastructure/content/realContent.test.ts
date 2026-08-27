@@ -912,11 +912,21 @@ describe("4렌즈 코드 (DEC-049)", () => {
     }
   });
 
-  it("균형 자리 글자가 극 글자와 구별됩니다", () => {
-    const balancedLetter = definition.typeCode?.balancedLetter;
+  it("균형 자리를 잇는 기호가 극 글자와 구별됩니다 (DEC-064)", () => {
+    // 균형 자리는 `G/D`처럼 두 극의 글자를 함께 적습니다. 잇는 기호가 극 글자와 같으면
+    // 어느 것이 자리 글자인지 읽을 수 없게 됩니다.
+    const separator = definition.typeCode?.balancedSeparator;
 
-    expect(balancedLetter).toBe("·");
-    expect(poles.some((pole) => pole.code === balancedLetter)).toBe(false);
+    expect(separator).toBe("/");
+    expect(poles.some((pole) => pole.code === separator)).toBe(false);
+  });
+
+  it("모든 극에 환산 글자가 있습니다 — 균형 자리도 후보 두 개를 만들 수 있어야 합니다", () => {
+    // 균형 자리는 두 극의 환산 글자를 모두 씁니다 (DEC-064).
+    // 한쪽만 있으면 후보를 만들지 못해 환산이 통째로 사라집니다.
+    for (const pole of poles) {
+      expect(pole.crosswalkCode, pole.shortLabel).toBeTruthy();
+    }
   });
 
   it("환산 안내에 근사임을 알리는 문구가 있습니다", () => {

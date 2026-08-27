@@ -33,6 +33,7 @@ function renderResult(
         normalized: 2 / 3,
         direction: "positive" as const,
         isBalanced: false,
+        directionSource: "score" as const,
         intensityBandId: "defining",
       })),
     },
@@ -55,7 +56,13 @@ function renderResult(
   };
 }
 
-function renderBalancedResult(): string {
+/**
+ * 균형 축이 `balancedCount`개인 결과를 그립니다.
+ *
+ * 실제 채점은 0점이어도 동점 보정이 방향을 찾으면 균형이 아니라고 말합니다 (DEC-063).
+ * 그래서 `directionSource`까지 채워야 이 fixture가 진짜 균형을 흉내 냅니다.
+ */
+function renderBalancedResult(balancedCount = 4): string {
   const found = staticAssessmentCatalog.findBySlug("teacher-style");
   if (!found.ok) throw new Error("테스트용 검사를 불러오지 못했습니다.");
   const profile = found.value.resultProfiles[0];
@@ -65,16 +72,20 @@ function renderBalancedResult(): string {
     characterGender: "male",
     score: {
       resultKey: profile.key,
-      axisScores: found.value.axes.map((axis) => ({
-        axisId: axis.id,
-        rawScore: 0,
-        minScore: -24,
-        maxScore: 24,
-        normalized: 0.5,
-        direction: "positive" as const,
-        isBalanced: true,
-        intensityBandId: "balanced",
-      })),
+      axisScores: found.value.axes.map((axis, index) => {
+        const balanced = index < balancedCount;
+        return {
+          axisId: axis.id,
+          rawScore: balanced ? 0 : 8,
+          minScore: -24,
+          maxScore: 24,
+          normalized: balanced ? 0.5 : 2 / 3,
+          direction: "positive" as const,
+          isBalanced: balanced,
+          directionSource: balanced ? ("unresolved" as const) : ("score" as const),
+          intensityBandId: balanced ? "balanced" : "clear",
+        };
+      }),
     },
   } as unknown as ResultSnapshot;
 
@@ -241,8 +252,8 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).not.toContain("함께 정하고 꼼꼼히 준비하는 선생님");
     expect(markup).not.toContain("결과를 나타내는 상징");
     expect(markup).toContain("balanced-male.jpg");
-    expect(markup).toContain("·");
     expect(markup).toContain(found.value.typeCode.balancedNote);
+    // 네 자리가 모두 균형이면 후보가 16개라 상한(4개)을 넘습니다. 잘라 보여 주지 않습니다.
     expect(markup).toContain(found.value.typeCode.crosswalk.unavailableNote);
     expect(markup).toContain('data-result-rhythm="summary"');
     expect(markup.split("나의 교직 리듬")).toHaveLength(2);
@@ -250,6 +261,54 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).toContain("두 방식이 갈렸던 날");
     expect(markup).toContain("균형으로 나온 관점 하나를 골라");
     expect(markup).not.toContain("혼자 정리하는 동료와는,");
+  });
+
+  /**
+   * 균형 자리 표기와 환산 후보 (DEC-064)
+   *
+   * 예전에는 균형 자리가 가운뎃점으로 비고, 균형이 하나라도 있으면 환산이 통째로
+   * 사라졌습니다. 축 하나가 0점인 사람이 약 28%였으므로 네 명 중 한 명이 그 화면을
+   * 봤습니다. 동점 보정(DEC-063)으로 이 경우가 크게 줄었지만, 남은 사람에게도
+   * "비어 있음" 대신 "둘 다일 수 있음"을 보여 줍니다.
+   */
+  it("균형 자리를 비우지 않고 두 극의 글자를 함께 적습니다", () => {
+    const markup = renderBalancedResult(1);
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok || found.value.typeCode === undefined) {
+      throw new Error("테스트용 코드 규격을 불러오지 못했습니다.");
+    }
+    const axis = found.value.axes[0];
+    if (axis === undefined) throw new Error("축이 없습니다.");
+
+    const separator = found.value.typeCode.balancedSeparator;
+    const both = `${axis.positive.code}${separator}${axis.negative.code}`;
+
+    expect(markup).toContain(both);
+    expect(markup).toContain(found.value.typeCode.balancedNote);
+    // 스크린리더에게도 "비움"이 아니라 "둘 다"로 읽어 줍니다.
+    expect(markup).toContain("어느 쪽으로도 기울지 않아");
+  });
+
+  it("균형 자리가 있어도 환산 후보를 모두 나열합니다", () => {
+    const markup = renderBalancedResult(1);
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok || found.value.typeCode?.crosswalk === undefined) {
+      throw new Error("테스트용 코드 규격을 불러오지 못했습니다.");
+    }
+
+    // 균형 한 자리 → 후보 두 개. 예전에는 여기서 환산을 통째로 포기했습니다 (DEC-046).
+    expect(markup).not.toContain(found.value.typeCode.crosswalk.unavailableNote);
+    expect(markup).not.toContain("환산 안 함");
+    // 근사라는 사실은 후보가 몇 개든 함께 붙습니다 (DEC-049).
+    expect(markup).toContain(found.value.typeCode.crosswalk.disclaimer);
+
+    const [energy, lens, decision, rhythm] = found.value.axes;
+    const tail = [lens, decision, rhythm]
+      .map((axis) => axis?.positive.crosswalkCode ?? "")
+      .join("");
+    for (const head of [energy?.positive.crosswalkCode, energy?.negative.crosswalkCode]) {
+      expect(markup, `${head ?? "?"} 후보`).toContain(`${head ?? ""}${tail}`);
+    }
   });
 
   it("새 신호가 있으면 장면 차이만 필요한 곳에 보여 줍니다", () => {

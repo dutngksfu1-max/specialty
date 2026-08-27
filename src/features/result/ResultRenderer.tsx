@@ -508,7 +508,10 @@ function axisCardMeta(
       definition.typeCode === undefined
         ? undefined
         : isBalanced
-          ? definition.typeCode.balancedLetter
+          ? // 균형 자리도 두 극의 글자를 함께 적습니다 (DEC-064).
+            [axis?.positive.code, axis?.negative.code]
+              .filter((code): code is string => code !== undefined)
+              .join(definition.typeCode.balancedSeparator)
           : pole?.code,
     poleLabel: showsUnreadable ? unreadableLabel : isBalanced ? "균형" : pole?.shortLabel,
     badge: showsUnreadable

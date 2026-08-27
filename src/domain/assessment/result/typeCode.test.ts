@@ -59,13 +59,14 @@ function score(id: string, rawScore: number): AxisScore {
     normalized: (rawScore + 24) / 48,
     direction,
     isBalanced: rawScore === 0,
+    directionSource: rawScore === 0 ? "unresolved" : "score",
     intensityBandId: "clear",
   };
 }
 
 const spec: TypeCodeSpec = {
   label: "테스트 코드",
-  balancedLetter: "·",
+  balancedSeparator: "/",
   balancedNote: "이 자리는 균형입니다.",
   crosswalk: {
     systemLabel: "다른 검사",
@@ -93,31 +94,32 @@ describe("buildTypeCode", () => {
     expect(result?.slots).toEqual([
       {
         axisId: toAxisId("a"),
-        letter: "P",
+        letters: ["P"],
         poleSide: "positive",
-        poleLabel: "a-플러스",
+        poleLabels: ["a-플러스"],
         isBalanced: false,
       },
       {
         axisId: toAxisId("b"),
-        letter: "S",
+        letters: ["S"],
         poleSide: "negative",
-        poleLabel: "b-마이너스",
+        poleLabels: ["b-마이너스"],
         isBalanced: false,
       },
     ]);
   });
 
-  it("균형 자리는 spec의 글자로 비우고, 어느 극인지 단정하지 않습니다 (DEC-046)", () => {
+  it("균형 자리는 비우지 않고 두 극의 글자를 함께 적습니다 (DEC-064)", () => {
     const balanced = new Set([toAxisId("b")]);
     const result = buildTypeCode(twoAxes, [score("a", 12), score("b", 3)], balanced, spec);
 
-    expect(result?.code).toBe("P·");
+    expect(result?.code).toBe("PR/S");
     expect(result?.hasBalancedSlot).toBe(true);
     expect(result?.slots[1]).toMatchObject({
-      letter: "·",
+      letters: ["R", "S"],
+      // 두 글자를 적어도 어느 한쪽으로 단정하지는 않습니다 (DEC-046).
       poleSide: null,
-      poleLabel: null,
+      poleLabels: ["b-플러스", "b-마이너스"],
       isBalanced: true,
     });
   });
@@ -165,20 +167,44 @@ describe("buildTypeCode — 코드를 만들지 않는 경우", () => {
   });
 });
 
-describe("buildTypeCode — 환산 코드", () => {
-  it("모든 자리가 방향을 가질 때만 환산합니다", () => {
+describe("buildTypeCode — 환산 후보 (DEC-064)", () => {
+  it("모든 자리가 방향을 가지면 후보가 하나입니다", () => {
     const result = buildTypeCode(twoAxes, [score("a", 12), score("b", -12)], none, spec);
-    expect(result?.crosswalkCode).toBe("XZ");
+
+    expect(result?.crosswalkCodes).toEqual(["XZ"]);
+    expect(result?.crosswalkTruncated).toBe(false);
   });
 
-  it("균형 자리가 하나라도 있으면 환산하지 않습니다 (DEC-046)", () => {
+  it("균형 자리가 있으면 그 자리의 두 글자를 모두 펼쳐 후보를 만듭니다", () => {
+    // 예전에는 균형이 하나라도 있으면 환산을 통째로 포기했습니다 (DEC-046).
+    // 이제는 "어느 쪽으로도 읽힐 수 있다"를 후보 나열로 보여 줍니다.
     const result = buildTypeCode(
       twoAxes,
       [score("a", 12), score("b", 3)],
       new Set([toAxisId("b")]),
       spec,
     );
-    expect(result?.crosswalkCode).toBeNull();
+
+    expect(result?.crosswalkCodes).toEqual(["XX", "XZ"]);
+    expect(result?.crosswalkTruncated).toBe(false);
+  });
+
+  it("후보가 상한을 넘으면 잘라 보여 주지 않고 아예 나열하지 않습니다", () => {
+    // 반쯤 잘라 보여 주면 나머지가 없는 것처럼 보입니다. 그래서 전부 아니면 전무입니다.
+    const three = ["a", "b", "c"].map((id) => axis(id, "P", "Q"));
+    const capped: TypeCodeSpec = {
+      ...spec,
+      crosswalk: { ...spec.crosswalk!, maxCandidates: 4 },
+    };
+    const result = buildTypeCode(
+      three,
+      three.map((item) => score(String(item.id), 0)),
+      new Set(three.map((item) => item.id)),
+      capped,
+    );
+
+    expect(result?.crosswalkCodes).toEqual([]);
+    expect(result?.crosswalkTruncated).toBe(true);
   });
 
   it("콘텐츠가 crosswalk 규격을 주지 않으면 환산하지 않습니다", () => {
@@ -191,6 +217,7 @@ describe("buildTypeCode — 환산 코드", () => {
     );
 
     expect(result?.code).toBe("PS");
-    expect(result?.crosswalkCode).toBeNull();
+    expect(result?.crosswalkCodes).toEqual([]);
+    expect(result?.crosswalkTruncated).toBe(false);
   });
 });

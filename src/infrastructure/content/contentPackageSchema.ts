@@ -96,6 +96,11 @@ const sectionSchema = z.object({
 const scoringSpecSchema = z.object({
   strategyId: z.literal("centered-likert-axis-sum"),
   scoringVersion: z.number().int().positive(),
+  /**
+   * 동점(축 점수 0) 보정 규칙을 적용 순서대로 (DEC-063).
+   * 선언하지 않으면 보정하지 않고 예전처럼 `defaultPole`로 떨어집니다.
+   */
+  tieBreak: z.array(z.enum(["context-mean", "extreme-responses"])).optional(),
 });
 
 const collaborationProfileSchema = z.object({
@@ -178,7 +183,8 @@ const resultNarrativeSchema = z.object({
  */
 const typeCodeSchema = z.object({
   label: z.string().min(1),
-  balancedLetter: z.string().min(1).max(2),
+  /** 균형 자리에서 두 극의 글자를 잇는 기호 (DEC-064) */
+  balancedSeparator: z.string().min(1).max(2),
   balancedNote: z.string().min(1),
   crosswalk: z
     .object({
@@ -187,6 +193,8 @@ const typeCodeSchema = z.object({
       selfReportedInputLabel: z.string().min(1),
       disclaimer: z.string().min(1),
       unavailableNote: z.string().min(1),
+      /** 나열할 환산 후보의 최대 개수. 넘으면 나열하지 않습니다 (DEC-064) */
+      maxCandidates: z.number().int().positive().optional(),
     })
     .optional(),
 });
@@ -316,9 +324,23 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
       issue(`유형 코드 글자가 중복됩니다: ${duplicateCodes.join(", ")}`, ["axes"]);
     }
 
-    const balancedLetter = definition.typeCode.balancedLetter;
-    if (poles.some((pole) => pole.code === balancedLetter)) {
-      issue(`균형 자리 글자(${balancedLetter})를 극 글자로도 쓰고 있습니다.`, ["typeCode"]);
+    // 균형 자리는 이제 두 극의 글자를 그대로 병기하므로(DEC-064), 이을 기호가 극 글자와
+    // 겹치면 `G/D`의 `/`가 어느 자리 글자인지 읽을 수 없게 됩니다.
+    const separator = definition.typeCode.balancedSeparator;
+    if (poles.some((pole) => pole.code === separator)) {
+      issue(`균형 자리를 잇는 기호(${separator})를 극 글자로도 쓰고 있습니다.`, ["typeCode"]);
+    }
+
+    const crosswalk = definition.typeCode.crosswalk;
+    if (crosswalk !== undefined) {
+      const missingCrosswalk = poles.filter((pole) => pole.crosswalkCode === undefined);
+      // 균형 자리는 두 극의 환산 글자를 모두 씁니다. 한쪽만 있으면 후보를 만들 수 없습니다.
+      if (missingCrosswalk.length > 0 && missingCrosswalk.length < poles.length) {
+        issue(
+          `환산 표기를 쓰려면 모든 축 극에 crosswalkCode가 있어야 합니다. ${missingCrosswalk.length}개 빠졌습니다.`,
+          ["axes"],
+        );
+      }
     }
   }
 

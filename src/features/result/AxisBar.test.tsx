@@ -27,6 +27,7 @@ function score(rawScore: number, intensityBandId: string): AxisScore {
     normalized: (rawScore + 24) / 48,
     direction: rawScore < 0 ? "negative" : "positive",
     isBalanced: rawScore === 0,
+    directionSource: rawScore === 0 ? "unresolved" : "score",
     intensityBandId,
   };
 }

@@ -1,5 +1,6 @@
 import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
 import type { AssessmentResponse } from "@/domain/assessment/session/session";
+import { MIN_DIFFERENTIATION_RANGE } from "@/domain/assessment/scoring/scoring";
 import type { AxisId, QuestionId } from "@/domain/shared/ids";
 
 /**
@@ -29,8 +30,12 @@ import type { AxisId, QuestionId } from "@/domain/shared/ids";
  *
  * 척도 폭에 대한 비율이 아니라 절대값인 이유: 이 판정은 "반대편에도 표를 줬는가"를 묻는
  * 것이라, 7점 척도가 되어도 뜻이 그대로 유지됩니다.
+ *
+ * 동점 보정(DEC-063)이 같은 기준으로 "보정을 걸어도 되는 축인가"를 판단하므로
+ * 값은 `scoring.ts`가 소유하고 여기서는 가져다 씁니다. 두 곳이 어긋나면 같은 응답이
+ * 한쪽에서는 방향을 얻고 다른 쪽에서는 '읽기 어려움'이 됩니다.
  */
-const MIN_VALUE_RANGE = 2;
+const MIN_VALUE_RANGE = MIN_DIFFERENTIATION_RANGE;
 
 export interface AxisDifferentiation {
   readonly axisId: AxisId;

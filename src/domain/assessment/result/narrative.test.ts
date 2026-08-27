@@ -31,6 +31,7 @@ function scores(rawScores: readonly number[]): readonly AxisScore[] {
       normalized: (rawScore + 20) / 40,
       direction: rawScore < 0 ? "negative" : "positive",
       isBalanced: rawScore === 0,
+      directionSource: rawScore === 0 ? "unresolved" : "score",
       intensityBandId: band.id,
     };
   });
@@ -55,6 +56,7 @@ describe("정확히 0점일 때는 한쪽으로 기울여 말하지 않습니다
       normalized: 0.5,
       direction: axis.defaultPole,
       isBalanced: true,
+      directionSource: "unresolved",
       intensityBandId: "balanced",
     }));
   }

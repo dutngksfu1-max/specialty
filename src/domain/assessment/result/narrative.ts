@@ -5,13 +5,15 @@ import type {
 } from "@/domain/assessment/model/definition";
 import type { ResultProfile } from "@/domain/assessment/result/profile";
 import type { AxisScore } from "@/domain/assessment/scoring/score";
-import { resolveIntensity } from "@/domain/assessment/scoring/scoring";
+import { resolveIntensity, weakestDirectionalBand } from "@/domain/assessment/scoring/scoring";
 import type { AxisId } from "@/domain/shared/ids";
 
 export interface ResolvedAxisNarrative {
   readonly axisId: AxisId;
   readonly rawScore: number;
   readonly isDirectional: boolean;
+  /** 0점이었는데 동점 보정이 방향을 찾은 축입니다. 화면은 근소한 차이임을 밝혀야 합니다 (DEC-063) */
+  readonly isTieBroken: boolean;
   readonly reading: AxisNarrativeReading;
   /** T3 반증 문구 — "이 설명이 안 맞는다면" (docs/PRD-result-v2.md 5장) */
   readonly counterEvidence: string;
@@ -65,11 +67,23 @@ export function resolveResultNarrative(
     // 저장된 intensityBandId를 그대로 믿지 않고 rawScore로 다시 찾습니다.
     // 구간 경계가 바뀐 뒤에도 예전 결과가 조용히 fallback으로 떨어지지 않게 하는 안전장치입니다.
     // (docs/PRD-result-v2.md 6.4 — rawScore는 스냅샷에 그대로 보존됩니다)
-    const band = resolveIntensity(Math.abs(score.rawScore), axis.intensityBands);
+    const scoredBand = resolveIntensity(Math.abs(score.rawScore), axis.intensityBands);
 
-    // 정확히 0점이면 어느 쪽으로도 기울지 않았습니다. `direction`은 이때 axis.defaultPole이
-    // 되므로 그대로 쓰면 "한쪽에 조금 더 가깝다"고 잘못 말하게 됩니다 (DEC-046).
-    const direction: NarrativeDirection = score.isBalanced ? "balanced" : score.direction;
+    /*
+      동점 보정으로 방향을 찾은 축은 점수가 0이라 '균형' 구간에 떨어집니다 (DEC-063).
+      그대로 두면 방향은 있는데 균형 문장을 읽게 되므로, 가장 약한 방향 구간으로 읽습니다.
+      구간이 하나도 방향을 갖지 않는 콘텐츠라면 원래 구간을 그대로 씁니다.
+    */
+    const isTieBroken = score.directionSource === "tiebreak";
+    const band = isTieBroken
+      ? weakestDirectionalBand(axis.intensityBands) ?? scoredBand
+      : scoredBand;
+
+    // 0점이고 보정으로도 갈리지 않았으면 어느 쪽으로도 기울지 않았습니다. `direction`은
+    // 이때 axis.defaultPole이므로 그대로 쓰면 "한쪽에 조금 더 가깝다"고 잘못 말하게 됩니다
+    // (DEC-046). 보정이 방향을 찾은 축은 여기 해당하지 않습니다.
+    const direction: NarrativeDirection =
+      score.directionSource === "unresolved" ? "balanced" : score.direction;
     const reading = narrativeAxis.readings.find(
       (candidate) =>
         candidate.intensityBandId === band.id && candidate.direction === direction,
@@ -80,6 +94,7 @@ export function resolveResultNarrative(
       axisId: axis.id,
       rawScore: score.rawScore,
       isDirectional: band.directional,
+      isTieBroken,
       reading,
       counterEvidence: narrativeAxis.counterEvidence,
     });

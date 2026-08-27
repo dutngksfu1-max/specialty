@@ -444,8 +444,10 @@ export interface AxisScore {
   readonly minScore: number;        // -20
   readonly maxScore: number;        // +20
   readonly normalized: number;      // 0~1 (시각화용, rawScore에서 파생)
-  readonly direction: PoleSide;     // 0이면 defaultPole
-  readonly isBalanced: boolean;     // rawScore === 0
+  readonly direction: PoleSide;     // 0이고 보정도 실패하면 defaultPole
+  readonly isBalanced: boolean;     // rawScore === 0 (보정 전 사실)
+  readonly directionSource: "score" | "tiebreak" | "unresolved";  // DEC-063
+  readonly tieBreakRuleId?: TieBreakRuleId;  // 방향을 정한 보정 규칙
   readonly intensityBandId: string;
 }
 
@@ -482,15 +484,37 @@ export interface ResultSnapshot {
 3) 점수 범위      min = -(문항수 × 최대편차 × weight합)  = -20
                   max = +(문항수 × 최대편차 × weight합)  = +20
 
-4) 강도 구간      |rawScore| 기준 (DEC-002b)
-                  0 ~ 4   → balanced    "균형"
-                  5 ~ 12  → clear       "뚜렷"
-                  13 ~ 20 → strong      "매우 뚜렷"
+4) 강도 구간      |rawScore| 기준 (DEC-052 — 균형은 정확히 0점 하나뿐)
+                  0       → balanced    "균형"
+                  1 ~ 6   → leaning     "조금 뚜렷"
+                  7 ~ 12  → clear       "뚜렷"
+                  13 ~ 18 → strong      "강함"
+                  19 ~ 24 → defining    "매우 뚜렷"
 
-5) 방향           rawScore > 0 → positive
-                  rawScore < 0 → negative
-                  rawScore = 0 → axis.defaultPole  (DEC-001)
-                                 + isBalanced = true (화면에 '균형' 표시)
+5) 방향           rawScore > 0 → positive          directionSource = "score"
+                  rawScore < 0 → negative          directionSource = "score"
+                  rawScore = 0 → 동점 보정으로 넘어감 (5b)
+
+5b) 동점 보정      DEC-063. `scoring.tieBreak`에 적힌 규칙을 순서대로 적용합니다.
+                  선언하지 않은 검사는 이 단계를 건너뛰고 곧장 defaultPole로 갑니다.
+
+                  전제 — 이 축의 응답이 갈렸어야 합니다 (최고값 − 최저값 ≥ 2).
+                         전부 같은 값을 찍으면 축 점수가 반드시 0이 되는데, 거기에
+                         방향을 붙이면 답을 고르지 않은 사람에게 성향을 지어내게
+                         됩니다 (DEC-053).
+
+                  context-mean       장면마다 문항 수가 달라 생기는 쏠림을 걷어내고
+                                     Σ(장면 합 ÷ 장면 문항 수)를 정수로 계산
+                                     (문항 2개 이상인 장면만, 최소공배수를 곱해 정수 유지)
+                  extreme-responses  척도 양 끝(|편차| = 최대)으로 답한 문항만 합산
+
+                  0이 아닌 값을 낸 첫 규칙이 방향을 정합니다  → "tiebreak"
+                  모든 규칙이 0     → axis.defaultPole (DEC-001) → "unresolved"
+                                       + isBalanced = true (화면에 '균형' 표시)
+
+                  rawScore는 보정으로 바뀌지 않습니다. 밸런스 지도 마커는 정중앙 그대로입니다.
+                  보정으로 방향을 찾은 축은 **가장 약한 방향 구간**으로 읽습니다 —
+                  근소한 차이를 뚜렷한 성향으로 부풀리지 않기 위해서입니다.
 
 6) 결과 키        4개 축 방향 조합으로 ResultProfile 1개를 찾음
                   연속 점수(rawScore)는 결과 스냅샷에 그대로 저장

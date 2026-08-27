@@ -169,8 +169,14 @@ export interface ResultNarrativeSpec {
 export interface TypeCodeSpec {
   /** 화면에 쓰는 체계 이름 (예: "4렌즈 코드") */
   readonly label: string;
-  /** 균형 구간인 자리에 대신 넣는 글자 */
-  readonly balancedLetter: string;
+  /**
+   * 균형 자리에서 두 극의 글자를 잇는 기호 (DEC-064)
+   *
+   * 균형 자리를 비우지 않고 **두 글자를 함께** 적습니다. 어느 쪽으로도 기울지 않았다는 것은
+   * "아무것도 아니다"가 아니라 "둘 다일 수 있다"이기 때문입니다.
+   * 자리 수는 그대로 유지되므로 코드 길이와 축 개수가 계속 일치합니다.
+   */
+  readonly balancedSeparator: string;
   /** 균형 자리가 있을 때 코드 옆에 붙이는 안내 */
   readonly balancedNote: string;
   /**
@@ -187,8 +193,15 @@ export interface TypeCodeSpec {
     readonly selfReportedInputLabel: string;
     /** 환산이 정확한 변환이 아니라 근사임을 알리는 문구 */
     readonly disclaimer: string;
-    /** 균형 자리가 있어 환산하지 않을 때 대신 보여 줄 문구 */
+    /** 후보가 너무 많거나 환산할 수 없을 때 대신 보여 줄 문구 */
     readonly unavailableNote: string;
+    /**
+     * 나열할 환산 후보의 최대 개수 (DEC-064)
+     *
+     * 균형 자리 하나마다 후보가 두 배로 늘어납니다(1개→2, 2개→4, 3개→8).
+     * 여덟 개를 늘어놓으면 읽을 수 없으므로 상한을 넘으면 나열하지 않고 안내 문구를 씁니다.
+     */
+    readonly maxCandidates?: number;
   };
 }
 
@@ -233,9 +246,30 @@ export interface AssessmentSection {
   readonly description?: string;
 }
 
+/**
+ * 동점(축 점수 정확히 0) 보정 규칙 (DEC-063)
+ *
+ * 축 점수는 `정방향 문항 − 역방향 문항`이라 0점이 자주 나옵니다. 0점은 "기울지 않았다"가
+ * 아니라 **"합계로는 갈리지 않았다"**입니다. 그래서 합계 말고 다른 각도로 한 번 더 봅니다.
+ *
+ * 규칙 이름만 엔진이 알고, **어떤 규칙을 어떤 순서로 쓸지는 콘텐츠가 정합니다.**
+ * 선언하지 않으면 보정이 아예 돌지 않습니다 (AGENTS.md 7절).
+ *
+ * | id | 보는 것 |
+ * |---|---|
+ * | `context-mean` | 장면마다 문항 수가 달라 생기는 쏠림을 걷어내고 다시 더한 값 |
+ * | `extreme-responses` | 척도 양 끝으로 강하게 답한 문항만 모아 더한 값 |
+ */
+export type TieBreakRuleId = "context-mean" | "extreme-responses";
+
 export interface ScoringSpec {
   readonly strategyId: "centered-likert-axis-sum";
   readonly scoringVersion: number;
+  /**
+   * 0점일 때 방향을 정하는 규칙을 **적힌 순서대로** 적용합니다.
+   * 먼저 0이 아닌 값을 낸 규칙이 방향을 정하고, 나머지는 보지 않습니다.
+   */
+  readonly tieBreak?: readonly TieBreakRuleId[];
 }
 
 export interface AssessmentDefinition {

@@ -8,10 +8,16 @@ import type {
   AssessmentQuestion,
   IntensityBand,
   IntensityBands,
+  PoleSide,
   ResponseScale,
+  TieBreakRuleId,
 } from "@/domain/assessment/model/definition";
 import type { ResultProfile } from "@/domain/assessment/result/profile";
-import type { AssessmentScore, AxisScore } from "@/domain/assessment/scoring/score";
+import type {
+  AssessmentScore,
+  AxisDirectionSource,
+  AxisScore,
+} from "@/domain/assessment/scoring/score";
 import type { AssessmentResponse } from "@/domain/assessment/session/session";
 import type { AxisId, QuestionId, ResultKey } from "@/domain/shared/ids";
 import { err, ok, type Result } from "@/domain/shared/result";
@@ -71,6 +77,162 @@ export function resolveIntensity(absScore: number, bands: IntensityBands): Inten
 }
 
 /**
+ * 방향 구간 중 가장 약한 것을 찾습니다 (DEC-063).
+ *
+ * 동점 보정으로 방향을 찾은 축은 점수가 0이라 '균형' 구간에 떨어집니다. 그대로 두면
+ * 방향은 있는데 균형 문장을 읽게 되므로, **가장 약한 방향 구간**으로 읽습니다.
+ * 근소한 차이를 뚜렷한 성향으로 부풀리지 않기 위해서입니다.
+ */
+export function weakestDirectionalBand(bands: IntensityBands): IntensityBand | undefined {
+  let weakest: IntensityBand | undefined;
+  for (const band of bands) {
+    if (!band.directional) continue;
+    if (weakest === undefined || band.minAbsScore < weakest.minAbsScore) weakest = band;
+  }
+  return weakest;
+}
+
+/**
+ * 이 값 미만으로 척도를 썼으면 응답이 갈리지 않은 것으로 봅니다 (DEC-053).
+ *
+ * 2 = "가장 높게 준 값과 가장 낮게 준 값의 차이가 2점 이상". 전부 같은 값을 찍었거나
+ * 3과 4만 오간 사람은 어디에도 반대하지 않은 것이라 방향을 읽을 근거가 없습니다.
+ *
+ * `result/differentiation.ts`가 같은 값을 씁니다. 두 곳이 어긋나면 같은 응답이
+ * 한쪽에서는 '균형', 다른 쪽에서는 '읽기 어려움'이 되므로 상수를 한 곳에 둡니다.
+ */
+export const MIN_DIFFERENTIATION_RANGE = 2;
+
+/**
+ * 장면 보정에서 세는 장면의 최소 문항 수 (DEC-063)
+ *
+ * 문항이 하나뿐인 장면에 문항 여덟 개짜리 장면과 같은 무게를 주면
+ * **문항 한 개가 축 방향을 정하게 됩니다.** 그건 보정이 아니라 우연입니다.
+ */
+const MIN_TIEBREAK_CONTEXT_QUESTIONS = 2;
+
+function greatestCommonDivisor(a: number, b: number): number {
+  return b === 0 ? a : greatestCommonDivisor(b, a % b);
+}
+
+function leastCommonMultiple(a: number, b: number): number {
+  return (a / greatestCommonDivisor(a, b)) * b;
+}
+
+interface AxisResponse {
+  readonly question: AssessmentQuestion;
+  /** 극 방향으로 정렬한 편차. 양수면 positive 쪽 */
+  readonly aligned: number;
+  /** 원래 응답값. 응답이 갈렸는지 볼 때는 정렬 전 값을 봐야 합니다 */
+  readonly value: number;
+}
+
+/**
+ * 장면마다 문항 수가 달라 생기는 쏠림을 걷어내고 다시 더합니다. (`context-mean`)
+ *
+ * 축 점수는 문항이 많은 장면이 더 세게 끌어당깁니다. 예를 들어 장면 A가 8문항,
+ * 장면 B가 3문항이면 A가 축을 거의 혼자 정합니다. 동점일 때만, 장면을 **동등하게**
+ * 놓고 다시 봅니다. "문항 수 쏠림을 걷어내면 이쪽"이라는 뜻입니다.
+ *
+ * 분수 합을 부동소수점으로 만들면 `=== 0` 비교가 흔들립니다. 최소공배수를 곱해
+ * **정수로만** 계산합니다.
+ */
+function contextMeanTieBreak(answers: readonly AxisResponse[]): number {
+  const sums = new Map<string, { sum: number; count: number }>();
+  for (const answer of answers) {
+    const bucket = sums.get(answer.question.context) ?? { sum: 0, count: 0 };
+    bucket.sum += answer.aligned;
+    bucket.count += 1;
+    sums.set(answer.question.context, bucket);
+  }
+
+  const eligible = [...sums.values()].filter(
+    (bucket) => bucket.count >= MIN_TIEBREAK_CONTEXT_QUESTIONS,
+  );
+  if (eligible.length < 2) return 0;
+
+  const common = eligible.reduce((acc, bucket) => leastCommonMultiple(acc, bucket.count), 1);
+  return eligible.reduce((total, bucket) => total + bucket.sum * (common / bucket.count), 0);
+}
+
+/**
+ * 척도 양 끝으로 강하게 답한 문항만 모아 더합니다. (`extreme-responses`)
+ *
+ * "확실히 그렇다 / 확실히 아니다"라고 말한 것들만 봅니다. 미지근한 응답이 서로 상쇄되어
+ * 0이 된 경우에도, 분명히 답한 쪽이 남아 있으면 그쪽을 방향으로 봅니다.
+ */
+function extremeResponseTieBreak(answers: readonly AxisResponse[], scale: ResponseScale): number {
+  const extreme = maxAbsDeviation(scale);
+  if (extreme === 0) return 0;
+
+  return answers.reduce(
+    (total, answer) =>
+      Math.abs(centerResponse(answer.value, scale.centerValue)) === extreme
+        ? total + answer.aligned
+        : total,
+    0,
+  );
+}
+
+function applyTieBreakRule(
+  ruleId: TieBreakRuleId,
+  answers: readonly AxisResponse[],
+  scale: ResponseScale,
+): number {
+  switch (ruleId) {
+    case "context-mean":
+      return contextMeanTieBreak(answers);
+    case "extreme-responses":
+      return extremeResponseTieBreak(answers, scale);
+  }
+}
+
+interface ResolvedDirection {
+  readonly direction: PoleSide;
+  readonly source: AxisDirectionSource;
+  readonly ruleId?: TieBreakRuleId;
+}
+
+/**
+ * 축의 방향을 정합니다 (DEC-001 · DEC-063).
+ *
+ * 1. 축 점수가 0이 아니면 그대로 씁니다
+ * 2. 0이면 콘텐츠가 선언한 보정 규칙을 **순서대로** 적용합니다
+ * 3. 그래도 갈리지 않으면 진짜 균형입니다. 방향 자리는 `defaultPole`로 채우되
+ *    `unresolved`를 함께 남겨, 화면이 그 방향을 결과라고 말하지 않게 합니다
+ *
+ * **응답이 갈리지 않은 축에는 보정을 걸지 않습니다.** 전부 같은 값을 찍으면 축 점수가
+ * 반드시 0이 되는데, 장면마다 정·역 문항 수가 다르면 장면 보정이 거기서도 방향을
+ * 만들어 냅니다. 답을 고르지 않은 사람에게 성향을 붙이는 셈이라 막습니다 (DEC-053).
+ */
+function resolveDirection(
+  axis: AssessmentAxis,
+  rawScore: number,
+  answers: readonly AxisResponse[],
+  scale: ResponseScale,
+  tieBreak: readonly TieBreakRuleId[],
+): ResolvedDirection {
+  if (rawScore > 0) return { direction: "positive", source: "score" };
+  if (rawScore < 0) return { direction: "negative", source: "score" };
+
+  const values = answers.map((answer) => answer.value);
+  const differentiated =
+    values.length > 0 &&
+    Math.max(...values) - Math.min(...values) >= MIN_DIFFERENTIATION_RANGE;
+
+  if (differentiated) {
+    for (const ruleId of tieBreak) {
+      const signal = applyTieBreakRule(ruleId, answers, scale);
+      if (signal !== 0) {
+        return { direction: signal > 0 ? "positive" : "negative", source: "tiebreak", ruleId };
+      }
+    }
+  }
+
+  return { direction: axis.defaultPole, source: "unresolved" };
+}
+
+/**
  * 축 하나의 점수를 계산합니다.
  *
  * questions에는 전체 문항을 넘겨도 됩니다. 이 축에 속한 문항만 골라 씁니다.
@@ -81,12 +243,14 @@ export function scoreAxis(
   questions: readonly AssessmentQuestion[],
   responses: ReadonlyMap<QuestionId, number>,
   scale: ResponseScale,
+  tieBreak: readonly TieBreakRuleId[] = [],
 ): AxisScore {
   const deviation = maxAbsDeviation(scale);
 
   let rawScore = 0;
   // extent = 이 축에서 나올 수 있는 최대 절대 점수 (문항 수 × 최대 편차 × weight)
   let extent = 0;
+  const answers: AxisResponse[] = [];
 
   for (const question of questions) {
     if (question.axisId !== axis.id) continue;
@@ -96,7 +260,9 @@ export function scoreAxis(
     const value = responses.get(question.id);
     if (value === undefined) continue;
 
-    rawScore += centerResponse(value, scale.centerValue) * question.polarity * question.weight;
+    const aligned = centerResponse(value, scale.centerValue) * question.polarity * question.weight;
+    rawScore += aligned;
+    answers.push({ question, aligned, value });
   }
 
   const minScore = -extent;
@@ -104,7 +270,7 @@ export function scoreAxis(
   const span = maxScore - minScore;
   const normalized = span === 0 ? 0.5 : (rawScore - minScore) / span;
 
-  const direction = rawScore > 0 ? "positive" : rawScore < 0 ? "negative" : axis.defaultPole;
+  const resolved = resolveDirection(axis, rawScore, answers, scale, tieBreak);
 
   return {
     axisId: axis.id,
@@ -112,8 +278,10 @@ export function scoreAxis(
     minScore,
     maxScore,
     normalized,
-    direction,
+    direction: resolved.direction,
     isBalanced: rawScore === 0,
+    directionSource: resolved.source,
+    ...(resolved.ruleId === undefined ? {} : { tieBreakRuleId: resolved.ruleId }),
     intensityBandId: resolveIntensity(Math.abs(rawScore), axis.intensityBands).id,
   };
 }
@@ -187,7 +355,13 @@ export function scoreAssessment(
   }
 
   const axisScores = definition.axes.map((axis) =>
-    scoreAxis(axis, definition.questions, responseByQuestion, definition.scale),
+    scoreAxis(
+      axis,
+      definition.questions,
+      responseByQuestion,
+      definition.scale,
+      definition.scoring.tieBreak ?? [],
+    ),
   );
 
   const resultKey = resolveResultKey(axisScores, definition.resultProfiles);

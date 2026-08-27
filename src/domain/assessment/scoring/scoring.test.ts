@@ -213,6 +213,7 @@ describe("결과 키 해석", () => {
         normalized: 0.675,
         direction: "positive",
         isBalanced: false,
+        directionSource: "score",
         intensityBandId: "clear",
       },
     ];

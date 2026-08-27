@@ -429,7 +429,10 @@ describe("getResult", () => {
     await completeAssessment(deps, { slug: SLUG });
 
     const bumped = JSON.parse(JSON.stringify(teacherStyleV1Package)) as Record<string, unknown>;
-    bumped.scoring = { strategyId: "centered-likert-axis-sum", scoringVersion: 2 };
+    // 콘텐츠가 실제로 쓰는 버전에서 한 칸 올립니다. 숫자를 적어 두면 콘텐츠가 그 숫자에
+    // 도달한 날 이 테스트가 조용히 아무것도 검사하지 않게 됩니다 (DEC-063에서 실제로 겪음).
+    const current = bumped.scoring as { readonly scoringVersion: number };
+    bumped.scoring = { ...current, scoringVersion: current.scoringVersion + 1 };
 
     const result = await getResult(
       { ...deps, catalog: new StaticAssessmentCatalog([bumped]) },

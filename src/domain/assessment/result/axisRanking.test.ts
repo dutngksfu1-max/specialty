@@ -28,6 +28,7 @@ function scoresOf(rawScores: readonly number[]): readonly AxisScore[] {
     maxScore: 24,
     normalized: ((rawScores[index] ?? 0) + 24) / 48,
     direction: (rawScores[index] ?? 0) < 0 ? "negative" : "positive",
+    directionSource: (rawScores[index] ?? 0) === 0 ? "unresolved" : "score",
     isBalanced: (rawScores[index] ?? 0) === 0,
     intensityBandId: "clear",
   }));

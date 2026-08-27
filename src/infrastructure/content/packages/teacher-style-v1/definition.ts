@@ -369,9 +369,9 @@ const crosswalkSystemLabel = ["M", "B", "T", "I"].join("");
 
 const typeCode = {
   label: "4렌즈 코드",
-  balancedLetter: "·",
+  balancedSeparator: "/",
   balancedNote:
-    "가운뎃점 자리는 어느 한쪽으로 기울지 않아, 한 글자로 적지 않았어요. 두 성향이 상황에 따라 번갈아 나타나는 편입니다.",
+    "글자가 두 개 적힌 자리는 어느 한쪽으로 기울지 않은 관점이에요. 둘 중 하나가 아니라, 상황에 따라 두 가지가 번갈아 나타나는 편이라는 뜻입니다.",
   crosswalk: {
     systemLabel: `교직 ${crosswalkSystemLabel}`,
     selfReportedLabel: `실제 ${crosswalkSystemLabel}`,
@@ -379,7 +379,8 @@ const typeCode = {
     disclaimer:
       "축의 이름이 비슷해 보이는 자리끼리 짝지어 본 것일 뿐, 두 검사는 문항도 채점 방식도 다릅니다. 재미로만 봐 주세요.",
     unavailableNote:
-      "어느 한쪽으로 기울지 않은 자리가 있어, 짝지을 수 있는 코드를 만들지 않았어요.",
+      "기울지 않은 자리가 많아 짝지을 수 있는 코드가 너무 여러 개가 됩니다. 그래서 이번에는 나열하지 않았어요.",
+    maxCandidates: 4,
   },
 };
 
@@ -410,5 +411,22 @@ export const teacherStyleV1Base = {
   typeCode,
   axisCombinations,
   sections,
-  scoring: { strategyId: "centered-likert-axis-sum", scoringVersion: 1 },
+  /*
+    동점 보정 (DEC-063)
+
+    축 점수는 정방향 6문항에서 역방향 6문항을 뺀 값이라 정확히 0점이 자주 나옵니다
+    (축당 약 8%, 네 축 중 하나라도 0점인 사람이 약 28%). 0점은 "기울지 않았다"가 아니라
+    "합계로는 갈리지 않았다"이므로, 0점일 때만 다른 각도로 한 번 더 봅니다.
+
+      1. context-mean      장면마다 문항 수가 달라 생기는 쏠림을 걷어내고 다시 더합니다
+      2. extreme-responses 척도 양 끝으로 분명히 답한 문항만 모아 봅니다
+
+    두 규칙을 거치면 균형으로 남는 사람이 약 28% → 0.5~4%로 줄어듭니다.
+    응답이 갈리지 않은 축(전부 같은 값)에는 보정을 걸지 않습니다 — DEC-053.
+  */
+  scoring: {
+    strategyId: "centered-likert-axis-sum",
+    scoringVersion: 2,
+    tieBreak: ["context-mean", "extreme-responses"],
+  },
 };
