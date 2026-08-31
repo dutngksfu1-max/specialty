@@ -321,8 +321,8 @@ describe("언어 규율 (DEC-047)", () => {
 
     for (const { axisId, reading } of balanced) {
       const joined = `${reading.headline} ${reading.summary} ${reading.rhythm}`;
-      // '두 방식'을 함께 언급해, 한쪽으로 확정하지 않았음을 드러냅니다.
-      expect(joined, `${axisId}/balanced: ${joined}`).toMatch(/두 방식|비슷하게/);
+      // 두 특징이 고르게 또는 함께 나타난다고 밝혀, 한쪽으로 확정하지 않았음을 드러냅니다.
+      expect(joined, `${axisId}/balanced: ${joined}`).toMatch(/두 방식|고르게|함께/);
     }
   });
 

@@ -7,16 +7,11 @@
 export const resultNarrative = {
   balancedTitle: "상황에 맞춰 폭넓게 움직이는 선생님",
   balancedRhythm:
-    "한 관점에서 두 방식이 정확히 같은 무게로 나왔습니다. 그래서 이 결과는 한쪽 이름을 붙이는 대신, 상황에 따라 방식을 바꿔 쓰는 모습으로 읽습니다. 어떤 상황에서 어느 쪽을 골랐는지 떠올려 보면 나에게 맞는 설명이 더 또렷해집니다.",
+    "한 관점에서 두 방식의 점수가 같게 나왔습니다. 그래서 한쪽 이름을 붙이는 대신, 그 관점의 두 특징을 함께 담았습니다. 관점 카드에서 두 방식이 실제 교실 일에 어떻게 이어지는지 확인해 보세요.",
   balancedOneLiner:
-    "네 가지 관점에서 서로 다른 방식을 고르게 활용하는 모습이 나타납니다.",
+    "네 가지 관점마다 한쪽으로 기우는 정도와 두 방식이 고르게 나타나는 지점이 함께 드러납니다.",
   balancedAxisNote:
-    "상황에 따라 두 방식을 폭넓게 활용하는 관점도 함께 나타납니다.",
-  // 0점이지만 응답이 갈리지 않은 축 (DEC-053).
-  // '균형'이라고 부르면, 답을 고르지 않은 분께 "두 방식을 고루 쓰신다"고 말하게 됩니다.
-  unreadableAxisLabel: "읽기 어려움",
-  unreadableAxisNote:
-    "이 관점은 문항마다 답이 비슷해서 어느 쪽인지 읽기 어려웠어요. 다시 검사하실 때 조금 더 갈라서 답해 주시면 또렷하게 보실 수 있습니다.",
+    "어느 한쪽보다 두 방식이 고르게 나타난 관점은 양쪽의 특징을 함께 읽습니다.",
   scopeNote: "이 검사는 학생과 나누는 말의 양이나 마감을 지키는 습관을 평가하지 않습니다.",
   emphasisTerms: [
     "입 밖으로 꺼내 놓으면",
@@ -142,9 +137,9 @@ export const resultNarrative = {
         {
           intensityBandId: "balanced",
           direction: "balanced",
-          headline: "말할 때와 혼자일 때가 반반이에요",
-          summary: "동료와 말하며 정리할 때와 혼자 정리할 때가 비슷하게 나타나요.",
-          rhythm: "회의에서 말하며 정리한 날도, 교실에 돌아와 혼자 정리한 날도 있습니다.",
+          headline: "대화와 혼자 정리를 고르게 활용해요",
+          summary: "동료와 말하며 실마리를 찾고, 혼자 생각을 다듬는 흐름이 함께 나타나요.",
+          rhythm: "회의에서 방향을 잡은 뒤 교실에 돌아와 혼자 결론을 다듬는 식으로 두 방식을 이어 씁니다.",
         },
         {
           intensityBandId: "balanced",
@@ -226,9 +221,9 @@ export const resultNarrative = {
         {
           intensityBandId: "balanced",
           direction: "balanced",
-          headline: "본 것과 앞일을 반반씩 봐요",
-          summary: "눈으로 확인한 것을 볼 때와 앞으로 어떻게 될지를 볼 때가 비슷하게 나타나요.",
-          rhythm: "아이 기록을 펼쳐 볼 때도, 몇 달 뒤 모습을 떠올릴 때도 있습니다.",
+          headline: "확인한 사실과 앞으로의 흐름을 함께 봐요",
+          summary: "남아 있는 기록을 살피면서, 그 변화가 앞으로 어디로 이어질지도 함께 그려요.",
+          rhythm: "아이 기록을 확인한 뒤 몇 달 뒤 모습을 떠올리며 다음 수업을 정합니다.",
         },
         {
           intensityBandId: "balanced",
@@ -310,9 +305,9 @@ export const resultNarrative = {
         {
           intensityBandId: "balanced",
           direction: "balanced",
-          headline: "약속과 사정을 반반씩 봐요",
-          summary: "정해 둔 약속을 확인할 때와 그 사람 사정을 살필 때가 비슷하게 나타나요.",
-          rhythm: "약속대로 처리한 일도, 그 아이 사정을 먼저 들은 일도 있습니다.",
+          headline: "공통 기준과 개별 사정을 함께 살펴요",
+          summary: "모두에게 필요한 기준을 세우면서도, 아이마다 다른 형편을 판단에 함께 담아요.",
+          rhythm: "먼저 약속을 확인한 뒤 그 아이의 사정을 듣고 적용 방법을 조정합니다.",
         },
         {
           intensityBandId: "balanced",
@@ -394,9 +389,9 @@ export const resultNarrative = {
         {
           intensityBandId: "balanced",
           direction: "balanced",
-          headline: "미리 정할 때와 그때 정할 때가 반반이에요",
-          summary: "시작 전에 순서를 정해 둘 때와 하면서 맞출 때가 비슷하게 나타나요.",
-          rhythm: "짜 둔 대로 간 주도 있고, 그날 상황에 맞춰 바꾼 주도 있습니다.",
+          headline: "계획을 세우고 현장에서 유연하게 조정해요",
+          summary: "시작 전에 순서를 잡고, 교실 반응에 맞춰 방법을 바꾸는 흐름이 함께 나타나요.",
+          rhythm: "주간 계획을 기준으로 움직이다가, 그날 상황에 맞춰 순서와 방법을 다시 맞춥니다.",
         },
         {
           intensityBandId: "balanced",

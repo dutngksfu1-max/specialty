@@ -78,7 +78,7 @@ describe("정확히 0점일 때는 한쪽으로 기울여 말하지 않습니다
     for (const axis of result.axes) {
       const joined = `${axis.reading.headline} ${axis.reading.summary} ${axis.reading.rhythm}`;
       expect(joined, String(axis.axisId)).not.toMatch(/더 가까|쪽에 가까/);
-      expect(joined, String(axis.axisId)).toMatch(/비슷하게/);
+      expect(joined, String(axis.axisId)).toMatch(/두 방식|고르게|함께/);
     }
   });
 

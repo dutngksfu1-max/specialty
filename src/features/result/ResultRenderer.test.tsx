@@ -486,11 +486,9 @@ describe("관점 카드 정렬 (DEC-055 · DEC-062)", () => {
 });
 
 /**
- * 0점을 '진짜 대칭'과 '읽기 어려움'으로 나눠 보여 줍니다 (DEC-053)
- *
- * 답을 고르지 않은 분께 "두 방식을 비슷하게 쓰시네요"라고 말하지 않기 위한 가드입니다.
+ * 응답 분화 신호는 보존하되, 결과 카드는 빈 판정 대신 두 관점의 조합을 보여 줍니다 (DEC-065).
  */
-describe("응답이 갈리지 않은 축 표시 (DEC-053)", () => {
+describe("두 관점이 고르게 나타난 축 표시 (DEC-065)", () => {
   function renderWithUnreadableAxes(): string {
     const found = staticAssessmentCatalog.findBySlug("teacher-style");
     if (!found.ok) throw new Error("테스트용 검사를 불러오지 못했습니다.");
@@ -509,6 +507,7 @@ describe("응답이 갈리지 않은 축 표시 (DEC-053)", () => {
           normalized: 0.5,
           direction: "positive" as const,
           isBalanced: true,
+          directionSource: "unresolved" as const,
           intensityBandId: "balanced",
         })),
       },
@@ -540,22 +539,36 @@ describe("응답이 갈리지 않은 축 표시 (DEC-053)", () => {
     );
   }
 
-  it("응답이 갈리지 않은 축은 '균형'이 아니라 읽기 어려웠다고 알려 줍니다", () => {
+  it("응답이 갈리지 않은 축도 다시 검사를 권하지 않고 축별 조합 서술을 보여 줍니다", () => {
     const markup = renderWithUnreadableAxes();
-    const spec = staticAssessmentCatalog.findBySlug("teacher-style");
-    if (!spec.ok) throw new Error("검사를 불러오지 못했습니다.");
-    const label = spec.value.resultNarrative?.unreadableAxisLabel;
-    if (label === undefined) throw new Error("읽기 어려움 문구가 없습니다.");
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok || found.value.resultNarrative === undefined) {
+      throw new Error("결과 서술을 불러오지 못했습니다.");
+    }
 
-    expect(markup).toContain(label);
-    expect(markup).not.toContain("균형 관점");
+    expect(markup).not.toContain("읽기 어려움");
+    expect(markup).not.toContain("다시 검사하실 때");
+    expect(markup).toContain("두 관점이 고르게 나타남");
+
+    for (const axis of found.value.resultNarrative.axes) {
+      const hybrid = axis.readings.find(
+        (reading) =>
+          reading.intensityBandId === "balanced" && reading.direction === "balanced",
+      );
+      if (hybrid === undefined) throw new Error("고른 관점 서술이 없습니다.");
+
+      expect(markup, String(axis.axisId)).toContain(hybrid.headline);
+      expect(markup, String(axis.axisId)).toContain(hybrid.summary);
+      expect(markup, String(axis.axisId)).toContain(hybrid.rhythm);
+    }
   });
 
-  it("같은 0점이어도 응답이 갈렸으면 균형으로 보여 줍니다", () => {
+  it("응답이 갈린 0점도 같은 고른 관점 문법으로 보여 줍니다", () => {
     // signals 없이 그리면 예전처럼 전부 균형입니다 — 응답을 지운 뒤에도 결과가 깨지면 안 됩니다.
     const markup = renderBalancedResult();
 
-    expect(markup).toContain("균형 관점");
+    expect(markup).toContain("두 관점이 고르게 나타남");
+    expect(markup).not.toContain("읽기 어려움");
   });
 });
 

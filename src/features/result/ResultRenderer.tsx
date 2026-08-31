@@ -497,6 +497,10 @@ function axisCardMeta(
   // 문구는 콘텐츠가 소유합니다. 콘텐츠가 주지 않으면 예전처럼 균형으로 다룹니다 (DEC-053).
   const showsUnreadable =
     isUnreadable && unreadableLabel !== undefined && unreadableNote !== undefined;
+  const balancedPoleLabel =
+    axis === undefined
+      ? undefined
+      : `${axis.positive.shortLabel} · ${axis.negative.shortLabel}`;
   const side = item.reading.direction === "negative" ? "negative" : "positive";
   const pole = side === "positive" ? axis?.positive : axis?.negative;
   const rankIndex = ranking.ordered.findIndex((candidate) => candidate.axisId === item.axisId);
@@ -513,11 +517,15 @@ function axisCardMeta(
               .filter((code): code is string => code !== undefined)
               .join(definition.typeCode.balancedSeparator)
           : pole?.code,
-    poleLabel: showsUnreadable ? unreadableLabel : isBalanced ? "균형" : pole?.shortLabel,
+    poleLabel: showsUnreadable
+      ? unreadableLabel
+      : isBalanced
+        ? balancedPoleLabel
+        : pole?.shortLabel,
     badge: showsUnreadable
       ? unreadableLabel
       : isBalanced
-        ? "균형 관점"
+        ? "두 관점이 고르게 나타남"
         : isPrimary
           ? "가장 도드라짐"
           : isSharedLead
@@ -699,7 +707,7 @@ function SummaryView({
           네 관점 한눈에
         </h2>
         <p className="mt-2 max-w-prose text-body text-foreground-muted">
-          각 관점에서 어느 쪽에 얼마나 가까운지예요.
+          한쪽으로 기우는지, 두 방식이 고르게 나타나는지 관점별로 보여 드려요.
         </p>
         <div className="mt-5">
           <AxisCardGrid
