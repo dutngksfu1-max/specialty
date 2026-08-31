@@ -269,11 +269,71 @@ async function waitForImages(root: HTMLElement): Promise<void> {
 }
 
 /**
- * 노드를 화면에 보이는 그대로 PNG data URL로 만듭니다.
+ * 페이지를 나눠도 되는 자리를 찾기 위한 **덩어리** 하나입니다 (DEC-067).
+ *
+ * 좌표는 캡처한 그림의 위쪽을 0으로 본 CSS px입니다.
+ */
+export interface PrintBlock {
+  readonly top: number;
+  readonly bottom: number;
+}
+
+/**
+ * 종이에 나눠 담을 때 **쪼개면 안 되는 덩어리**를 모읍니다 (DEC-067).
+ *
+ * 위에서부터 훑어 내려가다가, 한 페이지에 들어갈 만큼 작아지면 거기서 멈추고
+ * 그 요소를 덩어리 하나로 봅니다. 카드 한 장·문단 하나가 여기에 걸립니다.
+ * 한 페이지보다 큰 것(장 전체 등)은 더 들어가 봅니다 — 안 그러면 나눌 자리가 없어집니다.
+ *
+ * 이렇게 모은 덩어리 **사이의 빈 곳**만 페이지 경계로 씁니다. 그래서 카드가
+ * 반으로 잘리거나 글줄 한가운데가 끊기지 않습니다.
+ */
+function collectPrintBlocks(root: HTMLElement, maxBlockHeight: number): PrintBlock[] {
+  const rootTop = root.getBoundingClientRect().top;
+  const blocks: PrintBlock[] = [];
+
+  function visit(element: HTMLElement): void {
+    const rect = element.getBoundingClientRect();
+    if (rect.height <= 0) return;
+
+    if (rect.height <= maxBlockHeight) {
+      blocks.push({ top: rect.top - rootTop, bottom: rect.bottom - rootTop });
+      return;
+    }
+
+    // 한 페이지보다 큽니다. 안으로 들어가 더 작은 덩어리를 찾습니다.
+    const children = Array.from(element.children).filter(
+      (child): child is HTMLElement => child instanceof HTMLElement,
+    );
+    if (children.length === 0) return;
+    for (const child of children) visit(child);
+  }
+
+  visit(root);
+  return blocks;
+}
+
+/** 캡처 결과와, 그 그림을 종이에 나눠 담을 때 쓸 정보입니다 (DEC-067). */
+export interface CapturedNode {
+  readonly dataUrl: string;
+  /** 그림의 CSS px 크기 (실제 픽셀은 여기에 배율이 곱해집니다) */
+  readonly width: number;
+  readonly height: number;
+  /** 쪼개면 안 되는 덩어리들. 비어 있으면 아무 데서나 잘라도 됩니다 */
+  readonly blocks: readonly PrintBlock[];
+}
+
+/**
+ * 노드를 화면에 보이는 그대로 캡처합니다.
+ *
+ * `maxBlockHeight`를 주면 종이에 나눠 담을 때 쓸 덩어리 정보도 함께 돌려줍니다 (DEC-067).
  *
  * 실패는 예외로 올라갑니다. 부르는 쪽이 사용자에게 보여 줄 문구를 정합니다.
  */
-export async function captureNodeAsPng(node: HTMLElement): Promise<string> {
+export async function captureNode(
+  node: HTMLElement,
+  { maxBlockHeight }: { readonly maxBlockHeight?: number } = {},
+): Promise<CapturedNode> {
   // ① 글꼴이 준비되기 전에 재면 화면과 다른 폭으로 줄이 나뉩니다.
   if (typeof document !== "undefined" && "fonts" in document) {
     await document.fonts.ready;
@@ -301,6 +361,10 @@ export async function captureNodeAsPng(node: HTMLElement): Promise<string> {
     const width = Math.ceil(frozen.width);
     const height = Math.ceil(frozen.height);
 
+    // ④ 크기를 확정한 **뒤에** 덩어리를 잽니다. 확정 전에 재면 종이 위 위치와 어긋납니다.
+    const blocks =
+      maxBlockHeight === undefined ? [] : collectPrintBlocks(clone, maxBlockHeight);
+
     const options = {
       pixelRatio: PIXEL_RATIO,
       cacheBust: false,
@@ -313,12 +377,18 @@ export async function captureNodeAsPng(node: HTMLElement): Promise<string> {
       style: { width: `${width}px`, margin: "0" },
     };
 
-    // ④ 첫 번째 결과는 버립니다. 이때 SVG 안의 글꼴이 실제로 물립니다.
+    // ⑤ 첫 번째 결과는 버립니다. 이때 SVG 안의 글꼴이 실제로 물립니다.
     await toPng(clone, options);
-    return await toPng(clone, options);
+    const dataUrl = await toPng(clone, options);
+    return { dataUrl, width, height, blocks };
   } finally {
     stage.remove();
   }
+}
+
+/** 그림만 필요할 때 쓰는 짧은 이름입니다 (PNG 저장). */
+export async function captureNodeAsPng(node: HTMLElement): Promise<string> {
+  return (await captureNode(node)).dataUrl;
 }
 
 /**

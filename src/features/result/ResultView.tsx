@@ -107,7 +107,7 @@ export function ResultView({
 
   return (
     <>
-      <main id="main" className="mx-auto max-w-(--container-landing) px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+      <main id="main" className="mx-auto max-w-(--container-landing) px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <ResultRenderer
           definition={definition}
           snapshot={snapshot}
@@ -118,7 +118,7 @@ export function ResultView({
           heroRef={heroRef}
         />
 
-        <section className="mt-14 rounded-lg border border-border bg-surface p-5 sm:p-7 lg:flex lg:items-end lg:justify-between lg:gap-8">
+        <section className="mt-10 rounded-lg border border-border bg-surface p-5 sm:p-6 lg:flex lg:items-end lg:justify-between lg:gap-8">
           <div>
             <p className="text-caption font-semibold text-primary-active">결과 보관</p>
             <h2 className="mt-2 text-h2 text-foreground sm:text-h2-lg">이 결과를 남겨 두세요</h2>

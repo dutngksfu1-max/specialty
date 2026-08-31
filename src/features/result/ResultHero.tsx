@@ -200,7 +200,7 @@ export function ResultHero({
   return (
     <header ref={heroRef} className="assessment-card-deck hero-enter overflow-hidden rounded-(--radius-hero) border border-primary-soft-border bg-primary-soft">
       <div
-        className={`grid min-w-0 items-start gap-8 p-5 sm:p-8 lg:gap-12 lg:p-10 ${artwork === undefined ? "" : "md:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]"}`}
+        className={`grid min-w-0 items-start gap-6 p-5 sm:p-6 lg:gap-10 lg:p-8 ${artwork === undefined ? "" : "md:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]"}`}
       >
         <div className="min-w-0">
           <p className="text-caption font-semibold text-primary-active">
@@ -261,7 +261,7 @@ export function ResultHero({
         지금은 관점 카드 한 곳에서만 읽고, Hero에는 네 축을 한 모양으로 겹쳐 보는 지도만 남깁니다.
       */}
       <div className="min-w-0 border-t border-primary-soft-border bg-surface">
-        <section className="min-w-0 p-5 sm:p-8 lg:p-10">
+        <section className="min-w-0 p-5 sm:p-6 lg:p-8">
           <p className="text-caption font-semibold text-accent">밸런스 지도</p>
           <h2 className="mt-2 text-h2 text-foreground sm:text-h2-lg">
             {definition.axes.length}개 관점을 한눈에

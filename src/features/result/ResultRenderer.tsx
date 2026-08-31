@@ -93,7 +93,7 @@ function ChapterHeading({
   readonly description: React.ReactNode;
 }) {
   return (
-    <header className="border-b border-border pb-5">
+    <header className="border-b border-border pb-4">
       <div className="flex items-center gap-3">
         <span
           aria-hidden="true"
@@ -103,7 +103,7 @@ function ChapterHeading({
         </span>
         <h2 className="text-h1 text-foreground sm:text-h1-lg">{title}</h2>
       </div>
-      <p className="mt-3 max-w-prose text-body text-foreground-muted">{description}</p>
+      <p className="mt-2 max-w-prose text-body text-foreground-muted">{description}</p>
     </header>
   );
 }
@@ -179,7 +179,7 @@ function AxisInsightCard({
   return (
     <section
       data-perspective-tone={tone}
-      className={`assessment-perspective-card assessment-perspective-card--${tone} result-axis-card flex h-full min-w-0 flex-col overflow-hidden p-5 sm:p-6`}
+      className={`assessment-perspective-card assessment-perspective-card--${tone} result-axis-card flex h-full min-w-0 flex-col overflow-hidden p-4 sm:p-5`}
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
@@ -211,7 +211,7 @@ function AxisInsightCard({
 
       {unreadableNote === undefined ? (
         <>
-          <h3 className="result-axis-card-title mt-4 text-h3 text-foreground sm:text-h3-lg">
+          <h3 className="result-axis-card-title mt-3 text-h3 text-foreground sm:text-h3-lg">
             {narrative?.reading.headline ?? axis.name}
           </h3>
           {detail && narrative !== undefined && (
@@ -220,7 +220,7 @@ function AxisInsightCard({
             </p>
           )}
 
-          <div className="result-axis-card-chart mt-5 border-t pt-5 md:mt-auto">
+          <div className="result-axis-card-chart mt-4 border-t pt-4 md:mt-auto">
             <AxisBar
               axis={axis}
               score={score}
@@ -229,7 +229,7 @@ function AxisInsightCard({
           </div>
 
           {detail && narrative !== undefined && (
-            <p className="result-axis-card-scene mt-4 text-body-sm text-foreground-muted">
+            <p className="result-axis-card-scene mt-3 text-body-sm text-foreground-muted">
               {narrative.reading.rhythm}
             </p>
           )}
@@ -266,7 +266,7 @@ function ContextSplitCard({
   } as CSSProperties;
 
   return (
-    <section className="assessment-card min-w-0 p-5 sm:p-6">
+    <section className="assessment-card min-w-0 p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-caption font-semibold text-primary-active">상황 차이</p>
@@ -469,7 +469,7 @@ function ActionPanel({
   readonly children: ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-border bg-surface p-5 sm:p-6">
+    <section className="rounded-lg border border-border bg-surface p-4 sm:p-5">
       <Icon name={icon} className="text-accent" />
       <h3 className="mt-4 text-h3 text-foreground">{title}</h3>
       <p className="mt-2 text-body-sm text-foreground-muted">{description}</p>
@@ -906,7 +906,7 @@ export function ResultRenderer({
           />
         </TabPanel>
 
-        <TabPanel value="detail" className="mt-8">
+        <TabPanel value="detail" className="mt-6">
           <div ref={detailStartRef} tabIndex={-1} data-result-view="detail">
             <div className="grid gap-8 lg:grid-cols-4">
               <div className="lg:col-start-4 lg:row-start-1">
@@ -940,7 +940,7 @@ export function ResultRenderer({
                   </div>
 
                   {signals !== undefined && signals.contextSplits.length > 0 && (
-                    <section className="mt-10">
+                    <section className="mt-8">
                       <h3 className="text-h3 text-foreground sm:text-h3-lg">상황에 따라 달라지는 점</h3>
                       <p className="mt-2 max-w-prose text-body text-foreground-muted">
                         같은 관점인데 수업일 때와 회의일 때 답이 달랐던 곳이에요. 평균과 문항 수를 함께 봐 주세요.
@@ -963,7 +963,7 @@ export function ResultRenderer({
                   )}
 
                   {topCombinations.length > 0 && (
-                    <section className="mt-10">
+                    <section className="mt-8">
                       <h3 className="text-h3 text-foreground sm:text-h3-lg">두 관점이 겹칠 때</h3>
                       <p className="mt-2 max-w-prose text-body text-foreground-muted">
                         지금 가장 도드라진 두 관점이 수업과 업무에서 어떻게 만나는지 적었습니다.
@@ -980,7 +980,7 @@ export function ResultRenderer({
                           return (
                             <section
                               key={combination.id}
-                              className="assessment-card min-w-0 p-5 sm:p-6"
+                              className="assessment-card min-w-0 p-4 sm:p-5"
                             >
                               <p className="text-caption font-semibold text-primary-active">두 관점이 만날 때</p>
                               <h4 className="mt-2 text-h3 text-foreground">{combination.title}</h4>
@@ -1001,7 +1001,7 @@ export function ResultRenderer({
                   )}
                 </section>
 
-                <section id="result-scenes" className="mt-16 scroll-mt-28">
+                <section id="result-scenes" className="mt-10 scroll-mt-28">
                   <ChapterHeading
                     number="02"
                     title="교실에서 드러나는 모습"
@@ -1039,7 +1039,7 @@ export function ResultRenderer({
                   </div>
                 </section>
 
-                <section id="result-collaboration" className="mt-16 scroll-mt-28">
+                <section id="result-collaboration" className="mt-10 scroll-mt-28">
                   <ChapterHeading
                     number="03"
                     title="함께 일하는 방식"
@@ -1063,7 +1063,7 @@ export function ResultRenderer({
                   </div>
                 </section>
 
-                <section id="result-next" className="mt-16 scroll-mt-28">
+                <section id="result-next" className="mt-10 scroll-mt-28">
                   <ChapterHeading
                     number="04"
                     title="다음 대화로"
