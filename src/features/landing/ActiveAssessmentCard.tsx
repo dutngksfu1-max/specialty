@@ -13,6 +13,7 @@ import { startAssessment } from "@/application/assessment/startAssessment";
 import { AssessmentArtwork } from "@/components/ui/AssessmentArtwork";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
+import { emphasizeText } from "@/domain/assessment/result/emphasis";
 import { useAssessmentServices } from "@/features/shared/AssessmentRepositoryProvider";
 import { LandingEntryActionProvider } from "@/features/landing/LandingEntryAction";
 import type { AssessmentPresentation } from "@/lib/assessmentPresentation";
@@ -47,6 +48,28 @@ function ArtworkFallback() {
     <div className="grid aspect-4/3 place-items-center rounded-(--radius-hero) border border-border bg-primary-soft">
       <Icon name="compass" className="size-14 text-primary" />
     </div>
+  );
+}
+
+function EmphasizedDescription({
+  text,
+  terms,
+}: {
+  readonly text: string;
+  readonly terms?: readonly string[];
+}) {
+  return (
+    <>
+      {emphasizeText(text, terms ?? [], 3).map((segment, index) =>
+        segment.emphasized ? (
+          <strong key={index} className="font-semibold text-foreground">
+            {segment.text}
+          </strong>
+        ) : (
+          <span key={index}>{segment.text}</span>
+        ),
+      )}
+    </>
   );
 }
 
@@ -236,12 +259,17 @@ export function ActiveAssessmentCard({
         )}
 
         {featured && assessment.description !== undefined && (
-          <div className="mt-5 max-w-md border-y border-border py-4">
+          <div className="mt-5 max-w-md border-t border-border py-4">
             <p className="flex items-center gap-2 text-caption font-bold tracking-[0.08em] text-accent">
               <Icon name="compass" className="size-4" />
               이런 교직 장면을 살펴봐요
             </p>
-            <p className="mt-3 text-body-sm text-foreground-muted">{assessment.description}</p>
+            <p className="mt-3 text-body-sm text-foreground-muted">
+              <EmphasizedDescription
+                text={assessment.description}
+                terms={assessment.presentation?.descriptionEmphasisTerms}
+              />
+            </p>
           </div>
         )}
 

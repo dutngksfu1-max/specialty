@@ -251,6 +251,7 @@ const presentationSchema = z.object({
     ink: z.enum(PRESENTATION_COLOR_TOKENS),
   }),
   heroArtwork: localArtworkSchema,
+  descriptionEmphasisTerms: z.array(z.string().min(2)).max(3).optional(),
   sectionArtwork: z.array(
     z.object({
       sectionId: z.string().min(1).transform(toSectionId),
@@ -716,6 +717,7 @@ export function parseAssessmentContentPackage(
   const expectedSectionIds = definition.value.sections.map((section) => String(section.id));
   const artworkSectionIds = presentation.sectionArtwork.map((item) => String(item.sectionId));
   const responseScaleGuide = presentation.responseScaleGuide;
+  const descriptionEmphasisTerms = presentation.descriptionEmphasisTerms ?? [];
   const typeArtwork = presentation.typeArtwork;
   const typeArtworkKeys = typeArtwork?.map((item) => String(item.resultKey)) ?? [];
   const resultKeys = definition.value.resultProfiles.map((profile) => String(profile.key));
@@ -726,6 +728,7 @@ export function parseAssessmentContentPackage(
   const responseValues = definition.value.scale.options.map((option) => option.value);
   const guideValues = responseScaleGuide?.map((item) => item.value) ?? [];
   const duplicateGuideValues = findDuplicates(guideValues.map(String));
+  const duplicateDescriptionEmphasisTerms = findDuplicates(descriptionEmphasisTerms);
   const duplicateTypeArtworkKeys = findDuplicates(typeArtworkKeys);
   const missingTypeArtworkKeys = typeArtwork === undefined
     ? []
@@ -749,6 +752,10 @@ export function parseAssessmentContentPackage(
     ? []
     : guideValues.filter((value) => !responseValues.includes(value));
   const forbiddenGuide = responseScaleGuide?.find((item) => hasForbiddenTerm(item.criterion));
+  const forbiddenDescriptionEmphasisTerm = descriptionEmphasisTerms.find(hasForbiddenTerm);
+  const missingDescriptionEmphasisTerm = descriptionEmphasisTerms.find(
+    (term) => !definition.value.description.includes(term),
+  );
 
   const issues = [
     duplicates.length > 0 ? `presentation sectionId가 중복됩니다: ${duplicates.join(", ")}` : "",
@@ -757,6 +764,12 @@ export function parseAssessmentContentPackage(
     duplicateGuideValues.length > 0
       ? `presentation.responseScaleGuide value가 중복됩니다: ${duplicateGuideValues.join(", ")}`
       : "",
+    duplicateDescriptionEmphasisTerms.length > 0
+      ? `presentation.descriptionEmphasisTerms가 중복됩니다: ${duplicateDescriptionEmphasisTerms.join(", ")}`
+      : "",
+    missingDescriptionEmphasisTerm === undefined
+      ? ""
+      : `presentation.descriptionEmphasisTerms가 description에 없는 문구를 가리킵니다: ${missingDescriptionEmphasisTerm}`,
     missingGuideValues.length > 0
       ? `presentation.responseScaleGuide에 빠진 응답값이 있습니다: ${missingGuideValues.join(", ")}`
       : "",
@@ -784,6 +797,9 @@ export function parseAssessmentContentPackage(
     forbiddenGuide === undefined
       ? ""
       : `presentation.responseScaleGuide.${forbiddenGuide.value}에 노출 금지 표현이 있습니다.`,
+    forbiddenDescriptionEmphasisTerm === undefined
+      ? ""
+      : "presentation.descriptionEmphasisTerms에 노출 금지 표현이 있습니다.",
   ].filter(Boolean);
 
   if (issues.length > 0) {
