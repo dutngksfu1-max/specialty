@@ -57,7 +57,6 @@ describe("S3 일관성", () => {
     expect(tornSignals?.bandId).toBe("split");
   });
 });
-
 describe("S4 장면 분화", () => {
   /** 장면 둘, 각 6문항, 장면 안 polarity 3:3 — 비교 조건을 모두 채운 모양 */
   const twoScenes = [
@@ -66,7 +65,7 @@ describe("S4 장면 분화", () => {
   ] as const;
 
   /** polarity를 장면 안에서 3:3으로 맞춘 축 */
-  const balancedAxis = buildDefinition({
+  const mixedPolarityAxis = buildDefinition({
     axes: [
       {
         id: "axis-a",
@@ -78,11 +77,11 @@ describe("S4 장면 분화", () => {
 
   it("장면에 따라 답이 갈리면 격차를 보고합니다", () => {
     // scene-x는 positive 쪽(+2), scene-y는 negative 쪽(-2)으로 답합니다.
-    const responses = respond(balancedAxis, {
+    const responses = respond(mixedPolarityAxis, {
       "axis-a": [5, 5, 5, 1, 1, 1, 1, 1, 1, 5, 5, 5],
     });
 
-    const [split] = computeSignals(balancedAxis, responses).contextSplits;
+    const [split] = computeSignals(mixedPolarityAxis, responses).contextSplits;
     expect(split).toBeDefined();
     expect(split?.high.context).toBe("scene-x");
     expect(split?.low.context).toBe("scene-y");
@@ -95,11 +94,11 @@ describe("S4 장면 분화", () => {
 
   it("장면 차이가 기준(1.5)에 못 미치면 아무 말도 하지 않습니다", () => {
     // 두 장면 모두 같은 방향 — 격차 0
-    const responses = respond(balancedAxis, {
+    const responses = respond(mixedPolarityAxis, {
       "axis-a": [5, 5, 5, 1, 1, 1, 5, 5, 5, 1, 1, 1],
     });
 
-    expect(computeSignals(balancedAxis, responses).contextSplits).toEqual([]);
+    expect(computeSignals(mixedPolarityAxis, responses).contextSplits).toEqual([]);
   });
 
   it("장면당 문항이 3개 미만이면 비교하지 않습니다", () => {
@@ -182,7 +181,7 @@ describe("T2 확신도", () => {
   const definition = oneAxis();
 
   it("일관되고 폭넓게 답했으면 확신도가 높습니다", () => {
-    // aligned 전부 +2 → rawScore 24(균형 아님), steady, wide
+    // aligned 전부 +2 → rawScore 24, steady, wide
     const responses = respond(definition, { "axis-a": [5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 1, 1] });
     const [confidence] = computeSignals(definition, responses).confidence;
 
@@ -194,14 +193,14 @@ describe("T2 확신도", () => {
     const responses = respond(definition, { "axis-a": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3] });
     const [confidence] = computeSignals(definition, responses).confidence;
 
-    // 균형 + 가운데 중심 → 사유 둘 → low
+    // 동점 + 가운데 중심 → 사유 둘 → low
     expect(confidence?.id).toBe("low");
-    expect(confidence?.reasons).toContain("balanced");
+    expect(confidence?.reasons).toContain("tied");
     expect(confidence?.reasons).toContain("centered");
   });
 
   it("답이 갈렸으면 사유에 split이 담깁니다", () => {
-    // 모든 문항에 5 → aligned가 +2/-2로 갈림, rawScore는 0(균형)
+    // 모든 문항에 5 → aligned가 +2/-2로 갈림, rawScore는 0
     const responses = respond(definition, { "axis-a": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5] });
     const [confidence] = computeSignals(definition, responses).confidence;
 
@@ -240,58 +239,5 @@ describe("자료가 모자랄 때", () => {
     const responses = respond(definition, { "axis-a": [5, 4, 3, 2, 1, 5, 1, 2, 3, 4, 5, 1] });
 
     expect(computeSignals(definition, responses)).toEqual(computeSignals(definition, responses));
-  });
-});
-
-/**
- * S6 응답 분화 (DEC-053)
- *
- * 축 점수는 `정방향 − 역방향`이라, 두 묶음에 같은 값을 주면 반드시 0이 됩니다.
- * 그 0을 '균형'이라고 부르면 답을 고르지 않은 사람에게 해석을 지어내게 됩니다.
- */
-describe("응답 분화와 '읽기 어려움' 축 (DEC-053)", () => {
-  it("모든 문항에 같은 값을 찍으면 0점이 되고, 그 축은 균형이 아니라 '읽기 어려움'입니다", () => {
-    const definition = oneAxis();
-    const signals = computeSignals(
-      definition,
-      respond(definition, { "axis-a": [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4] }),
-    );
-
-    expect(signals.differentiation[0]?.isDifferentiated).toBe(false);
-    expect(signals.unreadableAxisIds).toHaveLength(1);
-  });
-
-  it("척도를 넓게 쓴 사람이 0점이면 진짜 대칭입니다 — '읽기 어려움'이 아닙니다", () => {
-    const definition = oneAxis();
-    // 정방향 6문항과 역방향 6문항에 정확히 반대로 답하면 합이 0이 아니라 최대치가 됩니다.
-    // 여기서는 같은 방향 안에서 극단을 섞어 합을 0으로 만듭니다.
-    const signals = computeSignals(
-      definition,
-      respond(definition, { "axis-a": [5, 1, 5, 1, 5, 1, 5, 1, 5, 1, 5, 1] }),
-    );
-
-    expect(signals.differentiation[0]?.isDifferentiated).toBe(true);
-    expect(signals.unreadableAxisIds).toHaveLength(0);
-  });
-
-  it("3과 4만 오간 응답도 분화되지 않은 것으로 봅니다", () => {
-    const definition = oneAxis();
-    const signals = computeSignals(
-      definition,
-      respond(definition, { "axis-a": [3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4] }),
-    );
-
-    expect(signals.differentiation[0]?.isDifferentiated).toBe(false);
-  });
-
-  it("방향이 이미 나온 축은 분화되지 않았어도 '읽기 어려움'이 아닙니다", () => {
-    const definition = oneAxis();
-    // 정방향 6문항 5점 / 역방향 6문항 1점 — 폭은 넓고 점수도 0이 아닙니다.
-    const signals = computeSignals(
-      definition,
-      respond(definition, { "axis-a": [5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 1, 1] }),
-    );
-
-    expect(signals.unreadableAxisIds).toHaveLength(0);
   });
 });

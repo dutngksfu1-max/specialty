@@ -1,5 +1,8 @@
 # PRD — 결과 리포트 v2 「좌표에서만 보이는 장면」
 
+> **보관 문서:** 이 초안의 강도별·중립 상태 결과 계약은 DEC-068로 대체되었습니다.
+> 현재 제품 요구사항은 `docs/PRD.md`, `docs/architecture.md`, `docs/design.md`를 따릅니다.
+
 > 상태: `DRAFT` · 2026-08-20 작성
 > 대상: `teacher-style-v1` 검사의 결과 산출·표현 전면 개정
 > 선행 문서: `AGENTS.md` · `docs/PRD.md` · `docs/decisions.md` (DEC-038 · DEC-045 · DEC-046) · `docs/design.md`

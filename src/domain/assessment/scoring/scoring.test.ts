@@ -65,7 +65,7 @@ describe("architecture.md 5.3 검증 예시", () => {
     expect(axisScore.maxScore).toBe(20);
     expect(axisScore.intensityBandId).toBe("strong");
     expect(axisScore.direction).toBe("positive");
-    expect(axisScore.isBalanced).toBe(false);
+    expect(axisScore.directionSource).toBe("score");
     expect(axisScore.normalized).toBeCloseTo(0.85, 10);
   });
 
@@ -75,11 +75,11 @@ describe("architecture.md 5.3 검증 예시", () => {
     expect(axisScore.rawScore).toBe(-12);
     expect(axisScore.intensityBandId).toBe("clear");
     expect(axisScore.direction).toBe("negative");
-    expect(axisScore.isBalanced).toBe(false);
+    expect(axisScore.directionSource).toBe("score");
     expect(axisScore.normalized).toBeCloseTo(0.2, 10);
   });
 
-  it("예시 C — rawScore 0, 균형, 방향은 defaultPole (DEC-001)", () => {
+  it("예시 C — rawScore 0이면 defaultPole 방향을 사용합니다 (DEC-068)", () => {
     const allPositivePolarity: AxisSpec = {
       id: "axis-a",
       polarities: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -89,22 +89,22 @@ describe("architecture.md 5.3 검증 예시", () => {
     const axisScore = scoreOnly([5, 1, 4, 2, 3, 3, 4, 2, 5, 1], [allPositivePolarity]);
 
     expect(axisScore.rawScore).toBe(0);
-    expect(axisScore.intensityBandId).toBe("balanced");
+    expect(axisScore.intensityBandId).toBe("leaning");
     expect(axisScore.direction).toBe("negative");
-    expect(axisScore.isBalanced).toBe(true);
+    expect(axisScore.directionSource).toBe("default");
     expect(axisScore.normalized).toBeCloseTo(0.5, 10);
   });
 });
 
 describe("강도 구간 경계값 (DEC-002b)", () => {
   const cases = [
-    { label: "0 → 균형", values: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3], raw: 0, band: "balanced" },
-    { label: "4 → 균형", values: [5, 5, 3, 3, 3, 3, 3, 3, 3, 3], raw: 4, band: "balanced" },
+    { label: "0 → 근소한 차이", values: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3], raw: 0, band: "leaning" },
+    { label: "4 → 근소한 차이", values: [5, 5, 3, 3, 3, 3, 3, 3, 3, 3], raw: 4, band: "leaning" },
     { label: "5 → 뚜렷", values: [5, 5, 4, 3, 3, 3, 3, 3, 3, 3], raw: 5, band: "clear" },
     { label: "12 → 뚜렷", values: [5, 5, 5, 5, 5, 1, 3, 3, 3, 3], raw: 12, band: "clear" },
     { label: "13 → 매우 뚜렷", values: [5, 5, 5, 5, 5, 1, 2, 3, 3, 3], raw: 13, band: "strong" },
     { label: "20 → 매우 뚜렷", values: [5, 5, 5, 5, 5, 1, 1, 1, 1, 1], raw: 20, band: "strong" },
-    { label: "-4 → 균형", values: [1, 1, 3, 3, 3, 3, 3, 3, 3, 3], raw: -4, band: "balanced" },
+    { label: "-4 → 근소한 차이", values: [1, 1, 3, 3, 3, 3, 3, 3, 3, 3], raw: -4, band: "leaning" },
     { label: "-5 → 뚜렷", values: [1, 1, 2, 3, 3, 3, 3, 3, 3, 3], raw: -5, band: "clear" },
     { label: "-12 → 뚜렷", values: [1, 1, 1, 1, 1, 5, 3, 3, 3, 3], raw: -12, band: "clear" },
     { label: "-13 → 매우 뚜렷", values: [1, 1, 1, 1, 1, 5, 4, 3, 3, 3], raw: -13, band: "strong" },
@@ -119,18 +119,18 @@ describe("강도 구간 경계값 (DEC-002b)", () => {
     });
   }
 
-  it("전부 3점이면 축 점수가 0이고 균형입니다 (PRD AC-3)", () => {
+  it("전부 3점이어도 기본 방향으로 결과를 확정합니다 (DEC-068)", () => {
     const axisScore = scoreOnly([3, 3, 3, 3, 3, 3, 3, 3, 3, 3]);
     expect(axisScore.rawScore).toBe(0);
-    expect(axisScore.isBalanced).toBe(true);
+    expect(axisScore.directionSource).toBe("default");
     expect(axisScore.normalized).toBeCloseTo(0.5, 10);
   });
 });
 
 describe("resolveIntensity", () => {
   it("구간 경계는 minAbsScore 이상, maxAbsScore 이하입니다", () => {
-    expect(resolveIntensity(0, standardBands).id).toBe("balanced");
-    expect(resolveIntensity(4, standardBands).id).toBe("balanced");
+    expect(resolveIntensity(0, standardBands).id).toBe("leaning");
+    expect(resolveIntensity(4, standardBands).id).toBe("leaning");
     expect(resolveIntensity(5, standardBands).id).toBe("clear");
     expect(resolveIntensity(12, standardBands).id).toBe("clear");
     expect(resolveIntensity(13, standardBands).id).toBe("strong");
@@ -186,7 +186,10 @@ describe("결과 키 해석", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.axisScores.map((axisScore) => axisScore.isBalanced)).toEqual([true, true]);
+    expect(result.value.axisScores.map((axisScore) => axisScore.directionSource)).toEqual([
+      "default",
+      "default",
+    ]);
     expect(result.value.axisScores.map((axisScore) => axisScore.direction)).toEqual([
       "positive",
       "negative",
@@ -212,7 +215,6 @@ describe("결과 키 해석", () => {
         maxScore: 20,
         normalized: 0.675,
         direction: "positive",
-        isBalanced: false,
         directionSource: "score",
         intensityBandId: "clear",
       },

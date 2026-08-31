@@ -1,223 +1,101 @@
 import { describe, expect, it } from "vitest";
 
-import type {
-  AssessmentAxis,
-  IntensityBands,
-  PoleSide,
-  TypeCodeSpec,
-} from "@/domain/assessment/model/definition";
+import type { AssessmentAxis, TypeCodeSpec } from "@/domain/assessment/model/definition";
 import { buildTypeCode } from "@/domain/assessment/result/typeCode";
 import type { AxisScore } from "@/domain/assessment/scoring/score";
 import { toAxisId } from "@/domain/shared/ids";
-import type { AxisId } from "@/domain/shared/ids";
 
-/**
- * 4렌즈 코드 조립 테스트 (DEC-049)
- *
- * 여기서 지키려는 것은 하나입니다 — **엔진이 글자를 모른다**는 것.
- * 그래서 이 파일의 글자는 실제 콘텐츠와 일부러 다르게 두었고,
- * 마지막 describe에서만 실제 콘텐츠 패키지의 글자를 확인합니다.
- */
+const bands = [{ id: "leaning", label: "근소한 차이", minAbsScore: 0, maxAbsScore: 20 }] as const;
 
-const bands: IntensityBands = [
-  { id: "balanced", label: "균형", minAbsScore: 0, maxAbsScore: 5, directional: false },
-  { id: "clear", label: "뚜렷", minAbsScore: 6, maxAbsScore: 24, directional: true },
-];
-
-function axis(id: string, positiveCode: string, negativeCode: string): AssessmentAxis {
-  return {
-    id: toAxisId(id),
-    name: `${id} 축`,
-    positive: {
-      side: "positive",
-      label: `${id} 양극`,
-      shortLabel: `${id}-플러스`,
-      description: "설명",
-      code: positiveCode,
-      crosswalkCode: "X",
-    },
-    negative: {
-      side: "negative",
-      label: `${id} 음극`,
-      shortLabel: `${id}-마이너스`,
-      description: "설명",
-      code: negativeCode,
-      crosswalkCode: "Z",
-    },
+const axes: readonly AssessmentAxis[] = [
+  {
+    id: toAxisId("a"),
+    name: "첫 관점",
+    positive: { side: "positive", label: "첫 정방향", shortLabel: "정방향", description: "설명", code: "A", crosswalkCode: "X" },
+    negative: { side: "negative", label: "첫 역방향", shortLabel: "역방향", description: "설명", code: "B", crosswalkCode: "Y" },
     defaultPole: "positive",
     intensityBands: bands,
-  };
-}
-
-function score(id: string, rawScore: number): AxisScore {
-  const direction: PoleSide = rawScore >= 0 ? "positive" : "negative";
-  return {
-    axisId: toAxisId(id),
-    rawScore,
-    minScore: -24,
-    maxScore: 24,
-    normalized: (rawScore + 24) / 48,
-    direction,
-    isBalanced: rawScore === 0,
-    directionSource: rawScore === 0 ? "unresolved" : "score",
-    intensityBandId: "clear",
-  };
-}
+  },
+  {
+    id: toAxisId("b"),
+    name: "둘째 관점",
+    positive: { side: "positive", label: "둘째 정방향", shortLabel: "정방향", description: "설명", code: "C", crosswalkCode: "Z" },
+    negative: { side: "negative", label: "둘째 역방향", shortLabel: "역방향", description: "설명", code: "D", crosswalkCode: "Q" },
+    defaultPole: "negative",
+    intensityBands: bands,
+  },
+];
 
 const spec: TypeCodeSpec = {
-  label: "테스트 코드",
-  balancedSeparator: "/",
-  balancedNote: "이 자리는 균형입니다.",
+  label: "검사 코드",
   crosswalk: {
-    systemLabel: "다른 검사",
-    selfReportedLabel: "직접 입력",
+    systemLabel: "환산 코드",
+    selfReportedLabel: "입력 코드",
     selfReportedInputLabel: "내 코드",
-    disclaimer: "근사입니다.",
-    unavailableNote: "환산하지 않았습니다.",
+    disclaimer: "근사 표기입니다.",
+    unavailableNote: "환산할 수 없습니다.",
   },
 };
 
-const twoAxes = [axis("a", "P", "Q"), axis("b", "R", "S")];
-const none = new Set<AxisId>();
+function score(axisId: string, direction: "positive" | "negative", rawScore = 8): AxisScore {
+  return {
+    axisId: toAxisId(axisId),
+    rawScore,
+    minScore: -20,
+    maxScore: 20,
+    normalized: (rawScore + 20) / 40,
+    direction,
+    directionSource: rawScore === 0 ? "default" : "score",
+    intensityBandId: "leaning",
+  };
+}
 
-describe("buildTypeCode", () => {
-  it("축 순서대로 극 글자를 이어 붙입니다", () => {
-    const result = buildTypeCode(twoAxes, [score("a", 12), score("b", -12)], none, spec);
+describe("유형 코드 조립 (DEC-068)", () => {
+  it("축 방향마다 글자 하나를 이어 붙입니다", () => {
+    const result = buildTypeCode(axes, [score("a", "positive"), score("b", "negative", -8)], spec);
 
-    expect(result?.code).toBe("PS");
-    expect(result?.hasBalancedSlot).toBe(false);
-  });
-
-  it("자리마다 어느 극인지 함께 돌려줍니다 — 글자만 크게 띄우지 않기 위해서입니다", () => {
-    const result = buildTypeCode(twoAxes, [score("a", 12), score("b", -12)], none, spec);
-
+    expect(result?.code).toBe("AD");
     expect(result?.slots).toEqual([
-      {
-        axisId: toAxisId("a"),
-        letters: ["P"],
-        poleSide: "positive",
-        poleLabels: ["a-플러스"],
-        isBalanced: false,
-      },
-      {
-        axisId: toAxisId("b"),
-        letters: ["S"],
-        poleSide: "negative",
-        poleLabels: ["b-마이너스"],
-        isBalanced: false,
-      },
+      { axisId: toAxisId("a"), letter: "A", poleSide: "positive", poleLabel: "정방향" },
+      { axisId: toAxisId("b"), letter: "D", poleSide: "negative", poleLabel: "역방향" },
     ]);
+    expect(result?.crosswalkCode).toBe("XQ");
   });
 
-  it("균형 자리는 비우지 않고 두 극의 글자를 함께 적습니다 (DEC-064)", () => {
-    const balanced = new Set([toAxisId("b")]);
-    const result = buildTypeCode(twoAxes, [score("a", 12), score("b", 3)], balanced, spec);
+  it("원점수가 같아도 채점이 정한 방향의 글자 하나를 사용합니다", () => {
+    const result = buildTypeCode(axes, [score("a", "positive", 0), score("b", "negative", 0)], spec);
 
-    expect(result?.code).toBe("PR/S");
-    expect(result?.hasBalancedSlot).toBe(true);
-    expect(result?.slots[1]).toMatchObject({
-      letters: ["R", "S"],
-      // 두 글자를 적어도 어느 한쪽으로 단정하지는 않습니다 (DEC-046).
-      poleSide: null,
-      poleLabels: ["b-플러스", "b-마이너스"],
-      isBalanced: true,
-    });
+    expect(result?.code).toBe("AD");
+    expect(result?.slots.every((slot) => slot.letter.length === 1)).toBe(true);
   });
 
-  it("균형 판정은 rawScore가 아니라 넘겨받은 집합을 따릅니다", () => {
-    // rawScore 3은 0이 아니라 isBalanced=false지만, 균형 **구간**에는 들어갑니다.
-    // 구간 판정은 resolveResultNarrative가 하므로 여기서 다시 계산하지 않습니다.
-    const raw = score("b", 3);
-    expect(raw.isBalanced).toBe(false);
-
-    const result = buildTypeCode(twoAxes, [score("a", 12), raw], new Set([toAxisId("b")]), spec);
-    expect(result?.slots[1]?.isBalanced).toBe(true);
+  it("규격이나 축이 없으면 코드를 만들지 않습니다", () => {
+    expect(buildTypeCode(axes, [score("a", "positive"), score("b", "positive")], undefined)).toBeNull();
+    expect(buildTypeCode([], [], spec)).toBeNull();
   });
 
-  it("축이 2개든 5개든 그대로 동작합니다 — 4를 하드코딩하지 않습니다 (AGENTS.md 1.3)", () => {
-    const five = ["a", "b", "c", "d", "e"].map((id) => axis(id, "P", "Q"));
+  it("축 점수나 극 글자가 빠지면 반쪽짜리 코드를 만들지 않습니다", () => {
+    expect(buildTypeCode(axes, [score("a", "positive")], spec)).toBeNull();
+
+    const withoutCode: readonly AssessmentAxis[] = [
+      { ...axes[0]!, positive: { ...axes[0]!.positive, code: undefined } },
+      axes[1]!,
+    ];
+    expect(buildTypeCode(withoutCode, [score("a", "positive"), score("b", "positive")], spec)).toBeNull();
+  });
+
+  it("환산 글자가 하나라도 빠지면 주 코드는 유지하고 환산만 생략합니다", () => {
+    const withoutCrosswalk: readonly AssessmentAxis[] = [
+      { ...axes[0]!, positive: { ...axes[0]!.positive, crosswalkCode: undefined } },
+      axes[1]!,
+    ];
     const result = buildTypeCode(
-      five,
-      five.map((item) => score(String(item.id), 10)),
-      none,
-      spec,
-    );
-
-    expect(result?.code).toBe("PPPPP");
-    expect(result?.slots).toHaveLength(5);
-  });
-});
-
-describe("buildTypeCode — 코드를 만들지 않는 경우", () => {
-  it("spec이 없으면 null입니다. 코드 표기를 원하지 않는 검사도 있습니다", () => {
-    expect(buildTypeCode(twoAxes, [score("a", 12), score("b", -12)], none, undefined)).toBeNull();
-  });
-
-  it("극에 code가 없으면 null입니다. 반쪽짜리 코드를 만들지 않습니다", () => {
-    const noCode: AssessmentAxis = {
-      ...twoAxes[0]!,
-      positive: { ...twoAxes[0]!.positive, code: undefined },
-    };
-
-    expect(buildTypeCode([noCode], [score("a", 12)], none, spec)).toBeNull();
-  });
-
-  it("축과 점수가 어긋나면 null입니다. 틀린 코드보다 없는 코드가 낫습니다", () => {
-    expect(buildTypeCode(twoAxes, [score("a", 12)], none, spec)).toBeNull();
-  });
-});
-
-describe("buildTypeCode — 환산 후보 (DEC-064)", () => {
-  it("모든 자리가 방향을 가지면 후보가 하나입니다", () => {
-    const result = buildTypeCode(twoAxes, [score("a", 12), score("b", -12)], none, spec);
-
-    expect(result?.crosswalkCodes).toEqual(["XZ"]);
-    expect(result?.crosswalkTruncated).toBe(false);
-  });
-
-  it("균형 자리가 있으면 그 자리의 두 글자를 모두 펼쳐 후보를 만듭니다", () => {
-    // 예전에는 균형이 하나라도 있으면 환산을 통째로 포기했습니다 (DEC-046).
-    // 이제는 "어느 쪽으로도 읽힐 수 있다"를 후보 나열로 보여 줍니다.
-    const result = buildTypeCode(
-      twoAxes,
-      [score("a", 12), score("b", 3)],
-      new Set([toAxisId("b")]),
-      spec,
-    );
-
-    expect(result?.crosswalkCodes).toEqual(["XX", "XZ"]);
-    expect(result?.crosswalkTruncated).toBe(false);
-  });
-
-  it("후보가 상한을 넘으면 잘라 보여 주지 않고 아예 나열하지 않습니다", () => {
-    // 반쯤 잘라 보여 주면 나머지가 없는 것처럼 보입니다. 그래서 전부 아니면 전무입니다.
-    const three = ["a", "b", "c"].map((id) => axis(id, "P", "Q"));
-    const capped: TypeCodeSpec = {
-      ...spec,
-      crosswalk: { ...spec.crosswalk!, maxCandidates: 4 },
-    };
-    const result = buildTypeCode(
-      three,
-      three.map((item) => score(String(item.id), 0)),
-      new Set(three.map((item) => item.id)),
-      capped,
-    );
-
-    expect(result?.crosswalkCodes).toEqual([]);
-    expect(result?.crosswalkTruncated).toBe(true);
-  });
-
-  it("콘텐츠가 crosswalk 규격을 주지 않으면 환산하지 않습니다", () => {
-    const withoutCrosswalk: TypeCodeSpec = { ...spec, crosswalk: undefined };
-    const result = buildTypeCode(
-      twoAxes,
-      [score("a", 12), score("b", -12)],
-      none,
       withoutCrosswalk,
+      [score("a", "positive"), score("b", "positive")],
+      spec,
     );
 
-    expect(result?.code).toBe("PS");
-    expect(result?.crosswalkCodes).toEqual([]);
-    expect(result?.crosswalkTruncated).toBe(false);
+    expect(result?.code).toBe("AC");
+    expect(result?.crosswalkCode).toBeNull();
   });
 });

@@ -66,7 +66,6 @@ export const teacherStylePresentation = {
     { resultKey: "nnnp", artwork: characterArtwork("docm") },
     { resultKey: "nnnn", artwork: characterArtwork("docl") },
   ],
-  balancedArtwork: characterArtwork("balanced"),
   responseScaleGuide: [
     {
       value: 1,

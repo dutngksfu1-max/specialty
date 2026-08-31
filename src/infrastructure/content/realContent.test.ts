@@ -45,31 +45,12 @@ function allVisibleText(): readonly string[] {
     ...(definition.resultNarrative === undefined
       ? []
       : [
-          definition.resultNarrative.balancedTitle,
-          definition.resultNarrative.balancedOneLiner,
-          definition.resultNarrative.balancedAxisNote,
           definition.resultNarrative.scopeNote,
-          ...definition.resultNarrative.balancedGuidance.shiningMoments.flatMap((note) => [
-            note.scene,
-            note.text,
-          ]),
-          ...definition.resultNarrative.balancedGuidance.underPressure.flatMap((note) => [
-            note.scene,
-            note.text,
-          ]),
-          ...definition.resultNarrative.balancedGuidance.withColleagues.flatMap((note) => [
-            note.scene,
-            note.text,
-          ]),
-          ...definition.resultNarrative.balancedGuidance.collaboration.naturalFit,
-          ...definition.resultNarrative.balancedGuidance.collaboration.needsTuning,
-          ...definition.resultNarrative.balancedGuidance.nextSteps,
-          ...definition.resultNarrative.balancedGuidance.talkingPoints,
           ...definition.resultNarrative.axes.flatMap((axis) =>
             axis.readings.flatMap((reading) => [
               reading.headline,
               reading.summary,
-              reading.rhythm,
+              reading.scene,
             ]),
           ),
         ]),
@@ -265,15 +246,12 @@ describe("문항 작성 규칙 (5.2)", () => {
  * 감사 문서를 함께 갱신하지 않고 지나갈 수 없습니다.
  */
 /**
- * 언어 규율 — 강도가 확신을 올리지 않습니다 (docs/PRD-result-v2.md 6.3)
+ * 결과 언어 규율 — 방향 설명과 기울기 표시를 분리합니다 (DEC-068).
  *
- * 5구간을 검증 데이터 없이 쓸 수 있는 근거가 바로 이 규율입니다.
- * 구간이 올라가면 **몇 개의 장면에서 보이는가**가 달라질 뿐,
- * **얼마나 맞는가**를 더 세게 주장하지 않습니다.
- *
- * 사람이 문구를 고칠 때 조용히 무너지기 쉬운 규칙이라 기계가 지킵니다.
+ * 점수 차이는 막대가 맡고, 문장은 선택된 방향의 행동을 곧바로 설명합니다.
+ * 같은 방향이라면 점수 차이와 무관하게 같은 문장을 사용해야 합니다.
  */
-describe("언어 규율 (DEC-047)", () => {
+describe("결과 언어 규율 (DEC-068)", () => {
   const narrative = definition.resultNarrative;
   if (narrative === undefined) throw new Error("결과 서술이 없습니다.");
 
@@ -282,93 +260,34 @@ describe("언어 규율 (DEC-047)", () => {
   );
 
   it("확신을 끌어올리는 표현을 쓰지 않습니다", () => {
-    // "매우 뚜렷해요" 같은 표현은 강도를 확신으로 바꿔 읽게 만듭니다.
     const forbidden = /확실히|틀림없이|분명히 그렇|매우 뚜렷해|반드시|당연히/;
 
     for (const { axisId, reading } of allReadings) {
-      for (const text of [reading.headline, reading.summary, reading.rhythm]) {
-        expect(text, `${axisId}/${reading.intensityBandId}: ${text}`).not.toMatch(forbidden);
+      for (const text of [reading.headline, reading.summary, reading.scene]) {
+        expect(text, `${axisId}/${reading.direction}: ${text}`).not.toMatch(forbidden);
       }
     }
   });
 
-  it("높은 구간일수록 더 자주·더 넓게 말합니다", () => {
-    /*
-      구간마다 '얼마나 자주 그런가'를 가리키는 표현이 있어야 합니다.
-      예전에는 '어떤 장면 / 여러 장면 / 장면이 바뀌어도 / 대부분의 장면'이었는데,
-      '장면'이 선생님이 평소 쓰는 말이 아니라 읽다가 한 번 멈추게 했습니다 (DEC-062 2차).
-      지금은 가끔 → 자주 → 상황이 달라져도 → 거의 늘 로 읽습니다.
-    */
-    const scopeWords: Readonly<Record<string, RegExp>> = {
-      leaning: /가끔/,
-      clear: /자주/,
-      strong: /상황이 달라져도/,
-      defining: /거의 늘/,
-    };
-
-    for (const { axisId, reading } of allReadings) {
-      const pattern = scopeWords[reading.intensityBandId];
-      if (pattern === undefined) continue;
-
-      const joined = `${reading.headline} ${reading.summary} ${reading.rhythm}`;
-      expect(joined, `${axisId}/${reading.intensityBandId}`).toMatch(pattern);
-    }
-  });
-
-  it("균형 구간은 방향을 단정하지 않습니다", () => {
-    const balanced = allReadings.filter((item) => item.reading.intensityBandId === "balanced");
-    expect(balanced.length).toBeGreaterThan(0);
-
-    for (const { axisId, reading } of balanced) {
-      const joined = `${reading.headline} ${reading.summary} ${reading.rhythm}`;
-      // 두 특징이 고르게 또는 함께 나타난다고 밝혀, 한쪽으로 확정하지 않았음을 드러냅니다.
-      expect(joined, `${axisId}/balanced: ${joined}`).toMatch(/두 방식|고르게|함께/);
-    }
-  });
-
-  /**
-   * 방향이 반대인데 문구가 같으면, 읽는 사람은 자기가 어느 쪽인지 알 수 없습니다.
-   * 특히 `summary`는 결과 상단 한 줄 설명이라 방향이 반드시 드러나야 합니다.
-   */
-  it("같은 구간에서 방향이 다르면 문구도 다릅니다", () => {
+  it("축마다 양쪽 방향을 하나씩만 설명합니다", () => {
     for (const axis of narrative.axes) {
-      const byBand = new Map<string, { headline: string; summary: string; rhythm: string }[]>();
-      for (const reading of axis.readings) {
-        if (reading.direction === "balanced") continue;
-        byBand.set(reading.intensityBandId, [
-          ...(byBand.get(reading.intensityBandId) ?? []),
-          reading,
-        ]);
-      }
+      expect(axis.readings.map((reading) => reading.direction).sort()).toEqual([
+        "negative",
+        "positive",
+      ]);
+    }
+  });
 
-      for (const [bandId, readings] of byBand) {
-        for (const field of ["headline", "summary", "rhythm"] as const) {
-          const texts = readings.map((reading) => reading[field]);
-          expect(
-            new Set(texts).size,
-            `${String(axis.axisId)}/${bandId}/${field}가 방향과 무관하게 같습니다`,
-          ).toBe(texts.length);
-        }
+  it("반대 방향은 제목, 설명, 예시가 모두 다릅니다", () => {
+    for (const axis of narrative.axes) {
+      for (const field of ["headline", "summary", "scene"] as const) {
+        const values = axis.readings.map((reading) => reading[field]);
+        expect(new Set(values).size, `${String(axis.axisId)}/${field}`).toBe(values.length);
       }
     }
   });
 
-  it("축마다 균형 문구가 서로 다릅니다", () => {
-    // 네 축이 모두 0점이면 같은 문장이 네 번 나옵니다.
-    const headlines = narrative.axes.map(
-      (axis) =>
-        axis.readings.find((reading) => reading.direction === "balanced")?.headline ?? "",
-    );
-
-    expect(new Set(headlines).size).toBe(headlines.length);
-  });
-
-  /**
-   * 제목과 본문이 같은 말을 하면, 읽는 사람은 본문을 건너뜁니다.
-   * 제목은 "어느 쪽으로 얼마나", 본문은 "그래서 실제로 어떤 모습인지"를 맡습니다.
-   */
   it("제목과 본문이 같은 말을 되풀이하지 않습니다", () => {
-    /** 두 글자 단위로 잘라 겹치는 정도를 봅니다. 한국어는 어절이 붙어 있어 이 방식이 안정적입니다. */
     const bigrams = (text: string): ReadonlySet<string> => {
       const letters = text.replace(/[^가-힣]/g, "");
       return new Set(
@@ -385,11 +304,22 @@ describe("언어 규율 (DEC-047)", () => {
         const shared = [...head].filter((gram) => body.has(gram)).length;
         expect(
           shared / head.size,
-          `${String(axis.axisId)}/${reading.intensityBandId}/${reading.direction}
+          `${String(axis.axisId)}/${reading.direction}
   제목: ${reading.headline}
   본문: ${reading.summary}`,
         ).toBeLessThan(0.7);
       }
+    }
+  });
+
+  it("방향을 흐리는 표현과 비유적인 제목을 쓰지 않습니다", () => {
+    const ambiguous = /두 방식|고르게 나타|어느 쪽으로도|읽기 어려|균형/;
+    const figurative = /마음에 담|눈에 밟|큰 그림|길을 잃|손을 내밀|공기가 바뀌|흐름을 타/;
+
+    for (const { axisId, reading } of allReadings) {
+      const joined = `${reading.headline} ${reading.summary} ${reading.scene}`;
+      expect(joined, `${axisId}/${reading.direction}: ${joined}`).not.toMatch(ambiguous);
+      expect(joined, `${axisId}/${reading.direction}: ${joined}`).not.toMatch(figurative);
     }
   });
 
@@ -563,8 +493,8 @@ describe("축 조합 해석 (3.0.0 신규)", () => {
   });
 });
 
-describe("강도·균형 결과 서술 (DEC-046)", () => {
-  it("모든 축과 강도 구간을 방향성에 맞게 빠짐없이 설명합니다", () => {
+describe("방향별 결과 서술 (DEC-068)", () => {
+  it("모든 축의 양쪽 방향을 빠짐없이 설명합니다", () => {
     const narrative = definition.resultNarrative;
     expect(narrative).toBeDefined();
     if (narrative === undefined) return;
@@ -574,27 +504,20 @@ describe("강도·균형 결과 서술 (DEC-046)", () => {
       const narrativeAxis = narrative.axes.find((candidate) => candidate.axisId === axis.id);
       expect(narrativeAxis).toBeDefined();
       if (narrativeAxis === undefined) continue;
-
-      for (const band of axis.intensityBands) {
-        const readings = narrativeAxis.readings.filter(
-          (reading) => reading.intensityBandId === band.id,
-        );
-        expect(readings.map((reading) => reading.direction).sort()).toEqual(
-          band.directional
-            ? ["negative", "positive"]
-            : ["balanced", "negative", "positive"],
-        );
-      }
+      expect(narrativeAxis.readings.map((reading) => reading.direction).sort()).toEqual([
+        "negative",
+        "positive",
+      ]);
     }
   });
 
-  it("교직 리듬은 축마다 한 문장으로 읽힙니다", () => {
+  it("장면 예시는 축마다 한 문장으로 읽힙니다", () => {
     const narrative = definition.resultNarrative;
     if (narrative === undefined) throw new Error("결과 서술이 없습니다.");
 
     for (const axis of narrative.axes) {
       for (const reading of axis.readings) {
-        expect(reading.rhythm.match(/[.!?]/g), reading.rhythm).toHaveLength(1);
+        expect(reading.scene.match(/[.!?]/g), reading.scene).toHaveLength(1);
       }
     }
   });
@@ -609,10 +532,10 @@ describe("강도·균형 결과 서술 (DEC-046)", () => {
     expect(rhythm).toBeDefined();
 
     for (const reading of energy?.readings ?? []) {
-      expect(reading.rhythm).not.toMatch(/말수가 적|말없이|떠들썩|큰소리/);
+      expect(reading.scene).not.toMatch(/말수가 적|말없이|떠들썩|큰소리/);
     }
     for (const reading of rhythm?.readings ?? []) {
-      expect(reading.rhythm).not.toMatch(/미루는 습관|마감을 못|마감이 밀/);
+      expect(reading.scene).not.toMatch(/미루는 습관|마감을 못|마감이 밀/);
     }
     expect(narrative.scopeNote).toMatch(/말의 양/);
     expect(narrative.scopeNote).toMatch(/마감/);
@@ -912,18 +835,7 @@ describe("4렌즈 코드 (DEC-049)", () => {
     }
   });
 
-  it("균형 자리를 잇는 기호가 극 글자와 구별됩니다 (DEC-064)", () => {
-    // 균형 자리는 `G/D`처럼 두 극의 글자를 함께 적습니다. 잇는 기호가 극 글자와 같으면
-    // 어느 것이 자리 글자인지 읽을 수 없게 됩니다.
-    const separator = definition.typeCode?.balancedSeparator;
-
-    expect(separator).toBe("/");
-    expect(poles.some((pole) => pole.code === separator)).toBe(false);
-  });
-
-  it("모든 극에 환산 글자가 있습니다 — 균형 자리도 후보 두 개를 만들 수 있어야 합니다", () => {
-    // 균형 자리는 두 극의 환산 글자를 모두 씁니다 (DEC-064).
-    // 한쪽만 있으면 후보를 만들지 못해 환산이 통째로 사라집니다.
+  it("모든 극에 환산 글자가 있어 선택된 방향을 한 글자로 바꿀 수 있습니다", () => {
     for (const pole of poles) {
       expect(pole.crosswalkCode, pole.shortLabel).toBeTruthy();
     }

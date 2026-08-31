@@ -31,7 +31,7 @@ import { err, ok, type Result } from "@/domain/shared/result";
  *   - 입력을 변경하지 않음
  *   - 같은 입력 → 항상 같은 출력
  *
- * 문항 수(40)·Part 수(4)·척도(5)·점수 범위(20)는 이 파일 어디에도 없습니다.
+ * 문항 수·Part 수·척도·점수 범위의 검사별 값은 이 파일 어디에도 없습니다.
  * 전부 AssessmentDefinition 데이터에서 계산합니다.
  */
 
@@ -55,8 +55,8 @@ export function maxAbsDeviation(scale: ResponseScale): number {
 }
 
 /**
- * 절대 점수가 어느 강도 구간에 속하는지 찾습니다. (DEC-002b)
- * 경계값은 콘텐츠의 intensityBands에서 오며, 코드에는 0/4/5/12/13/20이 없습니다.
+ * 절대 점수가 어느 게이지 구간에 속하는지 찾습니다. (DEC-068)
+ * 경계값은 콘텐츠의 intensityBands에서 오며, 엔진에 검사별 숫자를 두지 않습니다.
  */
 export function resolveIntensity(absScore: number, bands: IntensityBands): IntensityBand {
   for (const band of bands) {
@@ -77,31 +77,14 @@ export function resolveIntensity(absScore: number, bands: IntensityBands): Inten
 }
 
 /**
- * 방향 구간 중 가장 약한 것을 찾습니다 (DEC-063).
- *
- * 동점 보정으로 방향을 찾은 축은 점수가 0이라 '균형' 구간에 떨어집니다. 그대로 두면
- * 방향은 있는데 균형 문장을 읽게 되므로, **가장 약한 방향 구간**으로 읽습니다.
- * 근소한 차이를 뚜렷한 성향으로 부풀리지 않기 위해서입니다.
- */
-export function weakestDirectionalBand(bands: IntensityBands): IntensityBand | undefined {
-  let weakest: IntensityBand | undefined;
-  for (const band of bands) {
-    if (!band.directional) continue;
-    if (weakest === undefined || band.minAbsScore < weakest.minAbsScore) weakest = band;
-  }
-  return weakest;
-}
-
-/**
  * 이 값 미만으로 척도를 썼으면 응답이 갈리지 않은 것으로 봅니다 (DEC-053).
  *
  * 2 = "가장 높게 준 값과 가장 낮게 준 값의 차이가 2점 이상". 전부 같은 값을 찍었거나
  * 3과 4만 오간 사람은 어디에도 반대하지 않은 것이라 방향을 읽을 근거가 없습니다.
  *
- * `result/differentiation.ts`가 같은 값을 씁니다. 두 곳이 어긋나면 같은 응답이
- * 한쪽에서는 '균형', 다른 쪽에서는 '읽기 어려움'이 되므로 상수를 한 곳에 둡니다.
+ * 동점 보정의 적용 여부가 모든 규칙에서 어긋나지 않도록 상수를 한 곳에 둡니다.
  */
-export const MIN_DIFFERENTIATION_RANGE = 2;
+const MIN_RESPONSE_RANGE_FOR_TIEBREAK = 2;
 
 /**
  * 장면 보정에서 세는 장면의 최소 문항 수 (DEC-063)
@@ -198,8 +181,7 @@ interface ResolvedDirection {
  *
  * 1. 축 점수가 0이 아니면 그대로 씁니다
  * 2. 0이면 콘텐츠가 선언한 보정 규칙을 **순서대로** 적용합니다
- * 3. 그래도 갈리지 않으면 진짜 균형입니다. 방향 자리는 `defaultPole`로 채우되
- *    `unresolved`를 함께 남겨, 화면이 그 방향을 결과라고 말하지 않게 합니다
+ * 3. 그래도 갈리지 않으면 콘텐츠의 `defaultPole`을 사용합니다
  *
  * **응답이 갈리지 않은 축에는 보정을 걸지 않습니다.** 전부 같은 값을 찍으면 축 점수가
  * 반드시 0이 되는데, 장면마다 정·역 문항 수가 다르면 장면 보정이 거기서도 방향을
@@ -218,7 +200,7 @@ function resolveDirection(
   const values = answers.map((answer) => answer.value);
   const differentiated =
     values.length > 0 &&
-    Math.max(...values) - Math.min(...values) >= MIN_DIFFERENTIATION_RANGE;
+    Math.max(...values) - Math.min(...values) >= MIN_RESPONSE_RANGE_FOR_TIEBREAK;
 
   if (differentiated) {
     for (const ruleId of tieBreak) {
@@ -229,7 +211,7 @@ function resolveDirection(
     }
   }
 
-  return { direction: axis.defaultPole, source: "unresolved" };
+  return { direction: axis.defaultPole, source: "default" };
 }
 
 /**
@@ -279,7 +261,6 @@ export function scoreAxis(
     maxScore,
     normalized,
     direction: resolved.direction,
-    isBalanced: rawScore === 0,
     directionSource: resolved.source,
     ...(resolved.ruleId === undefined ? {} : { tieBreakRuleId: resolved.ruleId }),
     intensityBandId: resolveIntensity(Math.abs(rawScore), axis.intensityBands).id,

@@ -297,11 +297,10 @@ export interface AxisPole {
 }
 
 export interface IntensityBand {
-  readonly id: string;           // "balanced" | "clear" | "strong"
-  readonly label: string;        // "균형" | "뚜렷" | "매우 뚜렷"
+  readonly id: string;           // "leaning" | "clear" | "strong" | "defining"
+  readonly label: string;        // 게이지에 표시할 점수 차이 라벨
   readonly minAbsScore: number;  // 이상
   readonly maxAbsScore: number;  // 이하
-  readonly directional: boolean;// false면 이 구간은 한쪽 방향으로 서술하지 않음
 }
 
 // 축에는 강도 구간이 최소 1개 있어야 합니다 (DEC-033).
@@ -332,7 +331,7 @@ export interface ResponseScale {
 export interface AssessmentQuestion {
   readonly id: QuestionId;
   readonly sectionId: SectionId;
-  readonly order: number;        // 전체 통 번호 (1~40)
+  readonly order: number;        // 전체 통 번호 (1부터 연속)
   readonly text: string;
   readonly axisId: AxisId;
   readonly polarity: Polarity;
@@ -364,7 +363,7 @@ export interface AssessmentDefinition {
   readonly contentVersion: string;       // "1.0.0"
   readonly scale: ResponseScale;
   readonly axes: readonly AssessmentAxis[];
-  readonly resultNarrative?: ResultNarrativeSpec; // 방향·강도·균형 결과 서술
+  readonly resultNarrative?: ResultNarrativeSpec; // 방향별 결과 서술
   readonly sections: readonly AssessmentSection[];
   readonly questions: readonly AssessmentQuestion[];
   readonly scoring: ScoringSpec;
@@ -397,17 +396,14 @@ export interface ResultProfile {
 }
 ```
 
-### 4.3a 방향·강도 결과 서술 (DEC-046)
+### 4.3a 방향별 결과 서술 (DEC-068)
 
 - `ResultProfile`은 기존 세션 호환과 장면·협업 콘텐츠를 위해 유지합니다.
-- 결과 상단의 제목·한 줄 설명·교직 리듬은 `resultNarrative`가 있으면 축 점수의
-  `intensityBandId`와 방향을 함께 읽어 조립합니다.
-- `directional: false`인 강도 구간은 프로필 방향으로 확정하지 않습니다. 다만 rawScore가 0이 아니면
-  균형 범위 안에서 어느 쪽에 조금 더 가까운지는 축 배지와 문장에 함께 표시합니다.
-- 현재 검사의 교직 리듬은 네 축을 한 문장씩 설명하는 네 문장으로 구성합니다.
+- 결과 제목과 요약은 확정된 네 방향의 `ResultProfile`에서 가져옵니다.
+- 축 설명은 `resultNarrative.axes[].readings`에서 방향만으로 고릅니다. 같은 방향이면
+  점수 차이와 관계없이 같은 `headline`·`summary`·`scene`을 사용합니다.
+- 강도 구간은 축 카드의 게이지와 구간 라벨에만 사용합니다.
 - 학생과 나누는 말의 양·마감 습관처럼 측정하지 않는 내용은 본문에 반복하지 않고 `scopeNote`로 한 번만 분리해 알립니다.
-- 균형 축이 하나라도 있으면 부호로 선택된 `ResultProfile`의 장면·협업·행동 문구도 사용하지 않고,
-  `resultNarrative.balancedGuidance`의 중립 안내를 사용합니다.
 - `resultNarrative`가 없는 다른 검사에서는 기존 프로필 문구를 안전한 fallback으로 사용합니다.
 
 ### 4.4 세션 · 응답 · 점수
@@ -441,12 +437,11 @@ export interface AssessmentResponse {
 export interface AxisScore {
   readonly axisId: AxisId;
   readonly rawScore: number;        // 연속 점수 (반드시 보존)
-  readonly minScore: number;        // -20
-  readonly maxScore: number;        // +20
+  readonly minScore: number;        // 문항·척도·weight로 계산한 음의 경계
+  readonly maxScore: number;        // 문항·척도·weight로 계산한 양의 경계
   readonly normalized: number;      // 0~1 (시각화용, rawScore에서 파생)
   readonly direction: PoleSide;     // 0이고 보정도 실패하면 defaultPole
-  readonly isBalanced: boolean;     // rawScore === 0 (보정 전 사실)
-  readonly directionSource: "score" | "tiebreak" | "unresolved";  // DEC-063
+  readonly directionSource: "score" | "tiebreak" | "default";  // DEC-063 · DEC-068
   readonly tieBreakRuleId?: TieBreakRuleId;  // 방향을 정한 보정 규칙
   readonly intensityBandId: string;
 }
@@ -481,15 +476,14 @@ export interface ResultSnapshot {
 2) 축 점수        rawScore = Σ (centered × question.polarity × question.weight)
                   weight는 MVP에서 전부 1 (임의 가중치 사용 안 함)
 
-3) 점수 범위      min = -(문항수 × 최대편차 × weight합)  = -20
-                  max = +(문항수 × 최대편차 × weight합)  = +20
+3) 점수 범위      min = -Σ(문항별 최대편차 × weight)
+                  max = +Σ(문항별 최대편차 × weight)
 
-4) 강도 구간      |rawScore| 기준 (DEC-052 — 균형은 정확히 0점 하나뿐)
-                  0       → balanced    "균형"
-                  1 ~ 6   → leaning     "조금 뚜렷"
-                  7 ~ 12  → clear       "뚜렷"
-                  13 ~ 18 → strong      "강함"
-                  19 ~ 24 → defining    "매우 뚜렷"
+4) 게이지 구간    |rawScore| 기준 (DEC-068)
+                  0 ~ 6   → leaning     "근소한 차이"
+                  7 ~ 12  → clear       "분명한 차이"
+                  13 ~ 18 → strong      "큰 차이"
+                  19 ~ 24 → defining    "매우 큰 차이"
 
 5) 방향           rawScore > 0 → positive          directionSource = "score"
                   rawScore < 0 → negative          directionSource = "score"
@@ -509,18 +503,16 @@ export interface ResultSnapshot {
                   extreme-responses  척도 양 끝(|편차| = 최대)으로 답한 문항만 합산
 
                   0이 아닌 값을 낸 첫 규칙이 방향을 정합니다  → "tiebreak"
-                  모든 규칙이 0     → axis.defaultPole (DEC-001) → "unresolved"
-                                       + isBalanced = true (화면에 '균형' 표시)
+                  모든 규칙이 0     → axis.defaultPole (DEC-001) → "default"
 
-                  rawScore는 보정으로 바뀌지 않습니다. 밸런스 지도 마커는 정중앙 그대로입니다.
-                  보정으로 방향을 찾은 축은 **가장 약한 방향 구간**으로 읽습니다 —
-                  근소한 차이를 뚜렷한 성향으로 부풀리지 않기 위해서입니다.
+                  rawScore는 보정으로 바뀌지 않습니다. 0점도 가장 약한 게이지 단계로
+                  선택 방향 쪽에 표시하되, 저장된 원점수는 그대로 0입니다.
 
 6) 결과 키        4개 축 방향 조합으로 ResultProfile 1개를 찾음
                   연속 점수(rawScore)는 결과 스냅샷에 그대로 저장
 
-7) 화면 서술      directional=false 구간은 균형으로 표시하되 0이 아니면 작은 기울기도 설명
-                  directional=true 구간은 방향 + 강도에 맞는 문장을 사용
+7) 화면 서술      방향에 맞는 문장 하나를 사용. 점수 차이는 문장을 바꾸지 않음
+                  차이의 크기는 게이지와 구간 라벨에서만 표시
 ```
 
 ### 5.2 순수 함수 시그니처
@@ -576,7 +568,6 @@ export function scoreAssessment(
 rawScore   = 14
 |14| ≥ 13  → intensityBand = strong ("매우 뚜렷")
 direction  = positive
-isBalanced = false
 normalized = (14 + 20) / 40 = 0.85   → 막대 마커 85% 위치
 ```
 
@@ -593,11 +584,10 @@ normalized = (14 + 20) / 40 = 0.85   → 막대 마커 85% 위치
 rawScore   = -12
 5 ≤ |12| ≤ 12 → intensityBand = clear ("뚜렷")
 direction  = negative
-isBalanced = false
 normalized = (-12 + 20) / 40 = 0.20  → 막대 마커 20% 위치
 ```
 
-**예시 C — 정확히 0, "균형" (동점 처리)**
+**예시 C — 정확히 0 (동점 처리)**
 
 polarity가 전부 `+1`인 축에서:
 
@@ -608,15 +598,14 @@ polarity가 전부 `+1`인 축에서:
 
 ```
 rawScore   = 0
-|0| ≤ 4    → intensityBand = balanced ("균형")
+|0| ≤ 6    → intensityBand = leaning ("근소한 차이")
 direction  = axis.defaultPole      ← 콘텐츠가 미리 정해 둔 방향
-isBalanced = true                  ← 화면에 '균형' 배지, 양쪽 라벨 동등 표시
 normalized = (0 + 20) / 40 = 0.50  → 막대 마커 정중앙
 resultKey  는 저장 호환을 위해 defaultPole을 포함해 정상적으로 16개 중 하나로 확정됩니다
 ```
 
-> **핵심**: 내부 결과 키는 하나로 확정되지만, 화면 서술은 0~4의 균형 구간 전체를
-> 어느 한쪽 성향으로 단정하지 않습니다. 연속 점수 0은 그대로 저장됩니다.
+> **핵심**: 화면 서술은 `defaultPole` 방향을 사용하고, 게이지는 선택 방향의 최소 단계로
+> 보여 줍니다. 연속 점수 0과 `directionSource: "default"`는 그대로 저장됩니다.
 
 ### 5.4 콘텐츠 무결성 검증 (로드 시 1회)
 

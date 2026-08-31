@@ -16,14 +16,10 @@ export interface ResolvedAxisCombination {
 export function resolveAxisCombinations(
   combinations: readonly AxisCombination[],
   poles: Readonly<Record<AxisId, PoleSide>>,
-  balancedAxisIds: ReadonlySet<AxisId> = new Set<AxisId>(),
 ): readonly ResolvedAxisCombination[] {
   const resolved: ResolvedAxisCombination[] = [];
 
   for (const combination of combinations) {
-    // 균형 구간의 축을 한쪽 방향으로 밀어 넣어 조합 문장을 만들지 않습니다.
-    if (combination.axisIds.some((axisId) => balancedAxisIds.has(axisId))) continue;
-
     const reading = combination.readings.find((candidate) =>
       combination.axisIds.every((axisId) => candidate.poles[axisId] === poles[axisId]),
     );

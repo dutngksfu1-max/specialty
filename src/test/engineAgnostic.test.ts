@@ -38,9 +38,9 @@ const CENTER_VALUE = 4;
 const AXIS_MAX = 18;
 
 const bands = [
-  { id: "balanced", label: "[fixture] 균형", minAbsScore: 0, maxAbsScore: 3, directional: false },
-  { id: "clear", label: "[fixture] 뚜렷", minAbsScore: 4, maxAbsScore: 11, directional: true },
-  { id: "strong", label: "[fixture] 매우 뚜렷", minAbsScore: 12, maxAbsScore: AXIS_MAX, directional: true },
+  { id: "leaning", label: "[fixture] 근소한 차이", minAbsScore: 0, maxAbsScore: 3 },
+  { id: "clear", label: "[fixture] 분명한 차이", minAbsScore: 4, maxAbsScore: 11 },
+  { id: "strong", label: "[fixture] 큰 차이", minAbsScore: 12, maxAbsScore: AXIS_MAX },
 ];
 
 const takenPerAxis = new Map<string, number>();
@@ -191,7 +191,7 @@ describe("모양이 다른 검사도 같은 엔진으로 동작합니다 (AC-6)"
     if (!score.ok) throw new Error("채점 실패");
 
     expect(score.value.axisScores.map((axisScore) => axisScore.rawScore)).toEqual([0, 0, 0]);
-    expect(score.value.axisScores.every((axisScore) => axisScore.isBalanced)).toBe(true);
+    expect(score.value.axisScores.every((axisScore) => axisScore.rawScore === 0)).toBe(true);
     // axis-y만 defaultPole이 negative입니다.
     expect(String(score.value.resultKey)).toBe("pnp");
   });

@@ -313,7 +313,7 @@ describe("completeAssessment", () => {
     expect(completed.error.code).toBe("INCOMPLETE_RESPONSES");
   });
 
-  it("전부 3점이면 모든 축이 균형이고 defaultPole 조합으로 확정됩니다", async () => {
+  it("전부 3점이면 모든 축이 기본 방향 조합으로 확정됩니다", async () => {
     await startAssessment(deps, {
       slug: SLUG,
       nickname: "테스트",
@@ -333,7 +333,8 @@ describe("completeAssessment", () => {
     expect(snapshot.characterGender).toBe("female");
     expect(snapshot.score.axisScores).toHaveLength(4);
     expect(snapshot.score.axisScores.every((axis) => axis.rawScore === 0)).toBe(true);
-    expect(snapshot.score.axisScores.every((axis) => axis.isBalanced)).toBe(true);
+    expect(snapshot.score.axisScores.every((axis) => axis.rawScore === 0)).toBe(true);
+    expect(snapshot.score.axisScores.every((axis) => axis.directionSource === "default")).toBe(true);
     expect(String(snapshot.score.resultKey)).toBe("pppp");
   });
 

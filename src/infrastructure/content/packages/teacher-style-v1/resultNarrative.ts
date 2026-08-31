@@ -1,133 +1,29 @@
 /**
- * 방향·강도·균형을 함께 반영하는 결과 상단 서술 (DEC-046).
+ * 축마다 두 방향, 방향마다 설명 하나 (DEC-068)
  *
- * 한 축당 균형 1개, 방향 2개 × 강도 2개를 둡니다.
+ * **세기로 문장을 가르지 않습니다.** 51:49로 기운 분과 80:20으로 기운 분은 같은 문장을
+ * 읽고, 얼마나 기울었는지는 게이지와 차이 배지가 말합니다. 예전에는 강도 구간마다
+ * 문장을 따로 두어 근소하게 기운 분이 "가끔 그래요" 같은 흐릿한 결과를 받아 갔습니다.
+ * 5~10분을 들여 답한 사람에게 돌려줄 답이 아니었습니다.
+ *
  * 문장은 해당 축이 실제로 물은 맥락 안에서만 설명합니다.
  */
 export const resultNarrative = {
-  balancedTitle: "상황에 맞춰 폭넓게 움직이는 선생님",
-  balancedRhythm:
-    "한 관점에서 두 방식의 점수가 같게 나왔습니다. 그래서 한쪽 이름을 붙이는 대신, 그 관점의 두 특징을 함께 담았습니다. 관점 카드에서 두 방식이 실제 교실 일에 어떻게 이어지는지 확인해 보세요.",
-  balancedOneLiner:
-    "네 가지 관점마다 한쪽으로 기우는 정도와 두 방식이 고르게 나타나는 지점이 함께 드러납니다.",
-  balancedAxisNote:
-    "어느 한쪽보다 두 방식이 고르게 나타난 관점은 양쪽의 특징을 함께 읽습니다.",
   scopeNote: "이 검사는 학생과 나누는 말의 양이나 마감을 지키는 습관을 평가하지 않습니다.",
+  /**
+   * 줄글에서 눈이 걸릴 곳을 만들 핵심 어구입니다.
+   * 무엇을 강조할지는 콘텐츠가 정하고, 한 문장에 몇 개까지 칠할지는 엔진이 막습니다.
+   */
   emphasisTerms: [
-    "입 밖으로 꺼내 놓으면",
-    "속으로 한 번 굴려",
-    "누군가에게 설명해 볼 때",
-    "혼자 있는 시간을 한 번 거쳐야",
-    "이야기할 사람을 먼저 찾는",
-    "방해받지 않는 시간",
-    "대체로 말한 뒤",
-    "대체로 혼자 있을 때",
-    "실제로 무슨 일이 있었는지",
-    "나중에 어디로 이어질지",
+    "누군가에게 설명할 때",
+    "혼자 있는 시간을 거쳐야",
     "남아 있는 기록과 결과물",
-    "몇 달 뒤에 달라져 있을 모습",
-    "확인되지 않은 이야기",
-    "그것들이 가리키는 방향",
-    "지금 확인된 것",
-    "그래서 어디로 가는지",
-    "무엇을 기준으로 볼지",
-    "지금 어떤 형편인지",
+    "몇 달 뒤에 생길 변화",
     "답이 달라지지 않는지",
     "놓인 형편에 따라",
-    "이유를 설명할 수 없는 결정",
-    "형편을 모르는 채로",
-    "결정보다 기준이 먼저",
-    "그 사람의 형편",
-    "한 번 적어 두고 나면",
-    "더 나은 길이 보이면",
     "무엇을 언제 할지",
-    "그날 형편에 맞는 쪽",
-    "준비가 덜 된 채로",
-    "다음 수를 찾는",
-    "할 일이 다 적힌 뒤",
-    "이미 해 보고 있는 중",
-    "말하며 정리하는 날",
-    "혼자 정리하는 날",
-    "남아 있는 기록과 자료",
-    "앞으로 어떻게 될지",
-    "모두에게 똑같이 적용되는 기준",
-    "그 사람이 놓인 형편",
-    "순서를 먼저 정해 두고",
-    "해 보면서 방법을 바꾸는",
+    "그날 상황에 맞는 방법",
   ],
-  balancedGuidance: {
-    shiningMoments: [
-      {
-        scene: "수업",
-        situation: "두 방식이 갈렸던 날",
-        text: "같은 단원을 어느 날은 준비한 대로, 어느 날은 교실 반응에 맞춰 가르칩니다.",
-      },
-      {
-        scene: "업무",
-        situation: "일의 성격이 다를 때",
-        text: "정해진 절차가 있는 일과 새로 만들어야 하는 일에 서로 다른 방식을 씁니다.",
-      },
-      {
-        scene: "생활지도",
-        situation: "아이마다 다르게 대할 때",
-        text: "공통 기준을 세울 때와 그 아이의 상황을 볼 때를 구분해 움직입니다.",
-      },
-    ],
-    underPressure: [
-      {
-        scene: "업무",
-        situation: "일이 몰릴 때",
-        text: "평소에는 둘을 오가던 것이, 바빠지면 한쪽 방식으로만 기웁니다.",
-      },
-      {
-        scene: "동료",
-        situation: "선택이 바뀌었을 때",
-        text: "무엇을 보고 바꿨는지 말해 두지 않으면, 동료는 판단 과정을 몰라 다시 묻습니다.",
-      },
-      {
-        scene: "수업",
-        situation: "시간이 부족할 때",
-        text: "익숙한 쪽 방식을 먼저 집어서, 다른 방식을 꺼낼 여유가 줄어듭니다.",
-      },
-    ],
-    withColleagues: [
-      {
-        scene: "동료",
-        situation: "역할을 나눌 때",
-        text: "한 방식에 매이지 않아, 비어 있는 자리를 맡기가 수월합니다.",
-      },
-      {
-        scene: "업무",
-        situation: "새 일을 시작할 때",
-        text: "이번에는 어느 방식으로 갈지, 언제 다시 볼지를 먼저 정합니다.",
-      },
-      {
-        scene: "동료",
-        situation: "의견이 갈릴 때",
-        text: "양쪽 방식을 다 해 봐서, 서로 왜 그렇게 하는지 옆에서 설명해 줍니다.",
-      },
-    ],
-    collaboration: {
-      naturalFit: [
-        "어느 한쪽으로 이름 붙이기보다, 이번에 자연스러웠던 방식과 그 이유를 나누기 쉬워요.",
-        "서로 다른 방식을 다 해 봤다면, 어떤 상황에서 어느 쪽을 골랐는지 비교해 보세요.",
-      ],
-      needsTuning: [
-        "균형이라고 늘 중간을 고른다는 뜻은 아니에요. 이번 일에서 어느 쪽이 편한지는 따로 말해 두세요.",
-        "상황에 따라 방법을 바꿨다면 바꾼 이유와 다시 확인할 시점을 함께 알려 주세요.",
-      ],
-    },
-    nextSteps: [
-      "균형으로 나온 관점 하나를 골라, 최근에 두 방식을 각각 썼던 때가 있는지 적어 보세요.",
-      "그 두 때가 무엇이 달랐는지 한 가지씩 적어 보세요.",
-      "다음 비슷한 일이 생기면 무엇을 먼저 확인할지 정해 보세요.",
-    ],
-    talkingPoints: [
-      "같은 일에서도 상황에 따라 다른 방식을 쓴 적이 있나요?",
-      "두 방식 중 하나를 더 선호하게 되는 조건은 무엇인가요?",
-      "동료에게 내 선택의 이유를 어떻게 설명하나요?",
-    ],
-  },
   axes: [
     {
       axisId: "axis-energy",
@@ -135,81 +31,18 @@ export const resultNarrative = {
         "최근 한 달이 유난히 바빴거나 함께 일하는 선생님이 바뀌었다면, 평소 모습이 아니라 그 시기의 상황이 답에 실렸을 수 있어요.",
       readings: [
         {
-          intensityBandId: "balanced",
-          direction: "balanced",
-          headline: "대화와 혼자 정리를 고르게 활용해요",
-          summary: "동료와 말하며 실마리를 찾고, 혼자 생각을 다듬는 흐름이 함께 나타나요.",
-          rhythm: "회의에서 방향을 잡은 뒤 교실에 돌아와 혼자 결론을 다듬는 식으로 두 방식을 이어 씁니다.",
-        },
-        {
-          intensityBandId: "balanced",
           direction: "positive",
-          headline: "반반인데 말하는 쪽이 조금 더예요",
-          summary: "두 방식을 비슷하게 쓰지만, 말하며 정리하는 날이 조금 더 많아요.",
-          rhythm: "학년 협의처럼 여러 사람이 모인 자리에서 조금 더 그렇습니다.",
+          headline: "말하면서 생각을 정리해요",
+          summary:
+            "혼자 계속 생각하기보다 누군가에게 설명할 때 결론을 빨리 정리해요. 해결되지 않는 일이 있으면 먼저 이야기할 사람을 찾습니다.",
+          scene: "학년 회의나 옆 반 선생님과 대화하면서 해결 방법을 정하는 일이 많습니다.",
         },
         {
-          intensityBandId: "balanced",
           direction: "negative",
-          headline: "반반인데 혼자 있는 쪽이 조금 더예요",
-          summary: "두 방식을 비슷하게 쓰지만, 혼자 정리하는 날이 조금 더 많아요.",
-          rhythm: "아이들이 빠져나간 교실처럼 조용한 자리에서 조금 더 그렇습니다.",
-        },
-        {
-          intensityBandId: "leaning",
-          direction: "positive",
-          headline: "가끔 말하다가 생각이 풀려요",
-          summary: "머릿속에 있을 때는 흐릿하던 것이, 입 밖으로 꺼내 놓으면 한 줄로 정리되곤 해요.",
-          rhythm: "옆 반 선생님과 이야기하다 결론이 잡히는 날이 있습니다.",
-        },
-        {
-          intensityBandId: "leaning",
-          direction: "negative",
-          headline: "가끔 혼자 있을 때 생각이 풀려요",
-          summary: "말을 꺼내기 전에 속으로 한 번 굴려 보고 나면 할 말이 또렷해지곤 해요.",
-          rhythm: "퇴근길처럼 혼자 있는 시간에 생각이 정리되는 날이 있습니다.",
-        },
-        {
-          intensityBandId: "clear",
-          direction: "positive",
-          headline: "자주 말하면서 생각을 정리해요",
-          summary: "혼자 붙잡고 있기보다 누군가에게 설명해 볼 때 결론이 빨리 잡혀요.",
-          rhythm: "학년 회의나 동학년 대화처럼 사람이 모인 자리에서 특히 그렇습니다.",
-        },
-        {
-          intensityBandId: "clear",
-          direction: "negative",
-          headline: "자주 혼자 생각을 정리해요",
-          summary: "여럿이 오간 이야기도 혼자 있는 시간을 한 번 거쳐야 내 결론이 돼요.",
-          rhythm: "아이들이 나간 뒤의 교실처럼 조용한 자리에서 특히 그렇습니다.",
-        },
-        {
-          intensityBandId: "strong",
-          direction: "positive",
-          headline: "상황이 달라져도 먼저 말할 사람을 찾아요",
-          summary: "일이 막히면 혼자 붙들기보다 이야기할 사람을 먼저 찾는 쪽이에요.",
-          rhythm: "복도에서 마주친 김에 물어보고, 그 자리에서 방향을 잡습니다.",
-        },
-        {
-          intensityBandId: "strong",
-          direction: "negative",
-          headline: "상황이 달라져도 먼저 혼자 앉을 시간을 만들어요",
-          summary: "방해받지 않는 시간이 생겨야 일이 앞으로 나가는 쪽이에요.",
-          rhythm: "아침 일찍 아무도 없는 교실에서 그날 할 일을 시작합니다.",
-        },
-        {
-          intensityBandId: "defining",
-          direction: "positive",
-          headline: "거의 늘 말해 보고 나서 정해요",
-          summary: "생각이 정리되는 때가 대체로 말한 뒤라, 대화가 곧 일의 한 과정이에요.",
-          rhythm: "혼자 정리해도 되는 일까지 누군가에게 한 번 말해 보고 넘어갑니다.",
-        },
-        {
-          intensityBandId: "defining",
-          direction: "negative",
-          headline: "거의 늘 혼자 정리한 다음에 말해요",
-          summary: "생각이 정리되는 때가 대체로 혼자 있을 때라, 그 시간이 곧 일의 한 과정이에요.",
-          rhythm: "회의 중에도 잠깐 자리를 떠나 혼자 정리하고 돌아옵니다.",
+          headline: "혼자 정리한 다음에 말해요",
+          summary:
+            "여럿이 오간 이야기도 혼자 있는 시간을 거쳐야 내 결론이 돼요. 방해받지 않는 시간이 있어야 결론과 다음 행동을 정합니다.",
+          scene: "아이들이 나간 뒤의 교실처럼 조용한 자리에서 생각이 정리됩니다.",
         },
       ],
     },
@@ -219,165 +52,39 @@ export const resultNarrative = {
         "올해 맡은 학년이나 교과가 크게 달라졌다면, 평소 보는 방식이 아니라 지금 익히는 중인 방식이 답에 실렸을 수 있어요.",
       readings: [
         {
-          intensityBandId: "balanced",
-          direction: "balanced",
-          headline: "확인한 사실과 앞으로의 흐름을 함께 봐요",
-          summary: "남아 있는 기록을 살피면서, 그 변화가 앞으로 어디로 이어질지도 함께 그려요.",
-          rhythm: "아이 기록을 확인한 뒤 몇 달 뒤 모습을 떠올리며 다음 수업을 정합니다.",
-        },
-        {
-          intensityBandId: "balanced",
           direction: "positive",
-          headline: "반반인데 확인한 것부터 보는 쪽이 조금 더예요",
-          summary: "두 방식을 비슷하게 쓰지만, 남아 있는 기록과 자료를 먼저 보는 날이 조금 더 많아요.",
-          rhythm: "평가 결과나 활동지처럼 남아 있는 자료를 볼 때 조금 더 그렇습니다.",
+          headline: "기록과 결과부터 확인해요",
+          summary:
+            "판단이 갈리면 기억보다 남아 있는 기록과 결과물을 먼저 꺼내요. 확인되지 않은 이야기만으로는 결정을 내리지 않습니다.",
+          scene: "상담을 앞두고 그동안의 기록부터 다시 꺼내 봅니다.",
         },
         {
-          intensityBandId: "balanced",
           direction: "negative",
-          headline: "반반인데 앞일부터 그리는 쪽이 조금 더예요",
-          summary: "두 방식을 비슷하게 쓰지만, 앞으로 어떻게 될지를 먼저 그리는 날이 조금 더 많아요.",
-          rhythm: "학기 계획을 세울 때처럼 앞을 내다보는 자리에서 조금 더 그렇습니다.",
-        },
-        {
-          intensityBandId: "leaning",
-          direction: "positive",
-          headline: "가끔 확인한 것부터 짚고 넘어가요",
-          summary: "이야기가 커질 때 실제로 무슨 일이 있었는지 한 번 확인하고 넘어가곤 해요.",
-          rhythm: "상담을 앞두고 그동안의 기록을 먼저 꺼내 보는 날이 있습니다.",
-        },
-        {
-          intensityBandId: "leaning",
-          direction: "negative",
-          headline: "가끔 앞일이 먼저 떠올라요",
-          summary: "눈앞의 일을 보다가 이게 나중에 어디로 이어질지가 함께 떠오르곤 해요.",
-          rhythm: "수업 중에 한 아이의 반응을 보고 다음 단원이 떠오르는 날이 있습니다.",
-        },
-        {
-          intensityBandId: "clear",
-          direction: "positive",
-          headline: "자주 눈으로 본 것에서 시작해요",
-          summary: "판단이 갈리면 기억보다 남아 있는 기록과 결과물을 먼저 꺼내요.",
-          rhythm: "교재 연구나 상담 준비처럼 자료가 필요한 자리에서 특히 그렇습니다.",
-        },
-        {
-          intensityBandId: "clear",
-          direction: "negative",
-          headline: "자주 앞으로 어떻게 될지부터 그려요",
-          summary: "지금 모습보다 몇 달 뒤에 달라져 있을 모습이 먼저 그려져요.",
-          rhythm: "학기 계획이나 새 단원을 짤 때처럼 앞을 그리는 자리에서 특히 그렇습니다.",
-        },
-        {
-          intensityBandId: "strong",
-          direction: "positive",
-          headline: "상황이 달라져도 확인된 것부터 놓아요",
-          summary: "확인되지 않은 이야기 위에서는 다음 단계로 잘 넘어가지 않는 쪽이에요.",
-          rhythm: "아이 이야기를 나눌 때도 언제 무슨 일이 있었는지부터 확인합니다.",
-        },
-        {
-          intensityBandId: "strong",
-          direction: "negative",
-          headline: "상황이 달라져도 큰 그림부터 놓아요",
-          summary: "낱낱의 사실보다 그것들이 가리키는 방향이 먼저 눈에 들어오는 쪽이에요.",
-          rhythm: "아이 이야기를 나눌 때도 이 아이가 어디로 갈지부터 이야기합니다.",
-        },
-        {
-          intensityBandId: "defining",
-          direction: "positive",
-          headline: "거의 늘 근거를 앞에 두고 정해요",
-          summary: "무엇을 정하든 출발점이 지금 확인된 것이라, 근거가 늘 앞에 놓여요.",
-          rhythm: "연수에서 새 방법을 들어도 우리 반 자료에 먼저 맞춰 봅니다.",
-        },
-        {
-          intensityBandId: "defining",
-          direction: "negative",
-          headline: "거의 늘 방향을 앞에 두고 정해요",
-          summary: "무엇을 보든 그래서 어디로 가는지가 먼저라, 가려는 쪽이 늘 앞에 놓여요.",
-          rhythm: "연수에서 새 방법을 들으면 우리 반에 어떻게 이어질지부터 그립니다.",
+          headline: "다음 단계를 먼저 생각해요",
+          summary:
+            "현재 모습보다 몇 달 뒤에 생길 변화를 먼저 예상해요. 개별 사실보다 그 사실들이 다음 단계에 미칠 영향을 먼저 봅니다.",
+          scene: "수업 중에 한 아이의 반응을 보고 다음 단원이 떠오릅니다.",
         },
       ],
     },
     {
       axisId: "axis-decision",
       counterEvidence:
-        "최근 판단이 어려웠던 일이 하나 크게 남아 있다면, 평소 기준이 아니라 그 일의 기억이 답을 끌어당겼을 수 있어요.",
+        "최근 판단이 어려웠던 일이 있었다면, 평소 기준보다 그 일의 기억이 답에 더 많이 반영됐을 수 있어요.",
       readings: [
         {
-          intensityBandId: "balanced",
-          direction: "balanced",
-          headline: "공통 기준과 개별 사정을 함께 살펴요",
-          summary: "모두에게 필요한 기준을 세우면서도, 아이마다 다른 형편을 판단에 함께 담아요.",
-          rhythm: "먼저 약속을 확인한 뒤 그 아이의 사정을 듣고 적용 방법을 조정합니다.",
-        },
-        {
-          intensityBandId: "balanced",
           direction: "positive",
-          headline: "반반인데 약속부터 보는 쪽이 조금 더예요",
-          summary: "두 방식을 비슷하게 쓰지만, 모두에게 똑같이 적용되는 기준을 먼저 보는 날이 조금 더 많아요.",
-          rhythm: "학급 규칙을 정할 때처럼 모두에게 같이 적용되는 자리에서 조금 더 그렇습니다.",
+          headline: "정해 둔 기준부터 확인해요",
+          summary:
+            "같은 일이 다시 왔을 때 답이 달라지지 않는지를 신경 써요. 남에게 이유를 설명할 수 없는 결정은 잘 내리지 않습니다.",
+          scene: "다툼을 중재할 때도 먼저 약속을 확인하고 시작합니다.",
         },
         {
-          intensityBandId: "balanced",
           direction: "negative",
-          headline: "반반인데 사정부터 듣는 쪽이 조금 더예요",
-          summary: "두 방식을 비슷하게 쓰지만, 그 사람이 놓인 형편을 먼저 듣는 날이 조금 더 많아요.",
-          rhythm: "한 아이와 따로 이야기하는 자리에서 조금 더 그렇습니다.",
-        },
-        {
-          intensityBandId: "leaning",
-          direction: "positive",
-          headline: "가끔 정하기 전에 약속을 확인해요",
-          summary: "결정하기 전에 무엇을 기준으로 볼지 한 번 짚어 두곤 해요.",
-          rhythm: "다툼을 중재할 때 먼저 약속을 확인하는 날이 있습니다.",
-        },
-        {
-          intensityBandId: "leaning",
-          direction: "negative",
-          headline: "가끔 정하기 전에 사정을 물어요",
-          summary: "결정하기 전에 이 사람이 지금 어떤 형편인지가 먼저 걸리곤 해요.",
-          rhythm: "다툼을 중재할 때 그 아이의 하루를 먼저 묻는 날이 있습니다.",
-        },
-        {
-          intensityBandId: "clear",
-          direction: "positive",
-          headline: "자주 같은 일에 같은 답을 찾아요",
-          summary: "같은 일이 다시 왔을 때 답이 달라지지 않는지를 신경 쓰는 편이에요.",
-          rhythm: "생활지도나 업무를 나눌 때처럼 여러 사람이 얽힌 자리에서 특히 그렇습니다.",
-        },
-        {
-          intensityBandId: "clear",
-          direction: "negative",
-          headline: "자주 사람마다 다르게 살펴요",
-          summary: "같은 규칙도 놓인 형편에 따라 다르게 적용될 수 있다고 보는 편이에요.",
-          rhythm: "상담이나 생활지도처럼 한 사람의 사정이 걸린 자리에서 특히 그렇습니다.",
-        },
-        {
-          intensityBandId: "strong",
-          direction: "positive",
-          headline: "상황이 달라져도 설명할 수 있는 기준을 앞에 둬요",
-          summary: "남에게 이유를 설명할 수 없는 결정은 잘 내리지 않는 쪽이에요.",
-          rhythm: "학부모 상담에서도 같은 일에는 같은 답이 나오도록 말합니다.",
-        },
-        {
-          intensityBandId: "strong",
-          direction: "negative",
-          headline: "상황이 달라져도 사정을 먼저 들어요",
-          summary: "형편을 모르는 채로는 결정을 늦추더라도 먼저 들어 보는 쪽이에요.",
-          rhythm: "학부모 상담에서도 그 집의 형편을 들은 뒤에 답을 정합니다.",
-        },
-        {
-          intensityBandId: "defining",
-          direction: "positive",
-          headline: "거의 늘 기준을 먼저 세워 둬요",
-          summary: "판단의 출발점이 늘 기준이라, 결정보다 기준이 먼저 서는 편이에요.",
-          rhythm: "새 학기가 시작되면 학급 규칙부터 세워 둡니다.",
-        },
-        {
-          intensityBandId: "defining",
-          direction: "negative",
-          headline: "거의 늘 그 사람 자리에서 시작해요",
-          summary: "판단의 출발점이 늘 그 사람의 형편이라, 규칙보다 상황을 먼저 읽는 편이에요.",
-          rhythm: "새 학기가 시작되면 아이들 사정부터 하나씩 들어 봅니다.",
+          headline: "그 사람 사정부터 들어요",
+          summary:
+            "같은 규칙도 놓인 형편에 따라 다르게 적용될 수 있다고 봐요. 사정을 모르는 채로는 결정을 늦추더라도 먼저 들어 봅니다.",
+          scene: "다툼을 중재할 때도 그 아이의 하루를 먼저 묻습니다.",
         },
       ],
     },
@@ -387,81 +94,18 @@ export const resultNarrative = {
         "학기 초처럼 일정이 몰리는 시기에 답했다면, 평소 리듬이 아니라 그 시기의 업무량이 답에 실렸을 수 있어요.",
       readings: [
         {
-          intensityBandId: "balanced",
-          direction: "balanced",
-          headline: "계획을 세우고 현장에서 유연하게 조정해요",
-          summary: "시작 전에 순서를 잡고, 교실 반응에 맞춰 방법을 바꾸는 흐름이 함께 나타나요.",
-          rhythm: "주간 계획을 기준으로 움직이다가, 그날 상황에 맞춰 순서와 방법을 다시 맞춥니다.",
-        },
-        {
-          intensityBandId: "balanced",
           direction: "positive",
-          headline: "반반인데 미리 정해 두는 쪽이 조금 더예요",
-          summary: "두 방식을 비슷하게 쓰지만, 순서를 먼저 정해 두고 시작하는 날이 조금 더 많아요.",
-          rhythm: "학기 초처럼 준비할 것이 많은 시기에 조금 더 그렇습니다.",
+          headline: "순서를 정해 놓고 시작해요",
+          summary:
+            "무엇을 언제 할지가 보이면 바로 시작해요. 준비가 덜 된 채로 시작하는 것은 잘 견디지 않습니다.",
+          scene: "다음 주 수업을 금요일에 미리 훑어 둡니다.",
         },
         {
-          intensityBandId: "balanced",
           direction: "negative",
-          headline: "반반인데 하면서 맞추는 쪽이 조금 더예요",
-          summary: "두 방식을 비슷하게 쓰지만, 해 보면서 방법을 바꾸는 날이 조금 더 많아요.",
-          rhythm: "행사처럼 변수가 많은 일에서 조금 더 그렇습니다.",
-        },
-        {
-          intensityBandId: "leaning",
-          direction: "positive",
-          headline: "가끔 시작 전에 순서를 훑어 둬요",
-          summary: "무엇부터 할지 한 번 적어 두고 나면 마음이 놓이곤 해요.",
-          rhythm: "다음 주 수업을 금요일에 미리 훑어 두는 날이 있습니다.",
-        },
-        {
-          intensityBandId: "leaning",
-          direction: "negative",
-          headline: "가끔 하다가 더 나은 방법으로 바꿔요",
-          summary: "해 보는 중에 더 나은 길이 보이면 그쪽으로 옮기곤 해요.",
-          rhythm: "수업 중에 더 나은 활동이 보이면 바로 바꾸는 날이 있습니다.",
-        },
-        {
-          intensityBandId: "clear",
-          direction: "positive",
-          headline: "자주 순서를 정해 놓고 시작해요",
-          summary: "무엇을 언제 할지가 보이면 그때부터 속도가 붙는 편이에요.",
-          rhythm: "수업 준비나 공문 처리처럼 순서가 있는 일에서 특히 그렇습니다.",
-        },
-        {
-          intensityBandId: "clear",
-          direction: "negative",
-          headline: "자주 그날 상황에 맞춰 정해요",
-          summary: "정해 둔 대로 가기보다 그날 형편에 맞는 쪽을 고르는 편이에요.",
-          rhythm: "수업이나 행사처럼 그날 분위기가 걸린 일에서 특히 그렇습니다.",
-        },
-        {
-          intensityBandId: "strong",
-          direction: "positive",
-          headline: "상황이 달라져도 준비를 끝내고 출발해요",
-          summary: "준비가 덜 된 채로 시작하는 것을 잘 견디지 않는 쪽이에요.",
-          rhythm: "갑자기 일이 들어와도 순서를 다시 짜 놓고 시작합니다.",
-        },
-        {
-          intensityBandId: "strong",
-          direction: "negative",
-          headline: "상황이 달라져도 하면서 길을 찾아요",
-          summary: "흐름이 어긋나도 크게 흔들리지 않고 다음 수를 찾는 쪽이에요.",
-          rhythm: "갑자기 일이 들어와도 하던 것을 접고 바로 그 일에 붙습니다.",
-        },
-        {
-          intensityBandId: "defining",
-          direction: "positive",
-          headline: "거의 늘 순서가 정해진 뒤에 움직여요",
-          summary: "일이 시작되는 때가 대체로 할 일이 다 적힌 뒤예요.",
-          rhythm: "하루를 여는 아침에도 오늘 할 일을 먼저 적어 둡니다.",
-        },
-        {
-          intensityBandId: "defining",
-          direction: "negative",
-          headline: "거의 늘 해 보면서 방법을 정해요",
-          summary: "방법이 정해지는 때가 대체로 이미 해 보고 있는 중이에요.",
-          rhythm: "하루를 여는 아침에도 교실 분위기를 보고 순서를 정합니다.",
+          headline: "진행하면서 방법을 바꿔요",
+          summary:
+            "정해 둔 대로 진행하기보다 그날 상황에 맞는 방법을 골라요. 계획과 달라져도 바로 다른 방법을 찾습니다.",
+          scene: "수업 중에 더 나은 활동이 보이면 그 자리에서 바꿉니다.",
         },
       ],
     },

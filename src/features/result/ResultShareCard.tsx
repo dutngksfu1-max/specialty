@@ -72,16 +72,14 @@ export const ResultShareCard = forwardRef<
       </p>
 
       {/* 유형 엠블럼 — 카드 전체가 aria-hidden이므로 decorative로 넘깁니다 */}
-      {narrative.balancedAxisIds.size === 0 && (
-        <div style={{ marginTop: 40 }}>
-          <TypeEmblem
-            axisIds={definition.axes.map((axis) => axis.id)}
-            poles={profile.poles}
-            size={132}
-            decorative
-          />
-        </div>
-      )}
+      <div style={{ marginTop: 40 }}>
+        <TypeEmblem
+          axisIds={definition.axes.map((axis) => axis.id)}
+          poles={profile.poles}
+          size={132}
+          decorative
+        />
+      </div>
 
       <p style={{ marginTop: 32, fontSize: 26, color: "var(--color-foreground-subtle)" }}>
         {resultOwner}의 결과
@@ -132,7 +130,7 @@ export const ResultShareCard = forwardRef<
               <AxisBar
                 axis={axis}
                 score={score}
-                intensityBandId={narrativeById.get(String(score.axisId))?.reading.intensityBandId}
+                intensityBandId={narrativeById.get(String(score.axisId))?.intensityBandId}
                 variant="share"
               />
             </div>

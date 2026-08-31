@@ -4,10 +4,7 @@ import {
   assessmentError,
   type AssessmentError,
 } from "@/domain/assessment/errors/assessmentError";
-import type {
-  AssessmentDefinition,
-  NarrativeDirection,
-} from "@/domain/assessment/model/definition";
+import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
 import {
   toAssessmentId,
   toAxisId,
@@ -50,7 +47,6 @@ const intensityBandSchema = z.object({
   label: z.string().min(1),
   minAbsScore: z.number().int().min(0),
   maxAbsScore: z.number().int().min(0),
-  directional: z.boolean().default(true),
 });
 
 const axisSchema = z.object({
@@ -148,11 +144,10 @@ const axisCombinationSchema = z.object({
 });
 
 const axisNarrativeReadingSchema = z.object({
-  intensityBandId: z.string().min(1),
-  direction: z.enum(["balanced", "positive", "negative"]),
+  direction: poleSideSchema,
   headline: z.string().min(1),
   summary: z.string().min(1),
-  rhythm: z.string().min(1),
+  scene: z.string().min(1),
 });
 
 const axisResultNarrativeSchema = z.object({
@@ -162,15 +157,8 @@ const axisResultNarrativeSchema = z.object({
 });
 
 const resultNarrativeSchema = z.object({
-  balancedTitle: z.string().min(1),
-  balancedRhythm: z.string().min(1).optional(),
-  balancedOneLiner: z.string().min(1),
-  balancedAxisNote: z.string().min(1),
-  unreadableAxisNote: z.string().min(1).optional(),
-  unreadableAxisLabel: z.string().min(1).max(12).optional(),
   scopeNote: z.string().min(1),
   emphasisTerms: z.array(z.string().min(2)).default([]),
-  balancedGuidance: resultGuidanceSchema,
   axes: z.array(axisResultNarrativeSchema).min(1),
 });
 
@@ -183,9 +171,6 @@ const resultNarrativeSchema = z.object({
  */
 const typeCodeSchema = z.object({
   label: z.string().min(1),
-  /** 균형 자리에서 두 극의 글자를 잇는 기호 (DEC-064) */
-  balancedSeparator: z.string().min(1).max(2),
-  balancedNote: z.string().min(1),
   crosswalk: z
     .object({
       systemLabel: z.string().min(1),
@@ -193,8 +178,6 @@ const typeCodeSchema = z.object({
       selfReportedInputLabel: z.string().min(1),
       disclaimer: z.string().min(1),
       unavailableNote: z.string().min(1),
-      /** 나열할 환산 후보의 최대 개수. 넘으면 나열하지 않습니다 (DEC-064) */
-      maxCandidates: z.number().int().positive().optional(),
     })
     .optional(),
 });
@@ -265,7 +248,6 @@ const presentationSchema = z.object({
       }),
     )
     .optional(),
-  balancedArtwork: characterArtworkSetSchema.optional(),
   responseScaleGuide: z.array(responseScaleGuideItemSchema).optional(),
 });
 
@@ -324,17 +306,9 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
       issue(`유형 코드 글자가 중복됩니다: ${duplicateCodes.join(", ")}`, ["axes"]);
     }
 
-    // 균형 자리는 이제 두 극의 글자를 그대로 병기하므로(DEC-064), 이을 기호가 극 글자와
-    // 겹치면 `G/D`의 `/`가 어느 자리 글자인지 읽을 수 없게 됩니다.
-    const separator = definition.typeCode.balancedSeparator;
-    if (poles.some((pole) => pole.code === separator)) {
-      issue(`균형 자리를 잇는 기호(${separator})를 극 글자로도 쓰고 있습니다.`, ["typeCode"]);
-    }
-
     const crosswalk = definition.typeCode.crosswalk;
     if (crosswalk !== undefined) {
       const missingCrosswalk = poles.filter((pole) => pole.crosswalkCode === undefined);
-      // 균형 자리는 두 극의 환산 글자를 모두 씁니다. 한쪽만 있으면 후보를 만들 수 없습니다.
       if (missingCrosswalk.length > 0 && missingCrosswalk.length < poles.length) {
         issue(
           `환산 표기를 쓰려면 모든 축 극에 crosswalkCode가 있어야 합니다. ${missingCrosswalk.length}개 빠졌습니다.`,
@@ -490,7 +464,7 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
     issue("pole 조합에 누락이 있습니다.", ["resultProfiles"]);
   }
 
-  // --- 방향·강도 결과 서술이 모든 축과 구간을 정확히 덮는가 ----------------
+  // --- 방향 결과 서술이 모든 축의 양쪽을 정확히 덮는가 ----------------------
   if (definition.resultNarrative !== undefined) {
     const narrativeAxisIds = definition.resultNarrative.axes.map((axis) => String(axis.axisId));
     const duplicateNarrativeAxes = findDuplicates(narrativeAxisIds);
@@ -511,39 +485,17 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
       const axis = definition.axes.find((candidate) => candidate.id === narrativeAxis.axisId);
       if (axis === undefined) return;
 
-      const knownBandIds = new Set(axis.intensityBands.map((band) => band.id));
-      narrativeAxis.readings.forEach((reading, readingIndex) => {
-        if (!knownBandIds.has(reading.intensityBandId)) {
-          issue(`결과 서술이 없는 강도 구간을 가리킵니다: ${reading.intensityBandId}`, [
-            "resultNarrative",
-            "axes",
-            narrativeAxisIndex,
-            "readings",
-            readingIndex,
-            "intensityBandId",
-          ]);
-        }
-      });
-
-      axis.intensityBands.forEach((band) => {
-        const readings = narrativeAxis.readings.filter(
-          (reading) => reading.intensityBandId === band.id,
+      const directions = narrativeAxis.readings.map((reading) => reading.direction);
+      const expectedDirections = ["positive", "negative"] as const;
+      if (
+        directions.length !== expectedDirections.length ||
+        expectedDirections.some((direction) => !directions.includes(direction))
+      ) {
+        issue(
+          `축 ${String(axis.id)}의 결과 서술은 positive/negative 방향을 정확히 한 번씩 가져야 합니다.`,
+          ["resultNarrative", "axes", narrativeAxisIndex, "readings"],
         );
-        const directions = readings.map((reading) => reading.direction);
-        const expectedDirections: readonly NarrativeDirection[] = band.directional
-          ? ["positive", "negative"]
-          : ["balanced", "positive", "negative"];
-
-        if (
-          directions.length !== expectedDirections.length ||
-          expectedDirections.some((direction) => !directions.includes(direction))
-        ) {
-          issue(
-            `축 ${String(axis.id)}의 ${band.id} 결과 서술은 ${expectedDirections.join("/")} 방향을 정확히 한 번씩 가져야 합니다.`,
-            ["resultNarrative", "axes", narrativeAxisIndex, "readings"],
-          );
-        }
-      });
+      }
     });
   }
 
@@ -609,37 +561,7 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
     ...(definition.resultNarrative === undefined
       ? []
       : [
-          ["resultNarrative.balancedTitle", definition.resultNarrative.balancedTitle] as const,
-          ["resultNarrative.balancedOneLiner", definition.resultNarrative.balancedOneLiner] as const,
-          ["resultNarrative.balancedAxisNote", definition.resultNarrative.balancedAxisNote] as const,
           ["resultNarrative.scopeNote", definition.resultNarrative.scopeNote] as const,
-          ...definition.resultNarrative.balancedGuidance.shiningMoments.map(
-            (note, index) =>
-              [`resultNarrative.balancedGuidance.shiningMoments.${index}`, note.text] as const,
-          ),
-          ...definition.resultNarrative.balancedGuidance.underPressure.map(
-            (note, index) =>
-              [`resultNarrative.balancedGuidance.underPressure.${index}`, note.text] as const,
-          ),
-          ...definition.resultNarrative.balancedGuidance.withColleagues.map(
-            (note, index) =>
-              [`resultNarrative.balancedGuidance.withColleagues.${index}`, note.text] as const,
-          ),
-          ...definition.resultNarrative.balancedGuidance.collaboration.naturalFit.map(
-            (text, index) =>
-              [`resultNarrative.balancedGuidance.naturalFit.${index}`, text] as const,
-          ),
-          ...definition.resultNarrative.balancedGuidance.collaboration.needsTuning.map(
-            (text, index) =>
-              [`resultNarrative.balancedGuidance.needsTuning.${index}`, text] as const,
-          ),
-          ...definition.resultNarrative.balancedGuidance.nextSteps.map(
-            (text, index) => [`resultNarrative.balancedGuidance.nextSteps.${index}`, text] as const,
-          ),
-          ...definition.resultNarrative.balancedGuidance.talkingPoints.map(
-            (text, index) =>
-              [`resultNarrative.balancedGuidance.talkingPoints.${index}`, text] as const,
-          ),
           ...definition.resultNarrative.axes.flatMap((axis) => [
             [
               `resultNarrative.${String(axis.axisId)}.counterEvidence`,
@@ -648,7 +570,7 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
             ...axis.readings.flatMap((reading, index) => [
               [`resultNarrative.${String(axis.axisId)}.${index}.headline`, reading.headline] as const,
               [`resultNarrative.${String(axis.axisId)}.${index}.summary`, reading.summary] as const,
-              [`resultNarrative.${String(axis.axisId)}.${index}.rhythm`, reading.rhythm] as const,
+              [`resultNarrative.${String(axis.axisId)}.${index}.scene`, reading.scene] as const,
             ]),
           ]),
         ]),
@@ -731,17 +653,11 @@ export function parseAssessmentContentPackage(
     ? []
     : resultKeys.filter((key) => !typeArtworkKeys.includes(key));
   const unknownTypeArtworkKeys = typeArtworkKeys.filter((key) => !resultKeys.includes(key));
-  const hasIncompleteTypeArtwork =
-    (typeArtwork === undefined) !== (presentation.balancedArtwork === undefined);
   const forbiddenTypeArtwork = typeArtwork?.find(
     (item) =>
       hasForbiddenTerm(item.artwork.male.src) ||
       hasForbiddenTerm(item.artwork.female.src),
   );
-  const forbiddenBalancedArtwork =
-    presentation.balancedArtwork !== undefined &&
-    (hasForbiddenTerm(presentation.balancedArtwork.male.src) ||
-      hasForbiddenTerm(presentation.balancedArtwork.female.src));
   const missingGuideValues = responseScaleGuide === undefined
     ? []
     : responseValues.filter((value) => !guideValues.includes(value));
@@ -772,15 +688,9 @@ export function parseAssessmentContentPackage(
     unknownTypeArtworkKeys.length > 0
       ? `presentation.typeArtwork이 없는 resultKey를 가리킵니다: ${unknownTypeArtworkKeys.join(", ")}`
       : "",
-    hasIncompleteTypeArtwork
-      ? "presentation.typeArtwork과 balancedArtwork는 함께 제공해야 합니다."
-      : "",
     forbiddenTypeArtwork === undefined
       ? ""
       : `presentation.typeArtwork.${String(forbiddenTypeArtwork.resultKey)} 경로에 노출 금지 표현이 있습니다.`,
-    forbiddenBalancedArtwork
-      ? "presentation.balancedArtwork 경로에 노출 금지 표현이 있습니다."
-      : "",
     forbiddenGuide === undefined
       ? ""
       : `presentation.responseScaleGuide.${forbiddenGuide.value}에 노출 금지 표현이 있습니다.`,

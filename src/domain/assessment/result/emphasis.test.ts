@@ -14,13 +14,13 @@ const TERMS = ["혼자 정리하는", "혼자", "미리 정해 두"] as const;
 
 describe("강조 구간 나누기", () => {
   it("핵심 어구만 강조하고 나머지는 그대로 둡니다", () => {
-    const segments = emphasizeText("두 방식을 함께 쓰지만, 혼자 정리하는 쪽에 조금 더 가까워요.", TERMS);
+    const segments = emphasizeText("혼자 정리한 뒤 의견을 말해요.", TERMS);
 
     expect(segments.map((segment) => segment.text).join("")).toBe(
-      "두 방식을 함께 쓰지만, 혼자 정리하는 쪽에 조금 더 가까워요.",
+      "혼자 정리한 뒤 의견을 말해요.",
     );
     expect(segments.filter((segment) => segment.emphasized).map((segment) => segment.text)).toEqual([
-      "혼자 정리하는",
+      "혼자",
     ]);
   });
 
@@ -72,7 +72,7 @@ describe("실제 콘텐츠에 강조가 실제로 걸립니다", () => {
   it("등록한 강조 어구가 모두 본문에 실제로 쓰입니다", () => {
     // 쓰이지 않는 어구가 쌓이면 목록이 관리되지 않고 있다는 뜻입니다.
     const body = narrative.axes
-      .flatMap((axis) => axis.readings.flatMap((r) => [r.headline, r.summary, r.rhythm]))
+      .flatMap((axis) => axis.readings.flatMap((r) => [r.headline, r.summary, r.scene]))
       .join(" ");
 
     for (const term of narrative.emphasisTerms) {
@@ -83,14 +83,12 @@ describe("실제 콘텐츠에 강조가 실제로 걸립니다", () => {
   it("방향이 정해진 축 서술은 강조할 곳이 있습니다", () => {
     for (const axis of narrative.axes) {
       for (const reading of axis.readings) {
-        if (reading.direction === "balanced") continue;
-
         const marked = emphasizeText(reading.summary, narrative.emphasisTerms).filter(
           (segment) => segment.emphasized,
         );
         expect(
           marked.length,
-          `${String(axis.axisId)}/${reading.intensityBandId}/${reading.direction}: ${reading.summary}`,
+          `${String(axis.axisId)}/${reading.direction}: ${reading.summary}`,
         ).toBeGreaterThan(0);
       }
     }

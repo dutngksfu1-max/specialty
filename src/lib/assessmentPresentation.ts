@@ -73,8 +73,6 @@ export interface AssessmentPresentation {
     readonly resultKey: ResultKey;
     readonly artwork: CharacterArtworkSet;
   }[];
-  /** 어느 한쪽으로 단정하지 않는 균형 구간 전용 남성·여성 캐릭터입니다. */
-  readonly balancedArtwork?: CharacterArtworkSet;
   /** 제공하면 소개 화면에서 각 응답 라벨과 함께 표시합니다. */
   readonly responseScaleGuide?: readonly ResponseScaleGuideItem[];
 }
@@ -110,16 +108,13 @@ export function findSectionArtwork(
   return presentation?.sectionArtwork.find((item) => item.sectionId === sectionId)?.artwork;
 }
 
-/** 결과 화면 조립 지점에서 성별·균형 여부·내부 결과 키에 맞는 캐릭터를 고릅니다. */
+/** 결과 화면 조립 지점에서 성별과 내부 결과 키에 맞는 캐릭터를 고릅니다. */
 export function findTypeArtwork(
   presentation: AssessmentPresentation | undefined,
   resultKey: ResultKey,
-  hasBalancedAxis: boolean,
   characterGender: CharacterGender | null,
 ): LocalArtwork | undefined {
   if (characterGender === null) return undefined;
-  const set = hasBalancedAxis
-    ? presentation?.balancedArtwork
-    : presentation?.typeArtwork?.find((item) => item.resultKey === resultKey)?.artwork;
+  const set = presentation?.typeArtwork?.find((item) => item.resultKey === resultKey)?.artwork;
   return set?.[characterGender];
 }

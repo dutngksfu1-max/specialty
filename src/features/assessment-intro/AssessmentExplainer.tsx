@@ -145,8 +145,8 @@ const takeawayItems = [
   {
     number: "02",
     icon: "layers" as const,
-    title: "기울기와 균형",
-    body: "한쪽으로 단정하지 않고 두 방향 사이의 위치와 균형을 함께 봐요.",
+    title: "방향과 기울기",
+    body: "결과 문장은 더 가까운 방향을 설명하고, 기울어진 정도는 막대로 보여 드려요.",
   },
   {
     number: "03",

@@ -33,17 +33,22 @@ export interface AxisPole {
 }
 
 export interface IntensityBand {
-  /** "balanced" | "clear" | "strong" 같은 내부 식별자 */
+  /** "clear" | "strong" 같은 내부 식별자 */
   readonly id: string;
-  /** "균형" | "뚜렷" | "매우 뚜렷" — 문구는 콘텐츠가 소유합니다 */
+  /** "뚜렷" | "매우 뚜렷" — 문구는 콘텐츠가 소유합니다 */
   readonly label: string;
   /** 이 값 이상 */
   readonly minAbsScore: number;
   /** 이 값 이하 */
   readonly maxAbsScore: number;
-  /** false면 이 구간에서는 어느 한쪽 방향으로 해석하지 않습니다. */
-  readonly directional: boolean;
 }
+
+/**
+ * 강도 구간은 **게이지 옆 배지에만** 쓰입니다 (DEC-068).
+ *
+ * 설명 문장을 고르는 데는 쓰지 않습니다. 어느 쪽으로 기울었는지만 문장을 정하고,
+ * 얼마나 기울었는지는 게이지와 이 배지가 말합니다.
+ */
 
 /**
  * 축에는 강도 구간이 최소 1개 있어야 합니다.
@@ -84,24 +89,22 @@ export interface AxisCombination {
   readonly readings: readonly AxisCombinationReading[];
 }
 
-export type NarrativeDirection = PoleSide | "balanced";
-
 /**
- * 축 점수의 방향과 강도를 함께 읽는 결과 문장입니다.
+ * 축의 한쪽 방향을 설명하는 문장 묶음입니다 (DEC-068).
  *
- * 비방향 구간도 rawScore가 0이 아니면 positive/negative 읽기를 사용해
- * 작은 기울기를 설명할 수 있습니다. 이때 방향 읽기는 프로필 확정이 아니라
- * 균형 범위 안의 차이를 보여 주기 위한 것입니다.
+ * **극마다 하나입니다.** 세기에 따라 문장을 나누지 않습니다 —
+ * 51:49로 기운 분과 80:20으로 기운 분은 같은 설명을 읽고, 얼마나 기울었는지는
+ * 게이지가 말합니다. 세기로 문장을 갈라 두면 근소한 차이가 "가끔 그래요"처럼
+ * 읽혀, 5~10분을 들인 사람이 자기 결과를 흐릿하게 받아 가게 됩니다.
  */
 export interface AxisNarrativeReading {
-  readonly intensityBandId: string;
-  readonly direction: NarrativeDirection;
-  /** 결과 상단 제목으로 쓸 수 있는 짧은 문장 */
+  readonly direction: PoleSide;
+  /** 관점 카드의 제목. 짧은 평서문 한 줄 */
   readonly headline: string;
-  /** 결과 상단 한 줄 설명에 쓰는 문장 */
+  /** 어떤 모습인지 설명하는 한두 문장 */
   readonly summary: string;
-  /** '나의 교직 리듬'에서 이 축을 설명하는 한 문장 */
-  readonly rhythm: string;
+  /** 교실에서 그 모습이 드러나는 장면 한 문장. 자세히 보기에서만 씁니다 */
+  readonly scene: string;
 }
 
 export interface AxisResultNarrative {
@@ -118,26 +121,6 @@ export interface AxisResultNarrative {
 
 /** 검사별 결과 서술 규격. 채점 엔진은 이 문구를 알지 못합니다. */
 export interface ResultNarrativeSpec {
-  /**
-   * 균형 축이 하나라도 있을 때 쓰는 제목 (DEC-046 · DEC-062)
-   *
-   * 균형 축의 방향은 `axis.defaultPole`이 임의로 채웁니다. 그렇게 뽑힌 16개 프로필의
-   * 제목을 그대로 쓰면, 사실상 동전 던지기로 정해진 이름을 "당신"이라고 부르게 됩니다.
-   */
-  readonly balancedTitle: string;
-  readonly balancedOneLiner: string;
-  /** 균형 축이 있을 때의 교직 리듬. 없으면 화면은 프로필 리듬으로 되돌아갑니다 */
-  readonly balancedRhythm?: string;
-  readonly balancedAxisNote: string;
-  /**
-   * 0점이지만 응답이 갈리지 않아 방향을 읽을 수 없는 축에 쓰는 문구 (DEC-053)
-   *
-   * 이 축은 **균형이 아닙니다.** 답을 고르지 않은 사람에게 "두 성향을 고루 쓰시네요"라고
-   * 말하는 것은 해석이 아니라 지어내기입니다. 없으면 화면은 균형과 같게 다룹니다.
-   */
-  readonly unreadableAxisNote?: string;
-  /** 위 축의 짧은 표식. 화면에서 '균형' 자리에 대신 들어갑니다 */
-  readonly unreadableAxisLabel?: string;
   /** 본문 흐름을 끊지 않고 해석 범위만 짧게 알리는 문구 */
   readonly scopeNote: string;
   /**
@@ -147,38 +130,18 @@ export interface ResultNarrativeSpec {
    * 이 검사는 축마다 전용 어휘를 쓰므로 목록 하나를 모든 결과 문장에 함께 써도 축이 섞이지 않습니다.
    */
   readonly emphasisTerms: readonly string[];
-  /** 균형 축이 하나라도 있을 때 부호 기반 16개 프로필 대신 보여 줄 중립 안내 */
-  readonly balancedGuidance: Pick<
-    ResultProfile,
-    | "shiningMoments"
-    | "underPressure"
-    | "withColleagues"
-    | "collaboration"
-    | "nextSteps"
-    | "talkingPoints"
-  >;
   readonly axes: readonly AxisResultNarrative[];
 }
 
 /**
  * 유형 코드 표기 규격 (DEC-049)
  *
- * 체계 이름·균형 표시·환산 문구를 전부 콘텐츠가 소유합니다.
+ * 체계 이름과 환산 문구를 전부 콘텐츠가 소유합니다.
  * 엔진은 "자리마다 글자 하나"라는 규칙만 알고, 무슨 글자인지도 무슨 이름인지도 모릅니다.
  */
 export interface TypeCodeSpec {
   /** 화면에 쓰는 체계 이름 (예: "4렌즈 코드") */
   readonly label: string;
-  /**
-   * 균형 자리에서 두 극의 글자를 잇는 기호 (DEC-064)
-   *
-   * 균형 자리를 비우지 않고 **두 글자를 함께** 적습니다. 어느 쪽으로도 기울지 않았다는 것은
-   * "아무것도 아니다"가 아니라 "둘 다일 수 있다"이기 때문입니다.
-   * 자리 수는 그대로 유지되므로 코드 길이와 축 개수가 계속 일치합니다.
-   */
-  readonly balancedSeparator: string;
-  /** 균형 자리가 있을 때 코드 옆에 붙이는 안내 */
-  readonly balancedNote: string;
   /**
    * 다른 검사로의 환산 표기. 없으면 환산을 아예 보여 주지 않습니다.
    *
@@ -193,15 +156,8 @@ export interface TypeCodeSpec {
     readonly selfReportedInputLabel: string;
     /** 환산이 정확한 변환이 아니라 근사임을 알리는 문구 */
     readonly disclaimer: string;
-    /** 후보가 너무 많거나 환산할 수 없을 때 대신 보여 줄 문구 */
+    /** 환산할 수 없을 때 대신 보여 줄 문구 */
     readonly unavailableNote: string;
-    /**
-     * 나열할 환산 후보의 최대 개수 (DEC-064)
-     *
-     * 균형 자리 하나마다 후보가 두 배로 늘어납니다(1개→2, 2개→4, 3개→8).
-     * 여덟 개를 늘어놓으면 읽을 수 없으므로 상한을 넘으면 나열하지 않고 안내 문구를 씁니다.
-     */
-    readonly maxCandidates?: number;
   };
 }
 
@@ -287,7 +243,7 @@ export interface AssessmentDefinition {
   readonly contentVersion: string;
   readonly scale: ResponseScale;
   readonly axes: readonly AssessmentAxis[];
-  /** 방향·강도·균형을 함께 반영하는 결과 서술. 없으면 기존 프로필 문구를 사용합니다. */
+  /** 축 방향을 설명하는 결과 서술. 없으면 기존 프로필 문구를 사용합니다. */
   readonly resultNarrative?: ResultNarrativeSpec;
   /** 유형 코드 표기 규격. 없으면 결과에 코드를 표시하지 않습니다 (DEC-049) */
   readonly typeCode?: TypeCodeSpec;

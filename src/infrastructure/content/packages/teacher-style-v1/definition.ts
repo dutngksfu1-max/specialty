@@ -21,36 +21,24 @@
  */
 
 /**
- * 강도 구간 — 5구간 (DEC-047 · DEC-048)
+ * 게이지 강도 구간 — 4구간 (DEC-068)
  *
  * 축당 12문항 × 최대 편차 2 = 최대 24점입니다.
  *
- * **균형은 정확히 0점, 즉 진짜 동점일 때만입니다** (DEC-052).
+ * 결과 설명은 세기와 관계없이 방향별로 하나입니다. 이 구간은 설명 문장을 고르지 않고
+ * 게이지 옆에서 점수 차이만 알려 줍니다. 합계가 정확히 같아도 동점 보정 또는 기본 방향으로
+ * 한쪽을 정하며, 게이지에는 가장 작은 기울기로 표시합니다.
  *
- * 예전에는 0~5를 균형으로 봤는데, 이 폭이 응답 잡음의 표준편차(약 4.9점)와 거의 같았습니다.
- * 축 점수는 정방향 6문항에서 역방향 6문항을 뺀 값이라, 아무렇게나 답해도 대부분 0 근처에 모입니다.
- * 그래서 ±5를 균형으로 부르면 **잡음 구간을 통째로 균형이라고 부르게 됩니다.**
- * 실제로 무작위 응답에서 축 하나가 균형으로 판정될 확률이 73%, 네 축 모두 균형이 28%였습니다.
- *
- * 한쪽으로 조금이라도 기울면 그 방향을 알려 주고, **얼마나 기울었는지는 구간으로 말합니다.**
- * 약한 기울기를 숨기는 대신 약하다고 말하는 쪽이 정직합니다.
- *
- * **구간이 올라가면 확신이 아니라 구체성이 올라갑니다** (docs/PRD-result-v2.md 6.3).
- * "확실히 그렇습니다"가 아니라 "몇 개의 장면에서 나타나는가"가 달라집니다.
- * 검증 데이터 없이 5구간을 쓰는 것을 정당화하는 규율이므로, 문구를 고칠 때 반드시 지킵니다.
- *
- *   균형        0        정방향과 역방향이 정확히 맞선 진짜 동점
- *   조금 뚜렷   1 ~ 6     한 장면에서 보임
- *   뚜렷       7 ~ 12    여러 장면에서 비슷하게
- *   강함      13 ~ 18    장면이 바뀌어도 같은 선택
- *   매우 뚜렷  19 ~ 24    거의 모든 장면에서
+ *   근소한 차이   0 ~ 6
+ *   분명한 차이   7 ~ 12
+ *   큰 차이      13 ~ 18
+ *   매우 큰 차이  19 ~ 24
  */
 const intensityBands = [
-  { id: "balanced", label: "균형", minAbsScore: 0, maxAbsScore: 0, directional: false },
-  { id: "leaning", label: "조금 뚜렷", minAbsScore: 1, maxAbsScore: 6, directional: true },
-  { id: "clear", label: "뚜렷", minAbsScore: 7, maxAbsScore: 12, directional: true },
-  { id: "strong", label: "강함", minAbsScore: 13, maxAbsScore: 18, directional: true },
-  { id: "defining", label: "매우 뚜렷", minAbsScore: 19, maxAbsScore: 24, directional: true },
+  { id: "leaning", label: "근소한 차이", minAbsScore: 0, maxAbsScore: 6 },
+  { id: "clear", label: "분명한 차이", minAbsScore: 7, maxAbsScore: 12 },
+  { id: "strong", label: "큰 차이", minAbsScore: 13, maxAbsScore: 18 },
+  { id: "defining", label: "매우 큰 차이", minAbsScore: 19, maxAbsScore: 24 },
 ];
 
 /**
@@ -70,7 +58,7 @@ const axes = [
       code: "G",
       crosswalkCode: "E",
       description:
-        "동료와 이야기를 주고받을 때 생각이 정리되는 편입니다. 짧은 대화에서도 필요한 실마리를 찾고 다음 일을 이어 갑니다.",
+        "동료와 이야기를 주고받을 때 생각이 정리되는 편입니다. 짧은 대화에서도 필요한 정보와 다음 행동을 정합니다.",
     },
     negative: {
       side: "negative",
@@ -98,12 +86,12 @@ const axes = [
     },
     negative: {
       side: "negative",
-      label: "가능성과 흐름을 보는 가능성형",
+      label: "앞으로의 변화를 보는 가능성형",
       shortLabel: "가능성형",
       code: "O",
       crosswalkCode: "N",
       description:
-        "지금 보이는 일이 앞으로 어떻게 이어질지를 그리며 아이와 수업을 이해합니다. 하나하나를 전체 흐름과 이어서 살핍니다.",
+        "지금 확인한 일이 앞으로 어떤 변화로 이어질지 예상하며 아이와 수업을 이해합니다. 개별 사실이 다음 단계에 미칠 영향을 살핍니다.",
     },
     defaultPole: "positive",
     intensityBands,
@@ -151,7 +139,7 @@ const axes = [
       code: "L",
       crosswalkCode: "P",
       description:
-        "큰 방향을 세운 뒤 현장 상황에 맞춰 방법을 조정합니다. 새로 확인한 정보와 반응을 진행 과정에 반영합니다.",
+        "목표를 정한 뒤 현장 상황에 맞춰 방법을 조정합니다. 새로 확인한 정보와 반응을 진행 과정에 반영합니다.",
     },
     defaultPole: "positive",
     intensityBands,
@@ -168,7 +156,7 @@ const axes = [
 const axisCombinations = [
   {
     id: "combo-novelty",
-    title: "새로운 방법을 수업에 옮기는 방식",
+    title: "새 수업 방법을 시작하는 방식",
     axisIds: ["axis-lens", "axis-rhythm"],
     readings: [
       {
@@ -181,17 +169,17 @@ const axisCombinations = [
       },
       {
         poles: { "axis-lens": "negative", "axis-rhythm": "positive" },
-        text: "새로운 방법이 우리 반의 배움과 어디로 이어질지를 먼저 그려 보고, 의미가 분명해지면 학기 흐름 안에 자리를 마련하는 편이에요. 방향과 첫 걸음을 함께 적어 두면 생각을 옮기기 편합니다.",
+        text: "새로운 방법이 우리 반의 학습에 어떤 변화를 만들지 먼저 예상하고, 목적이 분명하면 학기 계획에 넣는 편이에요. 목표와 첫 실행 항목을 함께 적으면 바로 시작하기 쉽습니다.",
       },
       {
         poles: { "axis-lens": "negative", "axis-rhythm": "negative" },
-        text: "수업의 새로운 가능성이 떠오르면 큰 방향을 두고 작은 시도를 시작하는 편이에요. 시도한 뒤 무엇을 이어 가고 무엇을 멈출지 정리하면 다음 선택이 더 분명해질 수 있습니다.",
+        text: "새 수업 방법이 떠오르면 목표만 정한 뒤 작은 범위에서 먼저 시도하는 편이에요. 시도 후 계속할 것과 중단할 것을 정하면 다음 방법을 선택하기 쉽습니다.",
       },
     ],
   },
   {
     id: "combo-energy-decision",
-    title: "판단을 정리하는 자리",
+    title: "판단 기준을 정하는 방식",
     axisIds: ["axis-energy", "axis-decision"],
     readings: [
       {
@@ -214,7 +202,7 @@ const axisCombinations = [
   },
   {
     id: "combo-energy-lens",
-    title: "정보를 모으는 자리",
+    title: "정보를 확인하는 방식",
     axisIds: ["axis-energy", "axis-lens"],
     readings: [
       {
@@ -231,13 +219,13 @@ const axisCombinations = [
       },
       {
         poles: { "axis-energy": "negative", "axis-lens": "negative" },
-        text: "혼자 생각을 이어 가며 앞으로의 그림을 그리는 편이에요. 그린 그림을 중간에 한 번 꺼내 보면, 혼자 멀리 간 부분을 일찍 확인할 수 있습니다.",
+        text: "혼자 생각하며 앞으로 생길 변화를 예상하는 편이에요. 예상한 내용을 중간에 동료에게 공유하면, 현재 상황과 맞지 않는 부분을 일찍 확인할 수 있습니다.",
       },
     ],
   },
   {
     id: "combo-energy-rhythm",
-    title: "일을 시작하는 자리",
+    title: "업무를 시작하는 방식",
     axisIds: ["axis-energy", "axis-rhythm"],
     readings: [
       {
@@ -246,7 +234,7 @@ const axisCombinations = [
       },
       {
         poles: { "axis-energy": "positive", "axis-rhythm": "negative" },
-        text: "동료와 이야기하며 그때그때 방법을 맞춰 가는 편이에요. 바뀐 내용을 한 곳에 모아 두면 나중에 합류한 사람도 흐름을 따라올 수 있습니다.",
+        text: "동료와 이야기하며 상황에 맞게 방법을 조정하는 편이에요. 바뀐 내용을 한 곳에 기록하면 나중에 합류한 사람도 현재 진행 방식을 확인할 수 있습니다.",
       },
       {
         poles: { "axis-energy": "negative", "axis-rhythm": "positive" },
@@ -260,7 +248,7 @@ const axisCombinations = [
   },
   {
     id: "combo-lens-decision",
-    title: "본 것을 판단으로 옮기는 자리",
+    title: "사실과 상황을 판단하는 방식",
     axisIds: ["axis-lens", "axis-decision"],
     readings: [
       {
@@ -273,7 +261,7 @@ const axisCombinations = [
       },
       {
         poles: { "axis-lens": "negative", "axis-decision": "positive" },
-        text: "앞으로의 흐름을 그린 뒤 기준에 맞춰 정리하는 편이에요. 그림과 기준 사이가 벌어질 때가 있으니, 지금 확인할 수 있는 사실을 한 번 짚어 보면 도움이 됩니다.",
+        text: "앞으로 생길 변화를 예상한 뒤 공통 기준에 맞춰 판단하는 편이에요. 예상과 기준이 맞지 않을 때는 현재 확인할 수 있는 사실을 먼저 검토하면 도움이 됩니다.",
       },
       {
         poles: { "axis-lens": "negative", "axis-decision": "negative" },
@@ -283,7 +271,7 @@ const axisCombinations = [
   },
   {
     id: "combo-decision-rhythm",
-    title: "정한 것을 실행으로 옮기는 자리",
+    title: "결정을 실행하는 방식",
     axisIds: ["axis-decision", "axis-rhythm"],
     readings: [
       {
@@ -296,11 +284,11 @@ const axisCombinations = [
       },
       {
         poles: { "axis-decision": "negative", "axis-rhythm": "positive" },
-        text: "각자의 사정을 살피되 진행은 정한 순서대로 이어 가는 편이에요. 사정을 반영해 순서를 바꿨다면 그 사실을 알려 두면 혼선이 줄어듭니다.",
+        text: "각자의 사정을 살피되 업무는 정한 순서대로 진행하는 편이에요. 사정을 반영해 순서를 바꿨다면 변경 내용을 알려 두면 혼선이 줄어듭니다.",
       },
       {
         poles: { "axis-decision": "negative", "axis-rhythm": "negative" },
-        text: "상황을 보며 판단도 방법도 함께 조정하는 편이에요. 두 가지가 동시에 움직이면 밖에서는 흐름이 보이지 않으므로, 언제 다시 확인할지 정해 두면 좋습니다.",
+        text: "현재 상황에 맞춰 판단과 실행 방법을 함께 조정하는 편이에요. 두 가지를 동시에 바꾸면 동료가 변경 내용을 알기 어려우므로, 다시 확인할 시점을 정해 두면 좋습니다.",
       },
     ],
   },
@@ -316,30 +304,30 @@ const sections = [
   {
     id: "part-1",
     order: 1,
-    title: "평소의 교실 리듬 떠올리기",
+    title: "평소 교실 운영 떠올리기",
     description:
       "교실과 교무실에서 자주 보이는 평소 모습을 떠올려 보세요. 가장 바람직한 모습보다 요즘 자연스럽게 하는 쪽에 답하면 됩니다.",
   },
   {
     id: "part-2",
     order: 2,
-    title: "수업과 관계의 장면 살피기",
+    title: "수업과 관계에서 하는 행동 살피기",
     description:
       "수업을 준비하고 아이들과 관계를 맺는 장면을 생각해 보세요. 상황에 따라 달랐다면 더 자주 나타나는 쪽을 골라 주세요.",
   },
   {
     id: "part-3",
     order: 3,
-    title: "결정과 협업 방식 돌아보기",
+    title: "결정과 협업 방식 확인하기",
     description:
       "업무를 정리하고 동료와 함께 움직였던 최근 장면을 떠올려 보세요. 오래 분석하기보다 먼저 가까운 쪽을 골라 주세요.",
   },
   {
     id: "part-4",
     order: 4,
-    title: "마지막 장면까지 연결하기",
+    title: "남은 상황 확인하기",
     description:
-      "이제 남은 장면을 이어 봅니다. 앞선 답과 맞추려 하지 말고, 각 문장을 새롭게 읽고 지금의 나에게 답해 주세요.",
+      "이제 남은 상황에 답합니다. 앞선 답과 맞추려 하지 말고, 각 문장을 따로 읽고 지금의 나에게 답해 주세요.",
   },
 ];
 
@@ -369,18 +357,13 @@ const crosswalkSystemLabel = ["M", "B", "T", "I"].join("");
 
 const typeCode = {
   label: "4렌즈 코드",
-  balancedSeparator: "/",
-  balancedNote:
-    "글자가 두 개 적힌 자리는 어느 한쪽으로 기울지 않은 관점이에요. 둘 중 하나가 아니라, 상황에 따라 두 가지가 번갈아 나타나는 편이라는 뜻입니다.",
   crosswalk: {
     systemLabel: `교직 ${crosswalkSystemLabel}`,
     selfReportedLabel: `실제 ${crosswalkSystemLabel}`,
     selfReportedInputLabel: `내 ${crosswalkSystemLabel}`,
     disclaimer:
       "축의 이름이 비슷해 보이는 자리끼리 짝지어 본 것일 뿐, 두 검사는 문항도 채점 방식도 다릅니다. 재미로만 봐 주세요.",
-    unavailableNote:
-      "기울지 않은 자리가 많아 짝지을 수 있는 코드가 너무 여러 개가 됩니다. 그래서 이번에는 나열하지 않았어요.",
-    maxCandidates: 4,
+    unavailableNote: "이 검사에서는 짝지을 코드를 만들지 못했어요.",
   },
 };
 
@@ -390,7 +373,7 @@ export const teacherStyleV1Base = {
   title: "나의 교직 스타일 탐색",
   summary: "질문으로 살펴보는 나의 교실 운영 스타일",
   description:
-    "어디에서 힘을 얻고, 무엇이 먼저 눈에 들어오며, 판단할 때 무엇을 먼저 살피고, 일을 어떤 순서와 방식으로 이어 가는지 네 가지 관점으로 살펴봅니다. 맞고 틀린 답은 없고, 어느 쪽이 더 좋은 스타일인 것도 아니에요. 나와 동료가 서로 어떻게 다른지를 이야기해 보는 데 쓰시면 좋습니다.",
+    "동료와 생각을 정리하는 방식, 아이와 수업을 이해하는 방식, 결정을 내리는 기준, 업무를 진행하는 방식을 네 가지 관점으로 살펴봅니다. 맞고 틀린 답은 없고, 어느 쪽이 더 좋은 스타일인 것도 아니에요. 나와 동료가 서로 어떻게 다른지를 이야기해 보는 데 쓰시면 좋습니다.",
   // 48문항 기준. 이전에는 이 값(5)과 안내 문구(10분)가 서로 어긋나 있어 함께 맞췄습니다.
   estimatedMinutes: 5,
   estimatedTimeLabel: "약 5분",
@@ -401,36 +384,29 @@ export const teacherStyleV1Base = {
   // 문장의 뜻이 달라진 문항이 있어, 예전 응답을 그대로 이어 쓰면 다른 문장에 답한 점수가 됩니다.
   // 그래서 contentVersion만 올리지 않고 assessmentVersion을 함께 올려 재검사를 유도합니다.
   assessmentVersion: 5,
-  // 4.5.0 — 점수가 같은 관점도 빈 안내로 끝내지 않고, 두 특징을 함께 담은 축별 서술로 읽습니다
-  // (DEC-065). 원점수·응답 분화·동점 보정 규칙은 바꾸지 않았습니다.
-  // 4.5.1 — 작성 규칙(5.2)을 어기고 있던 문항 6개의 **문장만** 다듬었습니다.
-  //   어미가 "좋다·된다·중요하다고 생각한다"로 끝나던 3개, 45자를 넘던 1개,
-  //   축 전용 낱말("협의회")이 새어 든 1개, 한 축에서 "업무" 장면이 3번 나오던 1개입니다.
-  //   축·polarity·id·묻는 내용은 그대로여서 예전 응답이 다른 뜻의 문장에 붙지 않습니다.
-  //   그래서 assessmentVersion은 올리지 않습니다 — 저장된 응답도 그대로 이어집니다.
-  // 문항·축·채점은 그대로라 assessmentVersion은 올리지 않습니다. 저장된 응답도 그대로 이어집니다.
-  contentVersion: "4.5.1",
+  // 5.0.0 — 방향별 설명을 하나로 통합하고 결과의 모호한 문구와 요약 구조를 전면 개편했습니다
+  // (DEC-068). 문항·축·원점수 공식은 그대로이므로 assessmentVersion은 올리지 않습니다.
+  contentVersion: "5.0.0",
   scale,
   axes,
   typeCode,
   axisCombinations,
   sections,
   /*
-    동점 보정 (DEC-063)
+    동점 방향 결정 (DEC-063 · DEC-068)
 
     축 점수는 정방향 6문항에서 역방향 6문항을 뺀 값이라 정확히 0점이 자주 나옵니다
-    (축당 약 8%, 네 축 중 하나라도 0점인 사람이 약 28%). 0점은 "기울지 않았다"가 아니라
-    "합계로는 갈리지 않았다"이므로, 0점일 때만 다른 각도로 한 번 더 봅니다.
+    (축당 약 8%, 네 축 중 하나라도 0점인 사람이 약 28%). 0점은 합계만으로 방향을
+    정할 수 없으므로, 0점일 때만 다른 각도로 한 번 더 봅니다.
 
       1. context-mean      장면마다 문항 수가 달라 생기는 쏠림을 걷어내고 다시 더합니다
       2. extreme-responses 척도 양 끝으로 분명히 답한 문항만 모아 봅니다
 
-    두 규칙을 거치면 균형으로 남는 사람이 약 28% → 0.5~4%로 줄어듭니다.
-    응답이 갈리지 않은 축(전부 같은 값)에는 보정을 걸지 않습니다 — DEC-053.
+    두 규칙으로도 같거나 응답이 갈리지 않은 축에는 `defaultPole`을 사용합니다.
   */
   scoring: {
     strategyId: "centered-likert-axis-sum",
-    scoringVersion: 2,
+    scoringVersion: 3,
     tieBreak: ["context-mean", "extreme-responses"],
   },
 };

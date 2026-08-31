@@ -97,7 +97,7 @@ describe("fixture 콘텐츠 패키지", () => {
     expect(new Set(combinations).size).toBe(16);
   });
 
-  it("강도·균형 결과 서술이 모든 축에 있습니다", () => {
+  it("방향별 결과 서술이 모든 축에 있습니다", () => {
     if (!parsed.ok) throw new Error("검증 실패");
     expect(parsed.value.resultNarrative?.axes).toHaveLength(parsed.value.axes.length);
   });
@@ -183,7 +183,7 @@ describe("무결성 검증 실패 (INVALID_CONTENT_PACKAGE)", () => {
     expect(detail).toContain("중복");
   });
 
-  it("비방향 구간의 균형 결과 서술이 빠짐", () => {
+  it("한 축의 방향 결과 서술이 빠짐", () => {
     const detail = expectInvalid(
       broken((draft) => {
         const narrative = draft.resultNarrative as Record<string, unknown>;
@@ -191,22 +191,25 @@ describe("무결성 검증 실패 (INVALID_CONTENT_PACKAGE)", () => {
         const first = axes[0];
         if (first === undefined) return;
         const readings = first.readings as Record<string, unknown>[];
-        first.readings = readings.filter(
-          (reading) => reading.intensityBandId !== "balanced",
-        );
+        first.readings = readings.filter((reading) => reading.direction !== "negative");
       }),
     );
-    expect(detail).toContain("balanced 결과 서술");
+    expect(detail).toContain("positive/negative 방향");
   });
 
-  it("균형 결과 전용 안내가 빠짐", () => {
+  it("축 결과의 장면 예시가 빠짐", () => {
     const detail = expectInvalid(
       broken((draft) => {
         const narrative = draft.resultNarrative as Record<string, unknown>;
-        delete narrative.balancedGuidance;
+        const axes = narrative.axes as Record<string, unknown>[];
+        const first = axes[0];
+        if (first === undefined) return;
+        const readings = first.readings as Record<string, unknown>[];
+        const firstReading = readings[0];
+        if (firstReading !== undefined) delete firstReading.scene;
       }),
     );
-    expect(detail).toContain("balancedGuidance");
+    expect(detail).toContain("scene");
   });
 
   it("강도 구간에 빈틈이 있음", () => {
@@ -216,7 +219,7 @@ describe("무결성 검증 실패 (INVALID_CONTENT_PACKAGE)", () => {
         const first = axes[0];
         if (first === undefined) return;
         first.intensityBands = [
-          { id: "balanced", label: "균형", minAbsScore: 0, maxAbsScore: 4 },
+          { id: "leaning", label: "근소한 차이", minAbsScore: 0, maxAbsScore: 4 },
           { id: "strong", label: "매우 뚜렷", minAbsScore: 13, maxAbsScore: 20 },
         ];
       }),
@@ -231,7 +234,7 @@ describe("무결성 검증 실패 (INVALID_CONTENT_PACKAGE)", () => {
         const first = axes[0];
         if (first === undefined) return;
         first.intensityBands = [
-          { id: "balanced", label: "균형", minAbsScore: 0, maxAbsScore: 4 },
+          { id: "leaning", label: "근소한 차이", minAbsScore: 0, maxAbsScore: 4 },
           { id: "clear", label: "뚜렷", minAbsScore: 5, maxAbsScore: 12 },
         ];
       }),
@@ -333,8 +336,6 @@ describe("StaticAssessmentCatalog", () => {
     expect(presentation?.heroArtwork.src).toMatch(/^\/assessments\//);
     expect(presentation?.sectionArtwork).toHaveLength(4);
     expect(presentation?.typeArtwork).toHaveLength(16);
-    expect(presentation?.balancedArtwork?.male.src).toContain("/types/balanced-male.jpg");
-    expect(presentation?.balancedArtwork?.female.src).toContain("/types/balanced-female.jpg");
     expect(presentation?.responseScaleGuide).toHaveLength(5);
   });
 
@@ -424,31 +425,14 @@ describe("검사 프레젠테이션 무결성", () => {
     expect(detail).toContain("빠진 resultKey");
   });
 
-  it("유형 선화와 균형 선화는 한 쌍으로 제공합니다", () => {
-    const detail = expectInvalidPackage(
-      broken((draft) => {
-        const presentation = draft.presentation as Record<string, unknown>;
-        delete presentation.balancedArtwork;
-      }),
-    );
-    expect(detail).toContain("함께 제공");
-  });
-
-  it("등록한 유형별 남녀 32종과 균형 남녀 2종이 모두 로컬 파일로 존재합니다", () => {
+  it("등록한 유형별 남녀 32종이 모두 로컬 파일로 존재합니다", () => {
     const presentation = staticAssessmentCatalog.findPresentationBySlug("teacher-style");
     const typeArtwork = presentation?.typeArtwork ?? [];
-    const balancedArtwork = presentation?.balancedArtwork;
     expect(typeArtwork).toHaveLength(16);
-    expect(balancedArtwork).toBeDefined();
 
-    const artwork = [
-      ...typeArtwork.flatMap((item) => [item.artwork.male, item.artwork.female]),
-      ...(balancedArtwork === undefined
-        ? []
-        : [balancedArtwork.male, balancedArtwork.female]),
-    ];
-    expect(artwork).toHaveLength(34);
-    expect(new Set(artwork.map((item) => item.src)).size).toBe(34);
+    const artwork = typeArtwork.flatMap((item) => [item.artwork.male, item.artwork.female]);
+    expect(artwork).toHaveLength(32);
+    expect(new Set(artwork.map((item) => item.src)).size).toBe(32);
     for (const item of artwork) {
       expect(existsSync(resolve(process.cwd(), "public", item.src.slice(1))), item.src).toBe(true);
     }

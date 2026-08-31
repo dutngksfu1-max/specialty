@@ -23,29 +23,25 @@ function clampPercent(value: number): number {
 
 /** Display-only level. Scoring and intensity bands keep using the raw score. */
 export function axisDisplayLevel(
-  score: Pick<AxisScore, "rawScore" | "minScore" | "maxScore">,
+  score: Pick<AxisScore, "rawScore" | "minScore" | "maxScore" | "direction">,
 ): number {
-  if (score.rawScore === 0) return 0;
+  const direction = score.direction === "positive" ? 1 : -1;
+  // 합계가 같아도 동점 보정 또는 콘텐츠 기본값이 정한 방향으로 최소 한 칸을 표시합니다.
+  if (score.rawScore === 0) return direction;
 
-  const extent = score.rawScore > 0 ? score.maxScore : Math.abs(score.minScore);
-  if (extent <= 0) return 0;
+  const extent = direction > 0 ? score.maxScore : Math.abs(score.minScore);
+  if (extent <= 0) return direction;
 
   const strength = Math.min(Math.abs(score.rawScore) / extent, 1);
   const level = Math.max(1, Math.ceil(strength * AXIS_DISPLAY_LEVEL_MAX));
-  const direction = score.rawScore > 0 ? 1 : -1;
-
   return direction * level;
 }
 
 export function visualMarkerPercent(
-  score: Pick<AxisScore, "rawScore" | "minScore" | "maxScore">,
+  score: Pick<AxisScore, "rawScore" | "minScore" | "maxScore" | "direction">,
 ): number {
   const level = axisDisplayLevel(score);
   return clampPercent(50 + (level / AXIS_DISPLAY_LEVEL_MAX) * 50);
-}
-
-function signedScore(value: number): string {
-  return value > 0 ? `+${value}` : String(value);
 }
 
 export function AxisBar({
@@ -64,30 +60,15 @@ export function AxisBar({
   const band = axis.intensityBands.find((candidate) => candidate.id === intensityBandId);
   const displayLevel = axisDisplayLevel(score);
   const markerPercent = visualMarkerPercent(score);
-  const showsDirection = band?.directional ?? !score.isBalanced;
-  const isExactCenter = score.rawScore === 0;
-
+  // 방향은 언제나 한쪽입니다 (DEC-068). 게이지는 '어느 쪽으로 얼마나'만 말합니다.
   const directionLabel =
     score.direction === "positive" ? axis.positive.label : axis.negative.label;
   const shortDirectionLabel =
     score.direction === "positive" ? axis.positive.shortLabel : axis.negative.shortLabel;
-  const summaryLabel = !showsDirection
-    ? isExactCenter
-      ? (band?.label ?? "균형")
-      : `${shortDirectionLabel} · ${band?.label ?? "균형 구간"}`
-    : `${shortDirectionLabel} · ${band?.label ?? "방향 확인"}`;
+  const summaryLabel = `${shortDirectionLabel} · ${band?.label ?? "기울기"}`;
 
   const fillLeft = score.direction === "negative" ? markerPercent : 50;
   const fillWidth = Math.abs(markerPercent - 50);
-
-  const balancedLeft =
-    band !== undefined && !band.directional
-      ? visualMarkerPercent({ ...score, rawScore: -band.maxAbsScore })
-      : 50;
-  const balancedRight =
-    band !== undefined && !band.directional
-      ? visualMarkerPercent({ ...score, rawScore: band.maxAbsScore })
-      : 50;
 
   return (
     <div
@@ -115,7 +96,7 @@ export function AxisBar({
           }}
           className="result-axis-score-badge shrink-0 rounded-xs border border-border-strong bg-surface-muted font-semibold tabular-nums text-foreground-body"
         >
-          {signedScore(displayLevel)} · {summaryLabel}
+          {summaryLabel}
         </span>
       </div>
 
@@ -141,23 +122,11 @@ export function AxisBar({
         style={{ marginTop: size.gapPx, height: size.track }}
         className="result-axis-track relative w-full rounded-full"
         role="img"
-        aria-label={`${axis.name}: ${
-          !showsDirection
-            ? isExactCenter
-              ? "두 방향의 점수가 같은 균형 구간"
-              : `${directionLabel} 방향의 균형 구간`
-            : `${directionLabel} 쪽, ${band?.label ?? "방향 확인"}`
-        }, 기울기 단계 ${signedScore(displayLevel)}`}
+        aria-label={`${axis.name}: ${directionLabel} 쪽, ${
+          band?.label ?? "기울기"
+        }, 5단계 중 ${Math.abs(displayLevel)}단계`}
       >
-        {!showsDirection && (
-          <span
-            aria-hidden="true"
-            className="result-axis-balanced-zone absolute inset-y-0"
-            style={{ left: `${balancedLeft}%`, width: `${balancedRight - balancedLeft}%` }}
-          />
-        )}
-
-        {fillWidth > 0 && showsDirection && (
+        {fillWidth > 0 && (
           <span
             aria-hidden="true"
             data-direction={score.direction}
@@ -172,7 +141,7 @@ export function AxisBar({
         />
         <span
           aria-hidden="true"
-          data-direction={showsDirection ? score.direction : "balanced"}
+          data-direction={score.direction}
           style={{
             left: `${markerPercent}%`,
             width: size.marker,

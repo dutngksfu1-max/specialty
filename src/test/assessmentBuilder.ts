@@ -51,9 +51,9 @@ export interface DefinitionSpec {
 
 /** DEC-002b의 기본 구간. 5점 척도 × 10문항(=최대 20점) 기준입니다. */
 export const standardBands: IntensityBands = [
-  { id: "balanced", label: "균형", minAbsScore: 0, maxAbsScore: 4, directional: false },
-  { id: "clear", label: "뚜렷", minAbsScore: 5, maxAbsScore: 12, directional: true },
-  { id: "strong", label: "매우 뚜렷", minAbsScore: 13, maxAbsScore: 20, directional: true },
+  { id: "leaning", label: "근소한 차이", minAbsScore: 0, maxAbsScore: 4 },
+  { id: "clear", label: "분명한 차이", minAbsScore: 5, maxAbsScore: 12 },
+  { id: "strong", label: "큰 차이", minAbsScore: 13, maxAbsScore: 20 },
 ];
 
 export function buildScale(points: number): ResponseScale {

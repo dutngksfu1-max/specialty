@@ -146,7 +146,8 @@ function EmphasizedText({
  * 이 카드가 같은 문장을 한 번 더 보여 줬습니다. 글자·극 이름·도드라짐 배지를 이 카드로
  * 모아, 한 축은 한 곳에서만 읽도록 합니다.
  *
- * `detail`이 false면 제목과 막대만 남깁니다. 요약 보기에서 쓰는 얕은 깊이입니다.
+ * `detail`이 false면 방향 설명과 막대까지 보여 주고, 장면 예시만 덜어냅니다.
+ * 요약이 지나치게 짧아지지 않으면서도 반복 읽기를 줄이는 깊이입니다 (DEC-068).
  */
 function AxisInsightCard({
   index,
@@ -157,7 +158,6 @@ function AxisInsightCard({
   letter,
   poleLabel,
   badge,
-  unreadableNote,
   detail = true,
 }: {
   readonly index: number;
@@ -165,13 +165,11 @@ function AxisInsightCard({
   readonly score: AxisScore;
   readonly narrative?: ResolvedAxisNarrative;
   readonly terms?: readonly string[];
-  /** 4렌즈 코드 한 글자. 균형 자리는 콘텐츠가 정한 기호가 들어옵니다 */
+  /** 4렌즈 코드 한 글자 */
   readonly letter?: string;
   readonly poleLabel?: string;
   /** '가장 도드라짐'처럼 순위를 알리는 짧은 말 */
   readonly badge?: string;
-  /** 0점이지만 응답이 갈리지 않은 축 (DEC-053). 있으면 방향 문구 대신 이 안내를 씁니다 */
-  readonly unreadableNote?: string;
   readonly detail?: boolean;
 }) {
   const tone = assessmentPerspectiveTone(index);
@@ -209,33 +207,27 @@ function AxisInsightCard({
         )}
       </div>
 
-      {unreadableNote === undefined ? (
-        <>
-          <h3 className="result-axis-card-title mt-3 text-h3 text-foreground sm:text-h3-lg">
-            {narrative?.reading.headline ?? axis.name}
-          </h3>
-          {detail && narrative !== undefined && (
-            <p className="result-axis-card-summary mt-2 text-body text-foreground-body">
-              <EmphasizedText text={narrative.reading.summary} terms={terms} />
-            </p>
-          )}
+      <h3 className="result-axis-card-title mt-3 text-h3 text-foreground sm:text-h3-lg">
+        {narrative?.reading.headline ?? axis.name}
+      </h3>
+      {narrative !== undefined && (
+        <p className="result-axis-card-summary mt-2 text-body text-foreground-body">
+          <EmphasizedText text={narrative.reading.summary} terms={terms} />
+        </p>
+      )}
 
-          <div className="result-axis-card-chart mt-4 border-t pt-4 md:mt-auto">
-            <AxisBar
-              axis={axis}
-              score={score}
-              intensityBandId={narrative?.reading.intensityBandId}
-            />
-          </div>
+      <div className="result-axis-card-chart mt-4 border-t pt-4 md:mt-auto">
+        <AxisBar
+          axis={axis}
+          score={score}
+          intensityBandId={narrative?.intensityBandId}
+        />
+      </div>
 
-          {detail && narrative !== undefined && (
-            <p className="result-axis-card-scene mt-3 text-body-sm text-foreground-muted">
-              {narrative.reading.rhythm}
-            </p>
-          )}
-        </>
-      ) : (
-        <p className="mt-4 text-body-sm text-foreground-body">{unreadableNote}</p>
+      {detail && narrative !== undefined && (
+        <p className="result-axis-card-scene mt-3 text-body-sm text-foreground-muted">
+          {narrative.reading.scene}
+        </p>
       )}
     </section>
   );
@@ -488,20 +480,9 @@ function axisCardMeta(
   definition: AssessmentDefinition,
   item: ResolvedAxisNarrative,
   ranking: AxisRanking,
-  isUnreadable: boolean,
 ) {
   const axis = definition.axes.find((candidate) => candidate.id === item.axisId);
-  const isBalanced = definition.resultNarrative !== undefined && !item.isDirectional;
-  const unreadableLabel = definition.resultNarrative?.unreadableAxisLabel;
-  const unreadableNote = definition.resultNarrative?.unreadableAxisNote;
-  // 문구는 콘텐츠가 소유합니다. 콘텐츠가 주지 않으면 예전처럼 균형으로 다룹니다 (DEC-053).
-  const showsUnreadable =
-    isUnreadable && unreadableLabel !== undefined && unreadableNote !== undefined;
-  const balancedPoleLabel =
-    axis === undefined
-      ? undefined
-      : `${axis.positive.shortLabel} · ${axis.negative.shortLabel}`;
-  const side = item.reading.direction === "negative" ? "negative" : "positive";
+  const side = item.direction;
   const pole = side === "positive" ? axis?.positive : axis?.negative;
   const rankIndex = ranking.ordered.findIndex((candidate) => candidate.axisId === item.axisId);
   const isPrimary = ranking.primary?.axisId === item.axisId;
@@ -511,27 +492,13 @@ function axisCardMeta(
     letter:
       definition.typeCode === undefined
         ? undefined
-        : isBalanced
-          ? // 균형 자리도 두 극의 글자를 함께 적습니다 (DEC-064).
-            [axis?.positive.code, axis?.negative.code]
-              .filter((code): code is string => code !== undefined)
-              .join(definition.typeCode.balancedSeparator)
-          : pole?.code,
-    poleLabel: showsUnreadable
-      ? unreadableLabel
-      : isBalanced
-        ? balancedPoleLabel
-        : pole?.shortLabel,
-    badge: showsUnreadable
-      ? unreadableLabel
-      : isBalanced
-        ? "두 관점이 고르게 나타남"
-        : isPrimary
+        : pole?.code,
+    poleLabel: pole?.shortLabel,
+    badge: isPrimary
           ? "가장 도드라짐"
           : isSharedLead
             ? "함께 도드라짐"
             : undefined,
-    unreadableNote: showsUnreadable ? unreadableNote : undefined,
   };
 }
 
@@ -541,7 +508,6 @@ function AxisCardGrid({
   scores,
   narrativeById,
   ranking,
-  unreadableAxisIds,
   terms,
   detail,
 }: {
@@ -549,7 +515,6 @@ function AxisCardGrid({
   readonly scores: readonly AxisScore[];
   readonly narrativeById: ReadonlyMap<string, ResolvedAxisNarrative>;
   readonly ranking: AxisRanking;
-  readonly unreadableAxisIds: ReadonlySet<string>;
   readonly terms?: readonly string[];
   readonly detail: boolean;
 }) {
@@ -564,7 +529,7 @@ function AxisCardGrid({
         const meta =
           item === undefined
             ? undefined
-            : axisCardMeta(definition, item, ranking, unreadableAxisIds.has(String(score.axisId)));
+            : axisCardMeta(definition, item, ranking);
 
         return (
           <AxisInsightCard
@@ -577,7 +542,6 @@ function AxisCardGrid({
             letter={meta?.letter}
             poleLabel={meta?.poleLabel}
             badge={meta?.badge}
-            unreadableNote={meta?.unreadableNote}
             detail={detail}
           />
         );
@@ -587,7 +551,7 @@ function AxisCardGrid({
 }
 
 /**
- * 요약 보기의 장면 세 줄 — 강점·신호·동료를 한 개씩만 보여 줍니다.
+ * 요약 보기의 대표 장면 — 강점·신호·동료를 한 개씩만 보여 줍니다.
  *
  * 세 묶음을 면과 아이콘으로 갈라 두어야 지금 읽는 것이 강점인지 주의 신호인지
  * 색을 보지 않고도 알 수 있습니다 (DEC-054, design.md 5장).
@@ -662,9 +626,9 @@ function SummaryScenes({
 }
 
 /**
- * 요약 보기 (DEC-062)
+ * 요약 보기 (DEC-062 · DEC-068)
  *
- * 전체를 다 읽지 않아도 결과가 손에 남도록, 관점 네 줄과 대표 장면만 남깁니다.
+ * 전체를 다 읽지 않아도 결과가 손에 남도록, 관점 네 장과 대표 장면을 남깁니다.
  * 여기서 새 해석을 만들지 않습니다. 자세히 보기의 첫 항목을 그대로 씁니다.
  */
 function SummaryView({
@@ -672,7 +636,6 @@ function SummaryView({
   snapshot,
   narrativeById,
   ranking,
-  unreadableAxisIds,
   guidance,
   terms,
   onOpenDetail,
@@ -681,8 +644,6 @@ function SummaryView({
   readonly snapshot: ResultSnapshot;
   readonly narrativeById: ReadonlyMap<string, ResolvedAxisNarrative>;
   readonly ranking: AxisRanking;
-  readonly unreadableAxisIds: ReadonlySet<string>;
-  /** 균형 축이 있으면 프로필 대신 균형 안내가 들어옵니다 (DEC-046). 둘 다 받도록 구조로 적습니다. */
   readonly guidance: {
     readonly shiningMoments: readonly SceneNote[];
     readonly underPressure: readonly SceneNote[];
@@ -704,10 +665,10 @@ function SummaryView({
     <div data-result-view="summary">
       <section aria-labelledby="result-summary-axes">
         <h2 id="result-summary-axes" className="text-h2 text-foreground sm:text-h2-lg">
-          네 관점 한눈에
+          나를 설명하는 네 가지 방향
         </h2>
         <p className="mt-2 max-w-prose text-body text-foreground-muted">
-          한쪽으로 기우는지, 두 방식이 고르게 나타나는지 관점별로 보여 드려요.
+          각 문장은 선택된 방향을 설명합니다. 어느 정도 기울었는지는 막대에서 확인해 주세요.
         </p>
         <div className="mt-5">
           <AxisCardGrid
@@ -715,44 +676,45 @@ function SummaryView({
             scores={snapshot.score.axisScores}
             narrativeById={narrativeById}
             ranking={ranking}
-            unreadableAxisIds={unreadableAxisIds}
             terms={terms}
             detail={false}
           />
         </div>
       </section>
 
-      <section aria-labelledby="result-summary-scenes" className="mt-12">
+      <section aria-labelledby="result-summary-scenes" className="mt-10">
         <h2 id="result-summary-scenes" className="text-h2 text-foreground sm:text-h2-lg">
-          교실에서는 이렇게 나타나요
+          교실에서 나타나는 핵심 모습
         </h2>
         <p className="mt-2 max-w-prose text-body text-foreground-muted">
-          묶음마다 하나씩만 골랐어요. 나머지는 자세히 보기에 있습니다.
+          강점, 피로 신호, 동료와 함께할 때의 모습을 하나씩 정리했습니다.
         </p>
         <SummaryScenes guidance={guidance} terms={terms} />
       </section>
 
-      <section aria-labelledby="result-summary-next" className="mt-12">
+      <section aria-labelledby="result-summary-next" className="mt-10">
         <h2 id="result-summary-next" className="text-h2 text-foreground sm:text-h2-lg">
-          동료와, 그리고 내일
+          동료와 함께 일할 때
         </h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {naturalFit !== undefined && (
-            <section className="rounded-lg border border-border bg-surface p-5">
-              <p className="text-caption font-semibold text-primary-active">함께할 때 잘 이어지는 점</p>
-              <p className="mt-3 text-body text-foreground-body">{naturalFit}</p>
-            </section>
-          )}
-          {needsTuning !== undefined && (
-            <section className="rounded-lg border border-border bg-surface p-5">
-              <p className="text-caption font-semibold text-accent">미리 맞춰 두면 좋은 점</p>
-              <p className="mt-3 text-body text-foreground-body">{needsTuning}</p>
-            </section>
-          )}
+        <div className="mt-5 overflow-hidden rounded-lg border border-border bg-surface">
+          <div className="grid md:grid-cols-2 md:divide-x md:divide-border">
+            {naturalFit !== undefined && (
+              <section className="border-b border-border p-5 md:border-b-0">
+                <p className="text-caption font-semibold text-primary-active">함께할 때 잘 이어지는 점</p>
+                <p className="mt-2 text-body text-foreground-body">{naturalFit}</p>
+              </section>
+            )}
+            {needsTuning !== undefined && (
+              <section className="p-5">
+                <p className="text-caption font-semibold text-accent">미리 맞춰 두면 좋은 점</p>
+                <p className="mt-2 text-body text-foreground-body">{needsTuning}</p>
+              </section>
+            )}
+          </div>
           {nextStep !== undefined && (
-            <section className="rounded-lg border border-border bg-surface p-5">
+            <section className="border-t border-primary-soft-border bg-primary-soft p-5 sm:grid sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start sm:gap-5">
               <p className="text-caption font-semibold text-primary-active">내일 해 볼 것 하나</p>
-              <p className="mt-3 text-body text-foreground-body">{nextStep}</p>
+              <p className="mt-2 text-body font-medium text-foreground-body sm:mt-0">{nextStep}</p>
             </section>
           )}
         </div>
@@ -767,7 +729,7 @@ function SummaryView({
           <Icon name="compass" /> 전체 결과 자세히 보기
         </button>
         <p className="mt-3 text-body-sm text-foreground-muted">
-          교실에서의 모습 아홉 가지와 두 관점 해석까지 이어서 읽습니다.
+          더 많은 교실 장면, 두 관점의 조합, 협업 방법을 이어서 볼 수 있습니다.
         </p>
       </div>
     </div>
@@ -795,19 +757,8 @@ export function ResultRenderer({
 }) {
   const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
   const narrative = resolveResultNarrative(definition, snapshot.score.axisScores, profile);
-  const hasBalancedAxes = narrative.balancedAxisIds.size > 0;
-  // 0점이지만 응답이 갈리지 않은 축입니다. 균형과 구별해서 다룹니다 (DEC-053).
-  // 응답이 지워졌으면 signals가 없고, 그때는 예전처럼 전부 균형으로 봅니다.
-  const unreadableAxisIds = new Set((signals?.unreadableAxisIds ?? []).map(String));
-  const guidance =
-    hasBalancedAxes && definition.resultNarrative !== undefined
-      ? definition.resultNarrative.balancedGuidance
-      : profile;
-  const combinationReadings = resolveAxisCombinations(
-    definition.axisCombinations,
-    profile.poles,
-    narrative.balancedAxisIds,
-  );
+  const guidance = profile;
+  const combinationReadings = resolveAxisCombinations(definition.axisCombinations, profile.poles);
   const ranking = resolveAxisRanking(definition.axes, snapshot.score.axisScores);
   const emphasisTerms = definition.resultNarrative?.emphasisTerms;
   const narrativeById = new Map(narrative.axes.map((item) => [String(item.axisId), item]));
@@ -899,7 +850,6 @@ export function ResultRenderer({
             snapshot={snapshot}
             narrativeById={narrativeById}
             ranking={ranking}
-            unreadableAxisIds={unreadableAxisIds}
             guidance={guidance}
             terms={emphasisTerms}
             onOpenDetail={openDetail}
@@ -920,7 +870,7 @@ export function ResultRenderer({
                     title="한눈에 보는 나"
                     description={
                       <>
-                        네 관점이 어느 쪽에 얼마나 가까운지 살펴보세요.
+                        네 관점의 방향과 기울어진 정도를 살펴보세요.
                         <br />
                         어느 한쪽이 더 좋은 것을 뜻하지는 않습니다.
                       </>
@@ -933,7 +883,6 @@ export function ResultRenderer({
                       scores={snapshot.score.axisScores}
                       narrativeById={narrativeById}
                       ranking={ranking}
-                      unreadableAxisIds={unreadableAxisIds}
                       terms={emphasisTerms}
                       detail
                     />

@@ -5,7 +5,6 @@ import type { AssessmentDefinition } from "@/domain/assessment/model/definition"
 import type { ResolvedResultNarrative } from "@/domain/assessment/result/narrative";
 import { buildTypeCode } from "@/domain/assessment/result/typeCode";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
-import { ResultBalanceMap } from "@/features/result/ResultBalanceMap";
 import {
   findTypeArtwork,
   type AssessmentPresentation,
@@ -19,19 +18,12 @@ function withHonorific(nickname: string): string {
 function TypeCodePanel({
   definition,
   snapshot,
-  narrative,
 }: {
   readonly definition: AssessmentDefinition;
   readonly snapshot: ResultSnapshot;
-  readonly narrative: ResolvedResultNarrative;
 }) {
   const spec = definition.typeCode;
-  const typeCode = buildTypeCode(
-    definition.axes,
-    snapshot.score.axisScores,
-    narrative.balancedAxisIds,
-    spec,
-  );
+  const typeCode = buildTypeCode(definition.axes, snapshot.score.axisScores, spec);
   if (typeCode === null || spec === undefined) return null;
 
   const axisById = new Map(definition.axes.map((axis) => [axis.id, axis]));
@@ -39,60 +31,36 @@ function TypeCodePanel({
     .map((slot, index) => {
       const axis = axisById.get(slot.axisId);
       const place = `${index + 1}번째 ${axis?.name ?? "관점"}`;
-      // 균형 자리도 "비움"이 아니라 "둘 다"로 읽어 줍니다 (DEC-064).
-      return slot.isBalanced
-        ? `${place}은 ${slot.poleLabels.join("과 ")} 어느 쪽으로도 기울지 않아 ${slot.letters.join(", ")} 둘 다`
-        : `${place}은 ${slot.poleLabels[0] ?? "현재 방향"} ${slot.letters[0] ?? ""}`;
+      return `${place}은 ${slot.poleLabel} ${slot.letter}`;
     })
     .join(", ");
 
-  const crosswalkCodes = typeCode.crosswalkCodes;
-  const hasCrosswalk = crosswalkCodes.length > 0;
+  const hasCrosswalk = typeCode.crosswalkCode !== null;
 
   return (
     <section className="mt-6 overflow-hidden rounded-lg border border-primary-soft-border bg-surface">
       <div className="p-4 sm:p-5">
         <p className="text-caption font-semibold text-primary-active">{spec.label}</p>
         <p className="sr-only">{spokenCode}</p>
-        {/*
-          균형 자리는 비우지 않고 두 글자를 함께 적습니다 (DEC-064).
-          자리 수는 그대로 넷이라 코드 길이와 축 개수가 계속 맞습니다.
-          균형 칸만 넓어지므로 최소 너비를 걸지 않고 좌우 여백으로 늘립니다 — 360px에서도 넘치지 않습니다.
-        */}
         <div aria-hidden="true" className="mt-3 flex min-w-0 flex-wrap gap-2">
           {typeCode.slots.map((slot) => (
             <span
               key={String(slot.axisId)}
-              className={`grid place-items-center rounded-xs border border-border-strong bg-background py-1 font-bold tabular-nums text-foreground ${
-                slot.isBalanced ? "px-2.5 text-h2" : "min-w-12 px-2 text-display"
-              }`}
+              className="grid min-w-12 place-items-center rounded-xs border border-border-strong bg-background px-2 py-1 text-display font-bold tabular-nums text-foreground"
             >
-              {slot.letters.join(spec.balancedSeparator)}
+              {slot.letter}
             </span>
           ))}
         </div>
 
         <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2" aria-hidden="true">
-          {typeCode.slots.map((slot) => {
-            const axis = axisById.get(slot.axisId);
-            return (
-              <li key={String(slot.axisId)} className="text-caption text-foreground-muted">
-                <strong className="font-bold text-foreground">
-                  {slot.letters.join(spec.balancedSeparator)}
-                </strong>{" "}
-                {slot.isBalanced
-                  ? `${axis?.name ?? "관점"} — ${slot.poleLabels.join("·")} 둘 다`
-                  : slot.poleLabels[0]}
-              </li>
-            );
-          })}
+          {typeCode.slots.map((slot) => (
+            <li key={String(slot.axisId)} className="text-caption text-foreground-muted">
+              <strong className="font-bold text-foreground">{slot.letter}</strong>{" "}
+              {slot.poleLabel}
+            </li>
+          ))}
         </ul>
-
-        {typeCode.hasBalancedSlot && (
-          <p className="mt-4 border-l-2 border-accent pl-3 text-body-sm text-foreground-body">
-            {spec.balancedNote}
-          </p>
-        )}
       </div>
 
       {/*
@@ -101,35 +69,19 @@ function TypeCodePanel({
       */}
       {spec.crosswalk !== undefined && (
         <div className="result-crosswalk-body border-t border-border px-4 py-4 sm:px-5">
-          <>
-              {/*
-                라벨이 값을 '담고' 있어야 합니다 (DEC-056).
-                라벨을 위, 값을 아래에 두어 담김을 형태로 보여 줍니다.
-              */}
-              <div className="grid min-w-0 grid-cols-2 gap-3">
+          {/*
+            라벨이 값을 '담고' 있어야 합니다 (DEC-056).
+            라벨을 위, 값을 아래에 두어 담김을 형태로 보여 줍니다.
+          */}
+          <div className="grid min-w-0 grid-cols-2 gap-3">
                 <div className="result-crosswalk-field min-w-0 overflow-hidden rounded-sm">
                   <p className="result-crosswalk-legend px-3 py-1.5 text-caption font-semibold">
                     {spec.crosswalk.systemLabel}
                   </p>
-                  {/*
-                    균형 자리가 있으면 후보가 여러 개입니다 (DEC-064).
-                    어느 하나를 고르지 않고 모두 같은 무게로 세로로 쌓습니다 —
-                    앞의 것이 더 맞는 답처럼 보이면 안 되기 때문입니다.
-                    좁은 화면에서 두 코드를 한 줄에 넣으면 넘치므로 줄로 나눕니다.
-                  */}
                   {hasCrosswalk ? (
-                    <ul className="grid gap-1 bg-surface px-3 py-3">
-                      {crosswalkCodes.map((code) => (
-                        <li
-                          key={code}
-                          className={`result-crosswalk-code text-center font-bold ${
-                            crosswalkCodes.length > 1 ? "text-h3" : "text-h2"
-                          }`}
-                        >
-                          {code}
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="result-crosswalk-code bg-surface px-3 py-3 text-center text-h2 font-bold">
+                      {typeCode.crosswalkCode}
+                    </p>
                   ) : (
                     <p className="bg-surface px-3 py-3 text-center text-body-sm font-bold text-foreground-muted">
                       환산 안 함
@@ -150,23 +102,16 @@ function TypeCodePanel({
                     {snapshot.selfReportedCrosswalkCode ?? "입력 안 함"}
                   </p>
                 </div>
-              </div>
-              {!hasCrosswalk && (
-                <p className="mt-3 text-body-sm text-foreground-body">
-                  {spec.crosswalk.unavailableNote}
-                </p>
-              )}
-              {crosswalkCodes.length > 1 && (
-                <p className="mt-3 text-body-sm text-foreground-body">
-                  기울지 않은 자리가 있어 어느 쪽으로도 읽힐 수 있어요. {crosswalkCodes.length}개
-                  모두 나와 가까운 코드입니다.
-                </p>
-              )}
-              {/* 근사라는 사실을 감추지 않습니다 (DEC-049). */}
-              <p className="mt-3 text-caption text-foreground-subtle">
-                {spec.crosswalk.disclaimer}
-              </p>
-            </>
+          </div>
+          {!hasCrosswalk && (
+            <p className="mt-3 text-body-sm text-foreground-body">
+              {spec.crosswalk.unavailableNote}
+            </p>
+          )}
+          {/* 근사라는 사실을 감추지 않습니다 (DEC-049). */}
+          <p className="mt-3 text-caption text-foreground-subtle">
+            {spec.crosswalk.disclaimer}
+          </p>
         </div>
       )}
     </section>
@@ -189,11 +134,9 @@ export function ResultHero({
   /** 외부에서 Hero 영역을 캡처할 수 있도록 header 요소를 가리키는 ref */
   readonly heroRef?: RefObject<HTMLElement | null>;
 }) {
-  const hasBalancedAxes = narrative.balancedAxisIds.size > 0;
   const artwork = findTypeArtwork(
     presentation,
     snapshot.score.resultKey,
-    hasBalancedAxes,
     snapshot.characterGender,
   );
 
@@ -209,13 +152,13 @@ export function ResultHero({
           <h1 className="mt-3 max-w-prose text-display-lg text-foreground">
             {narrative.title}
           </h1>
-          <TypeCodePanel definition={definition} snapshot={snapshot} narrative={narrative} />
+          <TypeCodePanel definition={definition} snapshot={snapshot} />
           <section
             data-result-rhythm="summary"
             className="result-rhythm-summary mt-5 max-w-prose border-t border-primary-soft-border pt-4 sm:grid sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start sm:gap-4"
           >
             <h2 className="result-rhythm-label inline-flex w-fit rounded-sm bg-accent-soft px-3 py-1.5 text-caption font-semibold text-accent">
-              나의 교직 리듬
+              결과 요약
             </h2>
             <p className="mt-3 text-body font-medium text-foreground-body sm:mt-0">
               {narrative.rhythm}
@@ -253,33 +196,6 @@ export function ResultHero({
           </figure>
         )}
       </div>
-
-      {/*
-        관점 네 장은 여기 두지 않습니다 (DEC-062).
-        예전에는 이 자리의 렌즈 카드가 headline·summary를 먼저 보여 주고, 바로 아래
-        「한눈에 보는 나」의 관점 카드가 같은 문장을 한 번 더 보여 줬습니다.
-        지금은 관점 카드 한 곳에서만 읽고, Hero에는 네 축을 한 모양으로 겹쳐 보는 지도만 남깁니다.
-      */}
-      <div className="min-w-0 border-t border-primary-soft-border bg-surface">
-        <section className="min-w-0 p-5 sm:p-6 lg:p-8">
-          <p className="text-caption font-semibold text-accent">밸런스 지도</p>
-          <h2 className="mt-2 text-h2 text-foreground sm:text-h2-lg">
-            {definition.axes.length}개 관점을 한눈에
-          </h2>
-          <p className="mt-2 max-w-prose text-body-sm text-foreground-muted">
-            네 관점이 각각 어느 쪽으로 얼마나 기울었는지 한 모양으로 겹쳐 봅니다.
-          </p>
-          <div className="mt-5 flex justify-center">
-            <ResultBalanceMap
-              axes={definition.axes}
-              scores={snapshot.score.axisScores}
-              narratives={narrative.axes}
-              balancedAxisIds={narrative.balancedAxisIds}
-            />
-          </div>
-        </section>
-      </div>
-
     </header>
   );
 }
