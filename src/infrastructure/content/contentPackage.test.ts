@@ -331,12 +331,19 @@ describe("StaticAssessmentCatalog", () => {
   });
 
   it("검사별 프레젠테이션을 구체 카탈로그에서 찾을 수 있습니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
     const presentation = staticAssessmentCatalog.findPresentationBySlug("teacher-style");
+    expect(found.ok).toBe(true);
+    if (!found.ok) return;
     expect(presentation?.version).toBe(1);
     expect(presentation?.heroArtwork.src).toMatch(/^\/assessments\//);
     expect(presentation?.sectionArtwork).toHaveLength(4);
     expect(presentation?.typeArtwork).toHaveLength(16);
     expect(presentation?.responseScaleGuide).toHaveLength(5);
+    expect(presentation?.descriptionEmphasisTerms).toHaveLength(3);
+    for (const term of presentation?.descriptionEmphasisTerms ?? []) {
+      expect(found.value.description).toContain(term);
+    }
   });
 
   it("프레젠테이션이 없는 패키지도 기본 테마 대상으로 정상 로드합니다", () => {
@@ -409,6 +416,17 @@ describe("검사 프레젠테이션 무결성", () => {
       }),
     );
     expect(detail).toContain("responseScaleGuide");
+  });
+
+  it("랜딩 설명에 없는 강조 문구를 거부합니다", () => {
+    const detail = expectInvalidPackage(
+      broken((draft) => {
+        const presentation = draft.presentation as Record<string, unknown>;
+        presentation.descriptionEmphasisTerms = ["설명 원문에 없는 강조 문구"];
+      }),
+    );
+    expect(detail).toContain("descriptionEmphasisTerms");
+    expect(detail).toContain("description에 없는 문구");
   });
 
   it("유형 선화 참조의 중복과 누락을 거부합니다", () => {

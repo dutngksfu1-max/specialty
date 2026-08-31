@@ -64,6 +64,8 @@ export interface AssessmentPresentation {
   readonly version: 1;
   readonly palette: AssessmentPalette;
   readonly heroArtwork: LocalArtwork;
+  /** 랜딩 설명에서 굵게 표시할 핵심 어구입니다. 설명 원문에 포함된 문구만 사용합니다. */
+  readonly descriptionEmphasisTerms?: readonly string[];
   readonly sectionArtwork: readonly {
     readonly sectionId: SectionId;
     readonly artwork: LocalArtwork;

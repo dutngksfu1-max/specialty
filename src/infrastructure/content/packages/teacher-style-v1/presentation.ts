@@ -30,6 +30,11 @@ export const teacherStylePresentation = {
     height: 1086,
     alt: "",
   },
+  descriptionEmphasisTerms: [
+    "학교 현장에서 자주 마주하는 장면",
+    "평소 나에게 가까운 선택",
+    "네 가지 관점",
+  ],
   sectionArtwork: [
     {
       sectionId: "part-1",
