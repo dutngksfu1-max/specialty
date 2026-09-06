@@ -47,7 +47,7 @@ function HelpTooltip({
         type="button"
         aria-label={label}
         aria-describedby={tooltipId}
-        className="relative grid size-6 place-items-center rounded-xs text-foreground-subtle after:absolute after:-inset-2.5 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+        className="relative grid size-6 cursor-default place-items-center rounded-xs text-foreground-subtle transition-colors duration-(--motion-fast) ease-out-soft after:absolute after:-inset-2.5 hover:bg-primary-soft hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
       >
         <Icon name="help" className="size-4" />
       </button>
@@ -268,7 +268,7 @@ export function NicknameEntry({
                   ["male", "남성"],
                   ["female", "여성"],
                 ] as const).map(([gender, label]) => (
-                  <label key={gender} className="relative min-w-0 cursor-pointer">
+                  <label key={gender} className="relative min-w-0 cursor-default">
                     <input
                       type="radio"
                       name="characterGender"
@@ -278,7 +278,7 @@ export function NicknameEntry({
                       onChange={() => void persistCharacterGender(gender)}
                       className="peer sr-only"
                     />
-                    <span className="grid min-h-13 place-items-center rounded-sm border border-border-strong bg-background px-3 text-body-sm font-semibold text-foreground-body shadow-elev-1 peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary-active peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus-ring peer-disabled:cursor-not-allowed peer-disabled:bg-surface-muted">
+                    <span className="grid min-h-13 place-items-center rounded-sm border border-border-strong bg-background px-3 text-body-sm font-semibold text-foreground-body shadow-elev-1 transition-[background-color,border-color,color] duration-(--motion-fast) ease-out-soft hover:bg-surface-muted peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary-active peer-checked:hover:bg-primary-soft peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus-ring peer-disabled:bg-surface-muted">
                       {label}
                     </span>
                   </label>

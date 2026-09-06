@@ -50,9 +50,9 @@ export function SegmentedTabs({
             value={item.value}
             className={cn(
               // 갈래가 셋이 된 뒤로 360px에서 라벨이 잘렸습니다. 좁은 화면에서만 여백을 줄입니다.
-              "min-h-11 min-w-0 flex-1 rounded-sm px-2 py-2 text-body-sm font-medium text-foreground-muted sm:px-3",
+              "min-h-11 min-w-0 flex-1 cursor-default rounded-sm px-2 py-2 text-body-sm font-medium text-foreground-muted sm:px-3",
               "transition-[background-color,border-color,color] duration-(--motion-fast) ease-out-soft",
-              "hover:text-foreground",
+              "hover:bg-surface hover:text-foreground",
               "aria-selected:border aria-selected:border-border-strong aria-selected:bg-surface",
               "aria-selected:font-semibold aria-selected:text-foreground",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring",

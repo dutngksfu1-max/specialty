@@ -42,7 +42,7 @@ export function AssessmentMenu({
           ref={triggerRef}
           disabled={disabled}
           aria-label="검사 메뉴"
-          className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border-strong bg-surface px-3 text-label text-foreground-body hover:bg-surface-muted data-pressed:bg-primary-soft"
+          className="inline-flex min-h-11 cursor-default items-center gap-2 rounded-md border border-border-strong bg-surface px-3 text-label text-foreground-body hover:bg-surface-muted data-pressed:bg-primary-soft"
         >
           <Icon name="menu" />
           <span className="hidden min-[380px]:inline">검사 메뉴</span>

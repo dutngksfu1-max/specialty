@@ -3,8 +3,6 @@ import type { ResolvedAxisNarrative } from "@/domain/assessment/result/narrative
 import type { ResultProfile, SceneNote } from "@/domain/assessment/result/profile";
 import type { AssessmentSignals, AxisContextSplit } from "@/domain/assessment/result/signals";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
-import type { AxisScore } from "@/domain/assessment/scoring/score";
-import { AXIS_DISPLAY_LEVEL_MAX, axisDisplayLevel } from "@/features/result/AxisBar";
 
 /**
  * 줄글 보기 (DEC-069)
@@ -88,72 +86,6 @@ function Prose({ paragraphs }: { readonly paragraphs: readonly string[] }) {
 }
 
 /**
- * 기울기 눈금 — 글자를 최대한 덜어낸 게이지
- *
- * 배지도 숫자도 강도 이름도 없습니다. 양 끝에는 분류 이름 대신 **하는 일**을 적고
- * (`plainLabel`), 고른 쪽만 진하게 둡니다. 보조기기에는 같은 내용을 문장으로 알립니다.
- */
-function AxisMeter({
-  axis,
-  score,
-}: {
-  readonly axis: AssessmentAxis;
-  readonly score: AxisScore;
-}) {
-  const level = axisDisplayLevel(score);
-  const steps = Math.abs(level);
-  const toPositive = level > 0;
-  const chosen = toPositive ? axis.positive : axis.negative;
-  const other = toPositive ? axis.negative : axis.positive;
-  const chosenLabel = chosen.plainLabel ?? chosen.shortLabel;
-  const otherLabel = other.plainLabel ?? other.shortLabel;
-
-  /* 중앙에서 고른 쪽으로 몇 칸인지. 반대쪽 칸은 항상 비어 있습니다. */
-  const cells = Array.from({ length: AXIS_DISPLAY_LEVEL_MAX * 2 }, (_, index) => {
-    const fromCenter =
-      index < AXIS_DISPLAY_LEVEL_MAX
-        ? AXIS_DISPLAY_LEVEL_MAX - index
-        : index - AXIS_DISPLAY_LEVEL_MAX + 1;
-    const onChosenSide = index < AXIS_DISPLAY_LEVEL_MAX ? !toPositive : toPositive;
-    return { key: index, filled: onChosenSide && fromCenter <= steps };
-  });
-
-  return (
-    <div className={`${PROSE} mt-5`}>
-      <div
-        className="flex h-2 items-stretch gap-0.5"
-        role="img"
-        aria-label={`${axis.name}은 ${otherLabel}보다 ${chosenLabel} 쪽이고, ${AXIS_DISPLAY_LEVEL_MAX}칸 가운데 ${steps}칸만큼 기울어 있습니다.`}
-      >
-        {cells.map((cell) => (
-          <span
-            key={cell.key}
-            aria-hidden="true"
-            className={`flex-1 rounded-xs ${cell.filled ? "bg-chart-positive" : "bg-border"}`}
-          />
-        ))}
-      </div>
-      <div aria-hidden="true" className="mt-2 flex items-baseline justify-between gap-4">
-        <span
-          className={`text-caption ${
-            toPositive ? "text-foreground-subtle" : "font-semibold text-foreground"
-          }`}
-        >
-          {axis.negative.plainLabel ?? axis.negative.shortLabel}
-        </span>
-        <span
-          className={`text-right text-caption ${
-            toPositive ? "font-semibold text-foreground" : "text-foreground-subtle"
-          }`}
-        >
-          {axis.positive.plainLabel ?? axis.positive.shortLabel}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/**
  * 장면 묶음 — 카드 세 장이 아니라 한 구역 안의 문단 세 개
  *
  * 상황 제목을 문단 앞에 붙여 이어 읽게 합니다. 제목만 훑어도 무슨 이야기인지 알 수 있고,
@@ -189,28 +121,16 @@ function ContextRow({
   label,
   mean,
   axis,
-  extent,
 }: {
   readonly label: string;
   readonly mean: number;
   readonly axis: AssessmentAxis;
-  readonly extent: number;
 }) {
-  const toPositive = mean >= 0;
-  const pole = toPositive ? axis.positive : axis.negative;
-  const steps = Math.max(1, Math.ceil((Math.abs(mean) / extent) * AXIS_DISPLAY_LEVEL_MAX));
+  const pole = mean >= 0 ? axis.positive : axis.negative;
 
   return (
-    <div className="grid grid-cols-[5.5rem_auto_minmax(0,1fr)] items-center gap-3">
+    <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-baseline gap-3">
       <dt className="text-body-sm font-semibold text-foreground">{label}</dt>
-      <dd aria-hidden="true" className="flex h-1.5 w-16 items-stretch gap-0.5">
-        {Array.from({ length: AXIS_DISPLAY_LEVEL_MAX }, (_, index) => (
-          <span
-            key={index}
-            className={`flex-1 rounded-xs ${index < steps ? "bg-chart-positive" : "bg-border"}`}
-          />
-        ))}
-      </dd>
       <dd className="min-w-0 text-body-sm text-foreground-body">
         {pole.plainLabel ?? pole.shortLabel}
       </dd>
@@ -223,13 +143,11 @@ function ContextContrast({
   split,
   note,
   labels,
-  extent,
 }: {
   readonly axis: AssessmentAxis;
   readonly split: AxisContextSplit;
   readonly note?: string;
   readonly labels?: Readonly<Record<string, string>>;
-  readonly extent: number;
 }) {
   const name = (context: string) => labels?.[context] ?? context;
   const rows = [split.high, split.low];
@@ -252,7 +170,6 @@ function ContextContrast({
             label={name(sample.context)}
             mean={sample.mean}
             axis={axis}
-            extent={extent}
           />
         ))}
       </dl>
@@ -293,13 +210,6 @@ export function ResultStoryView({
       String(axis.axisId),
       axis.contextSplitNote,
     ]),
-  );
-  /** 척도 한쪽 끝까지의 거리. 5점 척도면 2입니다. */
-  const scaleExtent = Math.max(
-    ...definition.scale.options.map((option) =>
-      Math.abs(option.value - definition.scale.centerValue),
-    ),
-    1,
   );
   const contrasts = (signals?.contextSplits ?? []).flatMap((split) => {
     const axis = axisById.get(String(split.axisId));
@@ -348,7 +258,6 @@ export function ResultStoryView({
                   split={split}
                   note={noteByAxis.get(String(split.axisId))}
                   labels={contextLabels}
-                  extent={scaleExtent}
                 />
               ))}
             </div>
@@ -401,7 +310,6 @@ export function ResultStoryView({
               <div className="mt-4">
                 <Prose paragraphs={body} />
               </div>
-              <AxisMeter axis={axis} score={score} />
             </div>
           );
         })}

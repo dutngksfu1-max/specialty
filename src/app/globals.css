@@ -220,6 +220,12 @@
     text-wrap: pretty;
   }
 
+  /* 버튼은 모양과 면색 변화로 구분하고, hover 때 포인터 모양은 바꾸지 않습니다. */
+  button,
+  [role="button"] {
+    cursor: default;
+  }
+
   h1,
   h2,
   h3 {

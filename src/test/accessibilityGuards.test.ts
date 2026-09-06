@@ -3,6 +3,8 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { buttonClasses, type ButtonVariant } from "@/components/ui/Button";
+
 /**
  * 접근성 회귀 방지 (PRD AC-4, docs/design.md 15장)
  *
@@ -45,6 +47,30 @@ describe("focus 표시를 지우지 않습니다", () => {
     const css = read("app/globals.css");
     expect(css).toMatch(/:focus-visible\s*\{/);
     expect(css).toContain("--color-focus-ring");
+  });
+});
+
+describe("버튼 커서와 hover 피드백을 일관되게 유지합니다", () => {
+  it("버튼형 요소에 손가락·금지 커서를 직접 지정하지 않습니다", () => {
+    for (const file of uiFiles) {
+      const source = readFileSync(file, "utf-8");
+      expect(source, file).not.toMatch(/\bcursor-(?:pointer|not-allowed|grab|grabbing)\b/);
+      expect(source, file).not.toMatch(/\bcursor\s*:\s*["'](?:pointer|not-allowed|grab|grabbing)["']/);
+    }
+  });
+
+  it("공통 버튼의 모든 종류가 기본 커서와 hover 면색을 제공합니다", () => {
+    const variants: readonly ButtonVariant[] = ["primary", "secondary", "ghost", "destructive"];
+    for (const variant of variants) {
+      const classes = buttonClasses(variant);
+      expect(classes, variant).toContain("cursor-default");
+      expect(classes, variant).toMatch(/\bhover:bg-[^\s]+/);
+    }
+  });
+
+  it("네이티브 버튼에도 기본 커서를 전역 적용합니다", () => {
+    const css = read("app/globals.css");
+    expect(css).toMatch(/button,\s*\n\s*\[role="button"\]\s*\{\s*\n\s*cursor:\s*default;/);
   });
 });
 

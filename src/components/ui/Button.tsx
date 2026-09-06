@@ -13,7 +13,7 @@ export type ButtonSize = "sm" | "md" | "lg";
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   primary: "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active",
   secondary:
-    "bg-surface text-foreground-body border border-border-strong hover:border-foreground-subtle",
+    "bg-surface text-foreground-body border border-border-strong hover:border-foreground-subtle hover:bg-surface-muted",
   ghost: "bg-transparent text-foreground-muted hover:bg-surface-muted",
   destructive: "bg-surface text-status-danger border border-status-danger hover:bg-surface-muted",
 };
@@ -25,10 +25,10 @@ const SIZE_CLASS: Record<ButtonSize, string> = {
 };
 
 export const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 rounded-xl font-medium " +
+  "inline-flex cursor-default items-center justify-center gap-2 rounded-xl font-medium " +
   "transition-[background-color,border-color,color,transform] duration-(--motion-fast) ease-out-soft active:translate-y-px " +
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring " +
-  "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-foreground-disabled " +
+  "disabled:bg-surface-muted disabled:text-foreground-disabled " +
   "disabled:border-border disabled:hover:bg-surface-muted";
 
 export function buttonClasses(

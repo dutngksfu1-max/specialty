@@ -221,6 +221,8 @@ hover에서 카드 전체를 위로 들어 올리지 않습니다. Button·Menu 
 
 - 최소 높이 48px, icon-only는 44×44px 이상
 - 반경 12px, primary / secondary / quiet / danger 네 종류
+- 활성·비활성·링크형 버튼 모두 기본 화살표 커서(`cursor: default`)를 유지합니다. 버튼 여부는 면색·경계색 변화와 focus-visible로 전달합니다.
+- hover에서는 토큰 안의 면색 또는 경계색만 짧게 바꾸며, 커서 모양 변경이나 요소 이동으로 반응을 만들지 않습니다.
 - loading은 기존 라벨 폭을 유지하고 비활성 이유를 보조 문구로 전달
 - 모바일 고정 CTA는 `padding-bottom: env(safe-area-inset-bottom)`을 포함
 

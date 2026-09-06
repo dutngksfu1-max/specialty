@@ -24,8 +24,8 @@ export function Accordion({
         <BaseAccordion.Header>
           <BaseAccordion.Trigger
             className={cn(
-              "group flex min-h-12 w-full items-center justify-between gap-4 py-4 text-left",
-              "text-h3 text-foreground hover:text-primary-active",
+              "group flex min-h-12 w-full cursor-default items-center justify-between gap-4 py-4 text-left",
+              "text-h3 text-foreground transition-colors duration-(--motion-fast) ease-out-soft hover:bg-surface-muted hover:text-primary-active",
               "focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring",
             )}
           >

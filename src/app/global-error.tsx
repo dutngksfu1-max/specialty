@@ -7,6 +7,18 @@
 export default function GlobalError({ reset }: { readonly reset: () => void }) {
   return (
     <html lang="ko">
+      <head>
+        <style>{`
+          .global-error-button {
+            cursor: default;
+            transition: filter 120ms ease-out;
+          }
+
+          .global-error-button:hover {
+            filter: brightness(0.86);
+          }
+        `}</style>
+      </head>
       <body
         style={{
           margin: 0,
@@ -25,6 +37,7 @@ export default function GlobalError({ reset }: { readonly reset: () => void }) {
           <button
             type="button"
             onClick={reset}
+            className="global-error-button"
             style={{
               marginTop: 24,
               minHeight: 44,
@@ -34,7 +47,6 @@ export default function GlobalError({ reset }: { readonly reset: () => void }) {
               background: "#5c7a68",
               color: "#fdfcf9",
               fontSize: "1rem",
-              cursor: "pointer",
             }}
           >
             다시 시도

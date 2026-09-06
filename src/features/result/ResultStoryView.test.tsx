@@ -124,7 +124,7 @@ describe("ResultStoryView", () => {
     }
   });
 
-  it("게이지에 분류 이름 대신 하는 일을 적습니다", () => {
+  it("분류 이름을 보여 주지 않습니다", () => {
     const { definition, markup } = renderStory(0);
     const text = visibleText(markup);
 
@@ -132,7 +132,6 @@ describe("ResultStoryView", () => {
       for (const pole of [axis.positive, axis.negative]) {
         // "몰입형" 같은 분류어는 화면에서 사라져야 합니다.
         expect(text).not.toContain(pole.shortLabel);
-        if (pole.plainLabel !== undefined) expect(text).toContain(pole.plainLabel);
       }
     }
   });
@@ -430,11 +429,13 @@ describe("ResultStoryView", () => {
     }
   });
 
-  it("점수가 0이어도 한 방향으로 읽히고 눈금이 최소 한 칸 찹니다", () => {
+  it("점수가 0이어도 한 방향으로 읽힙니다", () => {
     // DEC-068을 그대로 따릅니다. 줄글 보기가 중립 상태를 되살리면 안 됩니다.
-    const { markup } = renderStory(0, 0);
+    const { definition, markup } = renderStory(0, 0);
+    const first = definition.resultNarrative?.axes[0]?.readings[0];
 
-    expect(markup).toContain("bg-chart-positive");
+    expect(first).toBeDefined();
+    if (first?.story !== undefined) expect(visibleText(markup)).toContain(first.story.lead);
     expect(visibleText(markup)).not.toContain("판단 보류");
   });
 });

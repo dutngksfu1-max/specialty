@@ -24,7 +24,7 @@ export function LikertScale({
         const distance = Math.abs(option.value - 3);
         const circleSizeClass = distance === 0 ? "size-5" : distance === 1 ? "size-6" : "size-7";
         return (
-          <label key={option.value} htmlFor={id} className="relative z-1 flex min-h-11 min-w-0 cursor-pointer flex-col text-center">
+          <label key={option.value} htmlFor={id} className="relative z-1 flex min-h-11 min-w-0 cursor-default flex-col text-center">
             <input
               id={id}
               type="radio"
