@@ -174,10 +174,14 @@ const axisResultNarrativeSchema = z.object({
   axisId: z.string().min(1).transform(toAxisId),
   readings: z.array(axisNarrativeReadingSchema).min(1),
   counterEvidence: z.string().min(1),
+  /** 장면에 따라 답이 갈렸을 때 붙일 한 문장 (DEC-071) */
+  contextSplitNote: z.string().min(1).optional(),
 });
 
 const resultNarrativeSchema = z.object({
   scopeNote: z.string().min(1),
+  /** 장면 태그 → 화면에 나갈 이름 (DEC-071) */
+  contextLabels: z.record(z.string().min(1), z.string().min(1)).optional(),
   emphasisTerms: z.array(z.string().min(2)).default([]),
   axes: z.array(axisResultNarrativeSchema).min(1),
 });
@@ -600,11 +604,22 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
       ? []
       : [
           ["resultNarrative.scopeNote", definition.resultNarrative.scopeNote] as const,
+          ...Object.entries(definition.resultNarrative.contextLabels ?? {}).map(
+            ([context, label]) => [`resultNarrative.contextLabels.${context}`, label] as const,
+          ),
           ...definition.resultNarrative.axes.flatMap((axis) => [
             [
               `resultNarrative.${String(axis.axisId)}.counterEvidence`,
               axis.counterEvidence,
             ] as const,
+            ...(axis.contextSplitNote === undefined
+              ? []
+              : [
+                  [
+                    `resultNarrative.${String(axis.axisId)}.contextSplitNote`,
+                    axis.contextSplitNote,
+                  ] as const,
+                ]),
             ...axis.readings.flatMap((reading, index) => [
               [`resultNarrative.${String(axis.axisId)}.${index}.headline`, reading.headline] as const,
               [`resultNarrative.${String(axis.axisId)}.${index}.summary`, reading.summary] as const,

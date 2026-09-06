@@ -1,6 +1,7 @@
 import type { AssessmentAxis, AssessmentDefinition } from "@/domain/assessment/model/definition";
 import type { ResolvedAxisNarrative } from "@/domain/assessment/result/narrative";
 import type { ResultProfile, SceneNote } from "@/domain/assessment/result/profile";
+import type { AssessmentSignals, AxisContextSplit } from "@/domain/assessment/result/signals";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 import type { AxisScore } from "@/domain/assessment/scoring/score";
 import { AXIS_DISPLAY_LEVEL_MAX, axisDisplayLevel } from "@/features/result/AxisBar";
@@ -172,16 +173,60 @@ function SceneProse({ items }: { readonly items: readonly SceneNote[] }) {
   );
 }
 
+/**
+ * 자리에 따라 달라지는 것 (DEC-071)
+ *
+ * 이 대비는 **문항을 하나하나 봐서는 알 수 없습니다.** 한 축의 열두 문항을 장면별로
+ * 갈라 평균을 내야 나오므로, 답한 사람에게는 "체크한 적 없는데 맞네"가 됩니다.
+ * 격차가 기준에 못 미치면 엔진이 아예 넘기므로, 여기 나온 대비는 실제로 갈린 것입니다.
+ */
+function ContextContrast({
+  axis,
+  split,
+  note,
+  labels,
+}: {
+  readonly axis: AssessmentAxis;
+  readonly split: AxisContextSplit;
+  readonly note?: string;
+  readonly labels?: Readonly<Record<string, string>>;
+}) {
+  const name = (context: string) => labels?.[context] ?? context;
+  const plain = (pole: AssessmentAxis["positive"]) => pole.plainLabel ?? pole.shortLabel;
+
+  /* 장면 평균은 이미 positive 방향으로 정렬되어 옵니다. */
+  const highPole = split.high.mean >= 0 ? axis.positive : axis.negative;
+  const lowPole = split.low.mean >= 0 ? axis.positive : axis.negative;
+  const sameSide = split.high.mean >= 0 === split.low.mean >= 0;
+
+  return (
+    <div className={PROSE}>
+      <p className="text-h3 text-foreground sm:text-h3-lg">{axis.name}</p>
+      <p className="mt-2 text-body-lg font-semibold text-foreground-body">
+        {sameSide
+          ? `${name(split.high.context)}에서도 ${name(split.low.context)}에서도 ${plain(highPole)} 쪽이지만, ${name(split.high.context)}에서 훨씬 뚜렷합니다.`
+          : `${name(split.high.context)}에서는 ${plain(highPole)}, ${name(split.low.context)}에서는 ${plain(lowPole)} 쪽으로 갈렸습니다.`}
+      </p>
+      {note !== undefined && (
+        <p className="mt-2 text-body-lg text-foreground-body">{note}</p>
+      )}
+    </div>
+  );
+}
+
 export function ResultStoryView({
   definition,
   snapshot,
   profile,
   narrative,
+  signals,
 }: {
   readonly definition: AssessmentDefinition;
   readonly snapshot: ResultSnapshot;
   readonly profile: ResultProfile;
   readonly narrative: readonly ResolvedAxisNarrative[];
+  /** 응답이 지워졌으면 없을 수 있습니다. 없으면 장면 대비 구역만 빠집니다. */
+  readonly signals?: AssessmentSignals;
 }) {
   const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
   const narrativeById = new Map(narrative.map((item) => [String(item.axisId), item]));
@@ -192,6 +237,18 @@ export function ResultStoryView({
     그때는 기존 필드로 대신 채우고, 없는 구역은 그리지 않습니다.
   */
   const opening = portrait?.opening ?? [profile.oneLiner, profile.rhythm];
+
+  const contextLabels = definition.resultNarrative?.contextLabels;
+  const noteByAxis = new Map(
+    (definition.resultNarrative?.axes ?? []).map((axis) => [
+      String(axis.axisId),
+      axis.contextSplitNote,
+    ]),
+  );
+  const contrasts = (signals?.contextSplits ?? []).flatMap((split) => {
+    const axis = axisById.get(String(split.axisId));
+    return axis === undefined ? [] : [{ split, axis }];
+  });
 
   return (
     <div data-result-view="story" className="flex flex-col gap-6">
@@ -219,6 +276,26 @@ export function ResultStoryView({
               <Prose paragraphs={portrait.misread} />
             </Block>
           </>
+        )}
+
+        {/*
+          갈린 장면이 없으면 이 구역은 아예 나오지 않습니다.
+          "차이가 없었습니다" 같은 빈 말을 채워 넣지 않습니다 (DEC-038).
+        */}
+        {contrasts.length > 0 && (
+          <Block title="자리에 따라 달라지는 것">
+            <div className="flex flex-col gap-6">
+              {contrasts.map(({ split, axis }) => (
+                <ContextContrast
+                  key={String(split.axisId)}
+                  axis={axis}
+                  split={split}
+                  note={noteByAxis.get(String(split.axisId))}
+                  labels={contextLabels}
+                />
+              ))}
+            </div>
+          </Block>
         )}
       </Card>
 

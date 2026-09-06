@@ -1,5 +1,14 @@
 /**
- * 문항 48개 (contentVersion 4.0.0 — 2026-08-21 확장, DEC-048)
+ * 문항 48개 (contentVersion 6.0.0 — 2026-09-06 axis-energy 교실 이전, DEC-071)
+ *
+ * axis-energy는 12문항 가운데 11개가 동료·혼자 장면이라, 교직 스타일이 아니라
+ * 어른들 사이에서의 사교성을 재고 있었습니다. "방학이 길어지면 동료가 보고 싶다"
+ * 같은 문항은 학교를 빼도 그대로 성립합니다. 축이 재는 것(말하며 정리하는가,
+ * 혼자 정리하는가)은 그대로 두고 **재는 장소를 교무실에서 교실로 옮겼습니다**.
+ *
+ * 그 결과 이 축의 장면이 수업 4 · 생활지도 4 · 업무 4가 되고 동료 장면은 0이 됩니다.
+ * 세 장면 모두 CONTEXT_MIN_QUESTIONS(3)을 넘으므로, 상황차 분석이
+ * "아이들 앞에서와 업무를 볼 때"처럼 **교직 안에서** 비교할 수 있게 됩니다 (DEC-071).
  *
  * 검수안: docs/content/teacher-style-v1-revision.md
  *
@@ -16,6 +25,18 @@
  *   - 40자 내외, "항상 / 절대" 같은 극단 표현 없음
  *   - 빈도가 아니라 성향을 물음 ("~하는 편이다")
  *   - 반박하기 어려운 문장을 쓰지 않는다 — 모두가 동의하면 사람을 구분하지 못함
+ *   - **양극이 둘 다 그럴듯한 교사상이어야 한다** (2026-09-06 추가)
+ *     한쪽을 고르면 교사로서 부족해 보이는 문항은 답이 한쪽으로 쏠립니다.
+ *     쏠리는 문항은 세 가지 모양으로 옵니다.
+ *       천장 — "그날 바로 불러서 이야기하며 푸는 편이다" (미루는 쪽을 고를 수 없음)
+ *       바닥 — "수업 중 설명이 막히면 아이들에게 되물으며 정리한다" (실제로 드묾)
+ *       중복 — 같은 축·같은 방향에서 사실상 같은 행동을 두 번 묻는 것
+ *     시점("언제 하는가")이나 성실성("얼마나 챙기는가")이 아니라
+ *     **방식**("어느 쪽이 더 편한가")을 물으면 답이 갈립니다.
+ *
+ *     좋은 본보기: "아이를 지도하기 전에 무슨 말을 할지 혼자 정리하고 부르는 편이다."
+ *     즉흥적으로 말하는 교사도, 정리한 뒤 말하는 교사도 둘 다 흔하고
+ *     어느 쪽도 더 훌륭해 보이지 않습니다.
  *
  * context는 이 문항이 묻는 장면입니다 (DEC-048). 장면 안에서도 찬반이 한쪽으로
  * 몰리지 않아야 합니다 — 몰리면 응답 습관이 장면 차이로 둔갑합니다.
@@ -26,14 +47,14 @@
 export const questions = [
   // ── Part 1 ──────────────────────────────────────────────────────────────
   {
-    id: "energy-01",
+    id: "energy-13",
     sectionId: "part-1",
     order: 1,
-    text: "쉬는 시간에는 다른 선생님과 수다를 떠는 편이다.",
+    text: "수업 중에 아이들 질문을 받다 보면 내가 하려던 말이 더 분명해지는 편이다.",
     axisId: "axis-energy",
     polarity: 1,
     weight: 1,
-    context: "colleague",
+    context: "lesson",
   },
   {
     id: "lens-02",
@@ -106,14 +127,14 @@ export const questions = [
     context: "lesson",
   },
   {
-    id: "energy-05",
+    id: "energy-14",
     sectionId: "part-1",
     order: 9,
-    text: "복도에서 선생님들을 마주치면 먼저 말을 거는 편이다.",
+    text: "수업이 뜻대로 안 된 날은 그 이야기를 누군가에게 해 봐야 정리가 되는 편이다.",
     axisId: "axis-energy",
     polarity: 1,
     weight: 1,
-    context: "colleague",
+    context: "lesson",
   },
   {
     id: "decision-06",
@@ -126,14 +147,14 @@ export const questions = [
     context: "guidance",
   },
   {
-    id: "energy-11",
+    id: "energy-23",
     sectionId: "part-1",
     order: 11,
-    text: "교무실을 들르면 할 일만 하고 교실로 돌아오는 편이다.",
+    text: "밀린 학교 서류는 조용한 자리에서 한 번에 끝내는 편이다.",
     axisId: "axis-energy",
     polarity: -1,
     weight: 1,
-    context: "colleague",
+    context: "admin",
   },
   {
     id: "lens-11",
@@ -167,14 +188,14 @@ export const questions = [
     context: "admin",
   },
   {
-    id: "energy-02",
+    id: "energy-15",
     sectionId: "part-2",
     order: 15,
-    text: "빈 시간이 생기면 동료와 어울리기보다 혼자 쉬는 편이다.",
+    text: "새 단원은 아이들에게 꺼내기 전에 혼자 끝까지 정리해 두는 편이다.",
     axisId: "axis-energy",
     polarity: -1,
     weight: 1,
-    context: "self",
+    context: "lesson",
   },
   {
     id: "decision-03",
@@ -207,14 +228,14 @@ export const questions = [
     context: "admin",
   },
   {
-    id: "energy-09",
+    id: "energy-22",
     sectionId: "part-2",
     order: 19,
-    text: "학년 협의회에서 떠오른 생각을 그 자리에서 꺼내 놓는 편이다.",
+    text: "학교 행사를 준비할 때 머릿속으로만 그리기보다 소리 내어 말해 보며 정리하는 편이다.",
     axisId: "axis-energy",
     polarity: 1,
     weight: 1,
-    context: "colleague",
+    context: "admin",
   },
   {
     id: "lens-05",
@@ -268,14 +289,14 @@ export const questions = [
   },
   // ── Part 3 ──────────────────────────────────────────────────────────────
   {
-    id: "energy-06",
+    id: "energy-21",
     sectionId: "part-3",
     order: 25,
-    text: "회의나 모임에서는 자주 발언하는 것보다 들으며 정리하는 편이다.",
+    text: "학급 전체에 할 이야기는 머릿속에서 문장을 다 만든 뒤에 꺼내는 편이다.",
     axisId: "axis-energy",
     polarity: -1,
     weight: 1,
-    context: "colleague",
+    context: "guidance",
   },
   {
     id: "lens-07",
@@ -308,14 +329,14 @@ export const questions = [
     context: "admin",
   },
   {
-    id: "energy-03",
+    id: "energy-20",
     sectionId: "part-3",
     order: 29,
-    text: "모르는 게 있으면 혼자 찾아보기보다 다른 선생님과 이야기하며 푸는 편이다.",
+    text: "학급에 문제가 생기면 아이들과 이야기를 나누며 해결 방법을 찾는 편이다.",
     axisId: "axis-energy",
     polarity: 1,
     weight: 1,
-    context: "colleague",
+    context: "guidance",
   },
   {
     id: "decision-02",
@@ -338,14 +359,14 @@ export const questions = [
     context: "lesson",
   },
   {
-    id: "energy-10",
+    id: "energy-16",
     sectionId: "part-3",
     order: 32,
-    text: "사람을 많이 만난 날은 다음 날 혼자 보내고 싶어지는 편이다.",
+    text: "아이를 지도하기 전에 무슨 말을 할지 혼자 정리하고 부르는 편이다.",
     axisId: "axis-energy",
     polarity: -1,
     weight: 1,
-    context: "self",
+    context: "guidance",
   },
   {
     id: "lens-06",
@@ -368,14 +389,14 @@ export const questions = [
     context: "guidance",
   },
   {
-    id: "energy-12",
+    id: "energy-17",
     sectionId: "part-3",
     order: 35,
-    text: "방학이 길어지면 슬슬 동료 선생님들이 보고 싶어지는 편이다.",
+    text: "아이와 마주 앉으면 준비한 말보다 그 자리에서 나오는 말이 많은 편이다.",
     axisId: "axis-energy",
     polarity: 1,
     weight: 1,
-    context: "self",
+    context: "guidance",
   },
   {
     id: "lens-12",
@@ -409,14 +430,14 @@ export const questions = [
     context: "admin",
   },
   {
-    id: "energy-07",
+    id: "energy-18",
     sectionId: "part-4",
     order: 39,
-    text: "마음이 복잡할 때는 누군가에게 꺼내 놓아야 정리되는 편이다.",
+    text: "공문이 애매하면 혼자 해석하기보다 담당 선생님께 바로 물어보는 편이다.",
     axisId: "axis-energy",
     polarity: 1,
     weight: 1,
-    context: "self",
+    context: "admin",
   },
   {
     id: "decision-09",
@@ -449,14 +470,14 @@ export const questions = [
     context: "lesson",
   },
   {
-    id: "energy-08",
+    id: "energy-19",
     sectionId: "part-4",
     order: 43,
-    text: "퇴근길에는 통화나 메시지를 하기보다 조용히 혼자 퇴근하는 편이다.",
+    text: "새 업무를 맡으면 자료를 혼자 다 읽어 본 뒤에 질문하는 편이다.",
     axisId: "axis-energy",
     polarity: -1,
     weight: 1,
-    context: "self",
+    context: "admin",
   },
   {
     id: "lens-10",
@@ -482,11 +503,11 @@ export const questions = [
     id: "rhythm-09",
     sectionId: "part-4",
     order: 46,
-    text: "쉬는 날에도 대략적인 시간 계획을 세워야 마음이 놓이는 편이다.",
+    text: "다음 주 수업은 큰 흐름이라도 그려 두어야 마음이 놓이는 편이다.",
     axisId: "axis-rhythm",
     polarity: 1,
     weight: 1,
-    context: "self",
+    context: "lesson",
   },
   {
     id: "decision-12",

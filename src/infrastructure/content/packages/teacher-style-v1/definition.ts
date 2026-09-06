@@ -1,5 +1,5 @@
 /**
- * 콘텐츠 패키지 — teacher-style-v1 (contentVersion 4.5.0)
+ * 콘텐츠 패키지 — teacher-style-v1 (contentVersion 6.0.0)
  *
  * 2026-08-20 전면 개정. 검수안: docs/content/teacher-style-v1-revision.md
  *
@@ -50,7 +50,7 @@ export const axisIds = ["axis-energy", "axis-lens", "axis-decision", "axis-rhyth
 const axes = [
   {
     id: "axis-energy",
-    name: "동료와 생각을 정리하는 방식",
+    name: "생각을 정리하는 방식",
     positive: {
       side: "positive",
       label: "대화하며 정리하는 교류형",
@@ -59,7 +59,7 @@ const axes = [
       code: "G",
       crosswalkCode: "E",
       description:
-        "동료와 이야기를 주고받을 때 생각이 정리되는 편입니다. 짧은 대화에서도 필요한 정보와 다음 행동을 정합니다.",
+        "말을 주고받는 사이에 생각이 정리되는 편입니다. 아이들에게 되묻거나 소리 내어 말해 보면서 다음 행동을 정합니다.",
     },
     negative: {
       side: "negative",
@@ -69,7 +69,7 @@ const axes = [
       code: "D",
       crosswalkCode: "I",
       description:
-        "혼자 생각할 시간이 있을 때 머릿속이 정리되는 편입니다. 방해받지 않는 시간에 필요한 내용을 차분히 검토합니다.",
+        "혼자 생각할 시간이 있을 때 머릿속이 정리되는 편입니다. 밖으로 꺼내기 전에 머릿속에서 한 번 끝내 두어야 마음이 놓입니다.",
     },
     defaultPole: "positive",
     intensityBands,
@@ -192,11 +192,11 @@ const axisCombinations = [
     readings: [
       {
         poles: { "axis-energy": "positive", "axis-decision": "positive" },
-        text: "결정할 일이 생기면 동료와 이야기하며 기준을 다듬어 가는 편이에요. 이야기 중에 정리된 기준은 회의 뒤 한 줄로 남겨 두면 다음에 같은 논의를 되풀이하지 않게 됩니다.",
+        text: "결정할 일이 생기면 말로 꺼내 보면서 기준을 다듬어 가는 편이에요. 이야기 중에 정리된 기준을 한 줄로 남겨 두면 다음에 같은 고민을 되풀이하지 않게 됩니다.",
       },
       {
         poles: { "axis-energy": "positive", "axis-decision": "negative" },
-        text: "결정할 일이 생기면 관련된 사람들의 사정을 먼저 듣고 이야기 속에서 답을 찾아 가는 편이에요. 들은 이야기 가운데 무엇이 결정에 영향을 줬는지 남겨 두면 나중에 설명하기 쉬워집니다.",
+        text: "결정할 일이 생기면 그 아이의 사정을 먼저 듣고 이야기 속에서 답을 찾아 가는 편이에요. 들은 이야기 가운데 무엇이 결정에 영향을 줬는지 남겨 두면 나중에 설명하기 쉬워집니다.",
       },
       {
         poles: { "axis-energy": "negative", "axis-decision": "positive" },
@@ -215,11 +215,11 @@ const axisCombinations = [
     readings: [
       {
         poles: { "axis-energy": "positive", "axis-lens": "positive" },
-        text: "동료와 이야기를 나누며 구체적인 사실을 모으는 편이에요. 다만 들은 이야기와 직접 확인한 것이 섞이기 쉬우니, 중요한 판단 앞에서는 어디서 온 정보인지 한 번 갈라 두면 좋습니다.",
+        text: "주고받는 말 속에서 구체적인 사실을 모으는 편이에요. 다만 들은 이야기와 직접 확인한 것이 섞이기 쉬우니, 중요한 판단 앞에서는 어디서 온 정보인지 한 번 갈라 두면 좋습니다.",
       },
       {
         poles: { "axis-energy": "positive", "axis-lens": "negative" },
-        text: "동료와 이야기하다가 앞으로의 가능성이 떠오르는 편이에요. 떠오른 생각 옆에 '무엇부터 해 볼지'를 한 줄 붙여 두면 이야기로만 끝나지 않습니다.",
+        text: "이야기를 주고받다가 앞으로의 가능성이 떠오르는 편이에요. 떠오른 생각 옆에 '무엇부터 해 볼지'를 한 줄 붙여 두면 이야기로만 끝나지 않습니다.",
       },
       {
         poles: { "axis-energy": "negative", "axis-lens": "positive" },
@@ -238,11 +238,11 @@ const axisCombinations = [
     readings: [
       {
         poles: { "axis-energy": "positive", "axis-rhythm": "positive" },
-        text: "동료와 먼저 이야기해 순서를 맞춘 뒤 시작하는 편이에요. 맞춘 순서를 짧게 적어 두면 서로 기억이 다를 때 확인할 곳이 생깁니다.",
+        text: "먼저 이야기해 순서를 맞춘 뒤 시작하는 편이에요. 맞춘 순서를 짧게 적어 두면 서로 기억이 다를 때 확인할 곳이 생깁니다.",
       },
       {
         poles: { "axis-energy": "positive", "axis-rhythm": "negative" },
-        text: "동료와 이야기하며 상황에 맞게 방법을 조정하는 편이에요. 바뀐 내용을 한 곳에 기록하면 나중에 합류한 사람도 현재 진행 방식을 확인할 수 있습니다.",
+        text: "이야기하면서 상황에 맞게 방법을 조정하는 편이에요. 바뀐 내용을 한 곳에 기록하면 나중에 합류한 사람도 현재 진행 방식을 확인할 수 있습니다.",
       },
       {
         poles: { "axis-energy": "negative", "axis-rhythm": "positive" },
@@ -314,7 +314,7 @@ const sections = [
     order: 1,
     title: "평소 교실 운영 떠올리기",
     description:
-      "교실과 교무실에서 자주 보이는 평소 모습을 떠올려 보세요. 가장 바람직한 모습보다 요즘 자연스럽게 하는 쪽에 답하면 됩니다.",
+      "교실에서 아이들과 지내는 평소 모습을 떠올려 보세요. 가장 바람직한 모습보다 요즘 자연스럽게 하는 쪽에 답하면 됩니다.",
   },
   {
     id: "part-2",
@@ -326,9 +326,9 @@ const sections = [
   {
     id: "part-3",
     order: 3,
-    title: "결정과 협업 방식 확인하기",
+    title: "결정과 진행 방식 확인하기",
     description:
-      "업무를 정리하고 동료와 함께 움직였던 최근 장면을 떠올려 보세요. 오래 분석하기보다 먼저 가까운 쪽을 골라 주세요.",
+      "아이를 지도하고 맡은 일을 처리했던 최근 장면을 떠올려 보세요. 오래 분석하기보다 먼저 가까운 쪽을 골라 주세요.",
   },
   {
     id: "part-4",
@@ -381,7 +381,7 @@ export const teacherStyleV1Base = {
   title: "나의 교직 스타일 탐색",
   summary: "질문으로 살펴보는 나의 교실 운영 스타일",
   description:
-    "학교 현장에서 자주 마주하는 장면을 떠올리며 평소 나에게 가까운 선택을 골라 보세요. 동료와 생각을 정리하는 방식, 아이와 수업을 이해하는 방식, 결정을 내리는 기준, 업무를 진행하는 방식을 네 가지 관점으로 확인합니다. 맞고 틀린 답이나 더 좋은 스타일은 없습니다.",
+    "수업하고 아이를 지도하고 업무를 처리하는 장면을 떠올리며, 평소 나에게 가까운 쪽을 골라 보세요. 생각을 정리하는 방식, 아이와 수업을 이해하는 방식, 결정을 내리는 방식, 일을 진행하는 방식을 네 가지 관점으로 확인합니다. 맞고 틀린 답이나 더 좋은 스타일은 없습니다.",
   // 48문항 기준. 이전에는 이 값(5)과 안내 문구(10분)가 서로 어긋나 있어 함께 맞췄습니다.
   estimatedMinutes: 5,
   estimatedTimeLabel: "약 5분",
@@ -391,10 +391,12 @@ export const teacherStyleV1Base = {
   // 48문항 중 20개의 문장을 다시 썼습니다 (DEC-051). 축·polarity·id·장면태그는 그대로지만
   // 문장의 뜻이 달라진 문항이 있어, 예전 응답을 그대로 이어 쓰면 다른 문장에 답한 점수가 됩니다.
   // 그래서 contentVersion만 올리지 않고 assessmentVersion을 함께 올려 재검사를 유도합니다.
-  assessmentVersion: 5,
-  // 5.0.0 — 방향별 설명을 하나로 통합하고 결과의 모호한 문구와 요약 구조를 전면 개편했습니다
-  // (DEC-068). 문항·축·원점수 공식은 그대로이므로 assessmentVersion은 올리지 않습니다.
-  contentVersion: "5.0.0",
+  // 6 — axis-energy 12문항 가운데 7개를 교실 장면으로 교체했습니다 (DEC-071).
+  // 문장의 뜻이 완전히 다른 문항이 되었으므로 예전 응답을 이어 쓰면 다른 문항에 답한
+  // 점수가 됩니다. 새 문항에는 새 id(energy-13~19)를 주어 잘못 매핑될 여지도 없앴습니다.
+  assessmentVersion: 6,
+  // 6.0.0 — 축 이름과 축 원고가 바뀌고, 결과에 장면 대비 구역이 생겼습니다 (DEC-071).
+  contentVersion: "6.0.0",
   scale,
   axes,
   typeCode,

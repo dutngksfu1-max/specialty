@@ -30,9 +30,10 @@ export const teacherStylePresentation = {
     height: 1086,
     alt: "",
   },
+  // description 본문에 그대로 들어 있어야 합니다. 소개 문구를 고치면 여기도 함께 고칩니다.
   descriptionEmphasisTerms: [
-    "학교 현장에서 자주 마주하는 장면",
-    "평소 나에게 가까운 선택",
+    "수업하고 아이를 지도하고 업무를 처리하는 장면",
+    "평소 나에게 가까운 쪽",
     "네 가지 관점",
   ],
   sectionArtwork: [

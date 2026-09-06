@@ -212,6 +212,22 @@ describe("ResultStoryView", () => {
         }
       }
     }
+
+    // 축 원고도 같은 규칙을 받습니다. 문항을 바꿀 때 여기가 함께 어긋나기 쉽습니다.
+    for (const axis of found.value.resultNarrative?.axes ?? []) {
+      for (const reading of axis.readings) {
+        const story = reading.story;
+        if (story === undefined) continue;
+        for (const paragraph of [story.lead, ...story.body]) {
+          for (const gram of triGrams(paragraph)) {
+            expect(
+              questionGrams.get(gram) ?? null,
+              `${String(axis.axisId)} ${reading.direction} 원고가 문항을 다시 썼습니다 — 겹친 대목 "${gram}"`,
+            ).toBeNull();
+          }
+        }
+      }
+    }
   });
 
   /*

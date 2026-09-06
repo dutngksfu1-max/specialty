@@ -207,6 +207,18 @@ describe("문항 작성 규칙 (5.2)", () => {
       expect(question.text, question.text).not.toMatch(
         /아이를 사랑|최선을 다|열심히 하는 편|노력하는 편|아이들에게 좋다|중요하다고 생각한다\.$/,
       );
+
+      /*
+        행동 수준의 천장 효과 (2026-09-06 추가)
+
+        "아이와 문제가 생기면 그날 바로 불러서 이야기하며 푸는 편이다"는 미덕 표현이
+        하나도 없는데도 거의 모든 교사가 "그렇다"에 답합니다. 미루는 쪽을 고르면
+        교사로서 부족하다고 말하는 셈이기 때문입니다. 시점이나 성실성을 묻는 대신
+        **방식**을 물으면 답이 갈립니다.
+      */
+      expect(question.text, question.text).not.toMatch(
+        /그날 바로|즉시|반드시|빠짐없이|항상|거르지 않/,
+      );
     }
   });
 
@@ -408,12 +420,17 @@ describe("문항 맥락 태그 (Phase A)", () => {
   });
 
   it("축별 S4 가용성이 감사 문서와 일치합니다", () => {
-    // docs/content/teacher-style-v1-audit.md 3장의 판정 (DEC-048 이후)
+    // docs/content/teacher-style-v1-audit.md 3장의 판정 (DEC-048 · DEC-071 이후)
     const expected: Readonly<Record<string, number>> = {
-      "axis-energy": 2,
+      // 2 → 3. 동료 장면 문항을 모두 교실·업무로 옮기면서 수업·생활지도·업무가
+      // 각각 4문항이 되었습니다. 비교할 장면이 늘어난 것은 개선입니다 (DEC-071).
+      "axis-energy": 3,
       "axis-lens": 3,
       "axis-decision": 2,
-      "axis-rhythm": 3,
+      // 3 → 2. "쉬는 날에도 시간 계획을 세운다"처럼 교직과 무관한 self 문항을
+      // 수업 장면으로 옮기면서 self가 자격을 잃었습니다. 남은 두 장면(수업·업무)의
+      // 대비가 오히려 교사에게 할 말이 많습니다 (DEC-071).
+      "axis-rhythm": 2,
     };
 
     for (const [axisId, count] of Object.entries(expected)) {
@@ -436,7 +453,7 @@ describe("문항 맥락 태그 (Phase A)", () => {
    * 한 장면 안에 문항 3개 이상인 축이 둘 이상이면, 그 장면에서 축끼리 견줄 수 있습니다.
    * 네 축을 세로로 읽는 기존 틀과 달리 "이 장면에서의 나"를 가로로 읽습니다.
    */
-  it("장면 프로파일을 만들 수 있는 장면이 5개입니다", () => {
+  it("장면 프로파일을 만들 수 있는 장면이 3개입니다", () => {
     const axesByContext = new Map<string, string[]>();
     for (const axis of definition.axes) {
       for (const [context, cell] of tally(String(axis.id))) {
@@ -446,12 +463,19 @@ describe("문항 맥락 태그 (Phase A)", () => {
     }
 
     const usable = [...axesByContext.entries()].filter(([, axes]) => axes.length >= 2);
+    /*
+      `self`와 `colleague`가 빠졌습니다 (DEC-071).
+
+      axis-energy가 그 두 장면에 문항 11개를 갖고 있었는데,
+      "방학이 길어지면 동료가 보고 싶다"처럼 학교를 빼도 그대로 성립하는 문항이었습니다.
+      교직 스타일이 아니라 어른들 사이에서의 사교성을 재고 있었던 것입니다.
+      열한 문항을 수업·생활지도·업무로 옮기면서 두 장면이 자격을 잃었습니다.
+      교실이 중심에 오도록 의도한 결과입니다.
+    */
     expect(usable.map(([context]) => context).sort()).toEqual([
       "admin",
-      "colleague",
       "guidance",
       "lesson",
-      "self",
     ]);
   });
 

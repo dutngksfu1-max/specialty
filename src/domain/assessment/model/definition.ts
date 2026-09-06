@@ -140,6 +140,14 @@ export interface AxisResultNarrative {
   readonly axisId: AxisId;
   readonly readings: readonly AxisNarrativeReading[];
   /**
+   * 같은 축인데 장면에 따라 답이 갈렸을 때 붙일 한 문장 (DEC-071)
+   *
+   * 이 대비는 **문항을 하나하나 보고는 알 수 없습니다.** 열두 문항을 장면별로 갈라
+   * 평균을 내야 나오는 것이라, 답한 사람 입장에서는 "체크한 적 없는데 맞네"가 됩니다.
+   * 문구는 콘텐츠가 소유하고 엔진은 어느 장면이 갈렸는지만 계산합니다.
+   */
+  readonly contextSplitNote?: string;
+  /**
    * T3 반증 여지 — "이 설명이 안 맞는다면" 문구 (docs/PRD-result-v2.md 5장)
    *
    * 반박할 수 없는 결과는 검사가 아니라 점괘입니다.
@@ -152,6 +160,13 @@ export interface AxisResultNarrative {
 export interface ResultNarrativeSpec {
   /** 본문 흐름을 끊지 않고 해석 범위만 짧게 알리는 문구 */
   readonly scopeNote: string;
+  /**
+   * 장면 태그를 사람이 읽는 이름으로 옮깁니다 (DEC-071).
+   *
+   * `lesson` 같은 식별자는 엔진의 말이고, 화면에 나갈 이름은 검사가 정합니다.
+   * 다음 검사가 다른 장면을 쓰더라도 엔진을 고치지 않게 하려는 것입니다 (AGENTS.md 7절).
+   */
+  readonly contextLabels?: Readonly<Record<string, string>>;
   /**
    * 줄글에서 눈이 걸릴 곳을 만들 핵심 어구입니다.
    *

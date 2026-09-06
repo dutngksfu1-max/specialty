@@ -873,6 +873,7 @@ export function ResultRenderer({
             snapshot={snapshot}
             profile={profile}
             narrative={narrative.axes}
+            signals={signals}
           />
         </TabPanel>
 
