@@ -15,6 +15,14 @@ export interface AxisPole {
   readonly label: string;
   /** 좁은 화면용 짧은 이름 */
   readonly shortLabel: string;
+  /**
+   * 분류 이름 대신 **하는 일**로 적은 짧은 라벨 (DEC-069)
+   *
+   * `shortLabel`("몰입형")은 이 검사를 처음 보는 사람에게 아무것도 알려 주지 않습니다.
+   * 줄글 보기의 게이지는 분류어와 강도 라벨을 모두 빼고 이 라벨만 양 끝에 둡니다.
+   * 없으면 줄글 보기가 `shortLabel`로 대신합니다.
+   */
+  readonly plainLabel?: string;
   readonly description: string;
   /**
    * 유형 코드에서 이 극을 나타내는 글자 한 개 (DEC-049)
@@ -105,6 +113,27 @@ export interface AxisNarrativeReading {
   readonly summary: string;
   /** 교실에서 그 모습이 드러나는 장면 한 문장. 자세히 보기에서만 씁니다 */
   readonly scene: string;
+  /**
+   * 줄글 보기 전용 서술 (DEC-069)
+   *
+   * `summary`는 관점 카드 한 장에 들어가야 해서 한두 문장으로 눌러 둔 문장입니다.
+   * 줄글 보기는 축 이름을 제목으로 크게 세우고 그 아래를 문단으로 읽히게 하므로,
+   * 같은 축이라도 **분량과 문장 구조가 다른 원고**가 필요합니다.
+   * 없으면 줄글 보기가 `summary`로 대신 채웁니다.
+   */
+  readonly story?: AxisNarrativeStory;
+}
+
+/**
+ * 축 하나를 문단으로 읽히게 하는 원고 (DEC-069)
+ *
+ * 강도 구간으로 갈리지 않습니다. 방향이 같으면 같은 원고를 읽습니다 (DEC-068).
+ */
+export interface AxisNarrativeStory {
+  /** 축 제목 바로 아래 한 줄. 방향을 평서문으로 못 박습니다 */
+  readonly lead: string;
+  /** 이어지는 문단. 교실에서 실제로 일어나는 일로 적습니다 */
+  readonly body: readonly string[];
 }
 
 export interface AxisResultNarrative {

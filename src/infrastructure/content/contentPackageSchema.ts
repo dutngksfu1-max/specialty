@@ -37,6 +37,8 @@ const axisPoleSchema = z.object({
   side: poleSideSchema,
   label: z.string().min(1),
   shortLabel: z.string().min(1),
+  /** 분류어 대신 하는 일로 적은 짧은 라벨 (DEC-069) */
+  plainLabel: z.string().min(1).optional(),
   description: z.string().min(1),
   code: codeLetterSchema.optional(),
   crosswalkCode: codeLetterSchema.optional(),
@@ -121,12 +123,21 @@ const resultGuidanceSchema = z.object({
   talkingPoints: z.array(z.string().min(1)).min(1),
 });
 
+/** 줄글 보기 전용 성격 묘사 (DEC-069). 없는 검사도 그대로 통과해야 합니다 */
+const resultPortraitSchema = z.object({
+  opening: z.array(z.string().min(1)).min(1),
+  drive: z.array(z.string().min(1)).min(1),
+  misread: z.array(z.string().min(1)).min(1),
+  whenTired: z.array(z.string().min(1)).min(1),
+});
+
 const resultProfileSchema = z.object({
   key: z.string().min(1).transform(toResultKey),
   poles: z.record(z.string().min(1), poleSideSchema),
   title: z.string().min(1),
   oneLiner: z.string().min(1),
   rhythm: z.string().min(1),
+  portrait: resultPortraitSchema.optional(),
   ...resultGuidanceSchema.shape,
 });
 
@@ -143,11 +154,18 @@ const axisCombinationSchema = z.object({
   readings: z.array(axisCombinationReadingSchema).min(2),
 });
 
+/** 줄글 보기 전용 축 원고 (DEC-069) */
+const axisNarrativeStorySchema = z.object({
+  lead: z.string().min(1),
+  body: z.array(z.string().min(1)).min(1),
+});
+
 const axisNarrativeReadingSchema = z.object({
   direction: poleSideSchema,
   headline: z.string().min(1),
   summary: z.string().min(1),
   scene: z.string().min(1),
+  story: axisNarrativeStorySchema.optional(),
 });
 
 const axisResultNarrativeSchema = z.object({
@@ -558,7 +576,22 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
       ? []
       : [["estimatedTimeLabel", definition.estimatedTimeLabel] as const]),
     ...definition.questions.map((question) => [`questions.${question.order}.text`, question.text] as const),
-    ...definition.resultProfiles.map((profile) => [`resultProfiles.${profile.key}.title`, profile.title] as const),
+    ...definition.resultProfiles.flatMap((profile) => [
+      [`resultProfiles.${profile.key}.title`, profile.title] as const,
+      ...(profile.portrait === undefined
+        ? []
+        : [
+            ...(["opening", "drive", "misread", "whenTired"] as const).flatMap((section) =>
+              (profile.portrait?.[section] ?? []).map(
+                (paragraph, index) =>
+                  [
+                    `resultProfiles.${profile.key}.portrait.${section}.${index}`,
+                    paragraph,
+                  ] as const,
+              ),
+            ),
+          ]),
+    ]),
     ...(definition.resultNarrative === undefined
       ? []
       : [
@@ -572,6 +605,21 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
               [`resultNarrative.${String(axis.axisId)}.${index}.headline`, reading.headline] as const,
               [`resultNarrative.${String(axis.axisId)}.${index}.summary`, reading.summary] as const,
               [`resultNarrative.${String(axis.axisId)}.${index}.scene`, reading.scene] as const,
+              ...(reading.story === undefined
+                ? []
+                : [
+                    [
+                      `resultNarrative.${String(axis.axisId)}.${index}.story.lead`,
+                      reading.story.lead,
+                    ] as const,
+                    ...reading.story.body.map(
+                      (paragraph, bodyIndex) =>
+                        [
+                          `resultNarrative.${String(axis.axisId)}.${index}.story.body.${bodyIndex}`,
+                          paragraph,
+                        ] as const,
+                    ),
+                  ]),
             ]),
           ]),
         ]),

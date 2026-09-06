@@ -29,6 +29,37 @@ export interface SceneNote {
   readonly text: string;
 }
 
+/**
+ * 줄글 보기의 성격 묘사 (DEC-069)
+ *
+ * `rhythm`은 히어로 요약 자리에 들어가는 세 문장이라, 검사에 5~10분을 들인 사람이
+ * "이게 다야?"라고 느끼기 쉬웠습니다. 이 원고는 그 자리를 대신하는 것이 아니라
+ * **줄글 보기에서만** 쓰이는 별도 원고입니다. 기존 보기는 이 필드를 읽지 않습니다.
+ *
+ * 유형별로 손으로 씁니다. 축 문장을 이어 붙여 만들면 네 축을 따로 읽는 것과 같아지고,
+ * "내 얘기 같다"는 느낌은 그 조합에서만 나오는 구체적인 장면에서 생깁니다.
+ */
+export interface ResultPortrait {
+  /** 결과를 여는 문단들. 이 선생님이 실제로 어떻게 일하는지 */
+  readonly opening: readonly string[];
+  /**
+   * 무엇을 중요하게 여기는가 — 행동이 아니라 **그 행동을 만드는 것**
+   *
+   * "무엇을 하는가"만 적으면 관찰 기록이 되고, 읽는 사람은 남 이야기로 읽습니다.
+   * "왜 그렇게 하는가"가 붙어야 자기 이야기가 됩니다.
+   */
+  readonly drive: readonly string[];
+  /**
+   * 자주 받는 오해 — "이렇게 보이지만 실은 이렇습니다"
+   *
+   * 칭찬은 공감을 만들지 않습니다. **본인은 억울했지만 설명하지 못했던 것**을
+   * 대신 말해 줄 때 "내 얘기 같다"가 됩니다. 그래서 오해를 먼저 적고 뒤집습니다.
+   */
+  readonly misread: readonly string[];
+  /** 여유가 없을 때 먼저 나타나는 모습. 단점이 아니라 신호로 적습니다 */
+  readonly whenTired: readonly string[];
+}
+
 export interface ResultProfile {
   /** 내부 식별자. 화면에 그대로 노출하지 않습니다. */
   readonly key: ResultKey;
@@ -38,6 +69,8 @@ export interface ResultProfile {
   readonly oneLiner: string;
   /** 나의 교직 리듬 */
   readonly rhythm: string;
+  /** 줄글 보기 전용 성격 묘사 (DEC-069). 없으면 줄글 보기가 rhythm으로 대신합니다 */
+  readonly portrait?: ResultPortrait;
   /** 강점이 드러날 수 있는 장면 */
   readonly shiningMoments: readonly SceneNote[];
   /** 바쁠 때 나타날 수 있는 모습 */

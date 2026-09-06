@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 /**
- * 두 갈래 보기 전환 (요약 / 자세히)
+ * 보기 갈래 전환 (요약 / 자세히 / 줄글)
  *
  * Base UI가 role·화살표 키 이동·포커스를 맡고, 외형은 프로젝트 토큰으로만 만듭니다.
  * 선택 상태를 색으로만 알리지 않도록 면·테두리·굵기를 함께 바꿉니다 (design.md 5장).
@@ -49,7 +49,8 @@ export function SegmentedTabs({
             key={item.value}
             value={item.value}
             className={cn(
-              "min-h-11 min-w-0 flex-1 rounded-sm px-3 py-2 text-body-sm font-medium text-foreground-muted",
+              // 갈래가 셋이 된 뒤로 360px에서 라벨이 잘렸습니다. 좁은 화면에서만 여백을 줄입니다.
+              "min-h-11 min-w-0 flex-1 rounded-sm px-2 py-2 text-body-sm font-medium text-foreground-muted sm:px-3",
               "transition-[background-color,border-color,color] duration-(--motion-fast) ease-out-soft",
               "hover:text-foreground",
               "aria-selected:border aria-selected:border-border-strong aria-selected:bg-surface",

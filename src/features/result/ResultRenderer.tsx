@@ -31,6 +31,7 @@ import type { AxisScore } from "@/domain/assessment/scoring/score";
 import { AxisBar } from "@/features/result/AxisBar";
 import { ResultNavigation } from "@/features/result/ResultNavigation";
 import { ResultHero } from "@/features/result/ResultHero";
+import { ResultStoryView } from "@/features/result/ResultStoryView";
 import {
   assessmentPerspectiveTone,
   type AssessmentPresentation,
@@ -59,8 +60,19 @@ const RESULT_NAVIGATION = [
  */
 const COMBINATION_LIMIT = 2;
 
-/** 결과를 어느 깊이로 읽을지 — 주소의 `?view=`와 같은 값입니다. */
-type ResultViewKey = "summary" | "detail";
+/**
+ * 결과를 어느 깊이로 읽을지 — 주소의 `?view=`와 같은 값입니다.
+ *
+ * `story`는 DEC-069로 붙인 세 번째 갈래입니다. 요약·자세히와 **같은 데이터**를 읽고
+ * 배치만 다르게 하므로, 이 값을 지우면 기존 두 갈래가 그대로 남습니다.
+ */
+type ResultViewKey = "summary" | "detail" | "story";
+
+const RESULT_VIEW_KEYS: readonly ResultViewKey[] = ["summary", "detail", "story"];
+
+function toResultViewKey(value: string | null): ResultViewKey {
+  return RESULT_VIEW_KEYS.find((candidate) => candidate === value) ?? "summary";
+}
 
 const CONTEXT_LABELS: Readonly<Record<string, string>> = {
   lesson: "수업",
@@ -796,9 +808,7 @@ export function ResultRenderer({
   const [view, setView] = useState<ResultViewKey>(() =>
     typeof window === "undefined"
       ? "summary"
-      : new URLSearchParams(window.location.search).get("view") === "detail"
-        ? "detail"
-        : "summary",
+      : toResultViewKey(new URLSearchParams(window.location.search).get("view")),
   );
   const detailStartRef = useRef<HTMLDivElement | null>(null);
 
@@ -838,10 +848,11 @@ export function ResultRenderer({
         label="결과 보기 방식"
         className="mt-8"
         value={view}
-        onValueChange={(next) => changeView(next === "detail" ? "detail" : "summary")}
+        onValueChange={(next) => changeView(toResultViewKey(next))}
         items={[
           { value: "summary", label: "요약 보기", hint: "약 1분" },
           { value: "detail", label: "자세히 보기", hint: "약 5분" },
+          { value: "story", label: "줄글 보기", hint: "약 3분" },
         ]}
       >
         <TabPanel value="summary" className="mt-8">
@@ -853,6 +864,15 @@ export function ResultRenderer({
             guidance={guidance}
             terms={emphasisTerms}
             onOpenDetail={openDetail}
+          />
+        </TabPanel>
+
+        <TabPanel value="story" className="mt-8">
+          <ResultStoryView
+            definition={definition}
+            snapshot={snapshot}
+            profile={profile}
+            narrative={narrative.axes}
           />
         </TabPanel>
 
