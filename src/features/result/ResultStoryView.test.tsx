@@ -261,6 +261,100 @@ describe("ResultStoryView", () => {
     expect(colleagues).toBeGreaterThan(classroom);
   });
 
+  /*
+    한 축이 원고를 먹으면 "이 검사가 그것만 봤나" 하고 느낍니다.
+    실제로 있었던 일입니다 — 어떤 유형은 '계획' 어휘가 60%, '기준·사정'은 0%였습니다.
+
+    낱말 목록은 **축의 양극을 모두** 담아야 합니다. 계획 쪽 낱말만 넣으면 유연형 원고가
+    전부 0으로 나오는데, 그건 원고가 아니라 자가 잘못된 것입니다.
+  */
+  const AXIS_WORDS: Readonly<Record<string, readonly string[]>> = {
+    "동료·혼자": [
+      "회의", "협의", "동료", "교무실", "옆 반", "메신저", "회식",
+      "혼자", "말수", "말이 적", "소리 내어", "말을 줄이", "밖으로는",
+    ],
+    "관찰·앞날": [
+      "기록", "적어 두", "메모", "자료", "확인", "직접 본", "날짜", "사실",
+      "몇 년 뒤", "몇 달 뒤", "앞으로", "다음 학년", "2학기", "학년 말", "12월",
+      "예상", "변화", "지난번", "작년", "원인",
+    ],
+    "기준·사정": [
+      "규칙", "기준", "사정", "아이에 따라", "아이마다", "일관", "예외",
+      "설명할 수", "학부모", "억울", "답이 정해", "같은 답", "넘으면 안 되는",
+    ],
+    "계획·즉흥": [
+      "계획", "미리", "순서", "마감", "일정", "학기 초", "금요일", "시간표", "진도",
+      "그때그때", "그 자리에서", "하면서", "바로 바꾸", "지금 할 수 있는", "준비해",
+      "밀리", "밀려", "손을 댑니다", "그날 하나",
+    ],
+  };
+
+  it("성격 묘사가 네 축을 고르게 다룹니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok) throw new Error("검사용 콘텐츠를 불러오지 못했습니다.");
+
+    for (const profile of found.value.resultProfiles) {
+      const portrait = profile.portrait;
+      if (portrait === undefined) continue;
+
+      const counts = new Map<string, number>();
+      const coverage = new Map<string, number>();
+
+      for (const [axis, words] of Object.entries(AXIS_WORDS)) {
+        let total = 0;
+        let sections = 0;
+        for (const name of PORTRAIT_SECTIONS) {
+          const text = portrait[name].join(" ");
+          const hits = words.reduce((sum, word) => sum + text.split(word).length - 1, 0);
+          total += hits;
+          if (hits > 0) sections += 1;
+        }
+        counts.set(axis, total);
+        coverage.set(axis, sections);
+      }
+
+      const grand = [...counts.values()].reduce((sum, value) => sum + value, 0);
+      expect(grand).toBeGreaterThan(0);
+
+      for (const axis of Object.keys(AXIS_WORDS)) {
+        // 여섯 구역 가운데 두 곳에도 안 나오면 그 축은 사실상 빠진 것입니다.
+        expect(
+          coverage.get(axis) ?? 0,
+          `${profile.key}에서 '${axis}' 축이 거의 다뤄지지 않습니다`,
+        ).toBeGreaterThanOrEqual(2);
+
+        // 한 축이 절반을 넘으면 나머지 셋이 묻힙니다.
+        expect(
+          (counts.get(axis) ?? 0) / grand,
+          `${profile.key}에서 '${axis}' 축이 원고를 독차지합니다`,
+        ).toBeLessThan(0.5);
+      }
+    }
+  });
+
+  /*
+    axis-energy 문항 12개 가운데 11개가 동료·혼자 장면입니다.
+    동료와 말수가 적어도 아이들과는 하루 종일 떠드는 선생님이 많으므로,
+    그 축을 아이 시점으로 옮겨 쓰면 결과가 통째로 틀립니다.
+  */
+  it("동료 앞에서의 모습을 아이 시점으로 옮겨 쓰지 않습니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok) throw new Error("검사용 콘텐츠를 불러오지 못했습니다.");
+
+    for (const profile of found.value.resultProfiles) {
+      const portrait = profile.portrait;
+      if (portrait === undefined) continue;
+
+      const text = portrait.fromKids.join(" ");
+      for (const word of ["말수", "말이 적", "회의", "교무실", "동료"]) {
+        expect(
+          text.includes(word),
+          `${profile.key}의 아이 시점에 어른들 사이의 이야기("${word}")가 섞였습니다`,
+        ).toBe(false);
+      }
+    }
+  });
+
   it("성격 묘사가 히어로 요약보다 깁니다", () => {
     const found = staticAssessmentCatalog.findBySlug("teacher-style");
     if (!found.ok) throw new Error("검사용 콘텐츠를 불러오지 못했습니다.");
