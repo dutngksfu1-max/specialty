@@ -57,6 +57,25 @@ function renderStory(profileIndex: number, rawScore = 8) {
   };
 }
 
+/** 성격 묘사 구역 이름. 구역이 늘면 여기 한 줄만 더합니다. */
+const PORTRAIT_SECTIONS = [
+  "opening",
+  "classroomSigns",
+  "fromKids",
+  "drive",
+  "misread",
+  "whenTired",
+] as const;
+
+/** 어절 3개 묶음. 이만큼 겹치면 사람이 읽었을 때 "아까 그 문장"으로 느낍니다. */
+function triGrams(text: string): readonly string[] {
+  const words = text
+    .replace(/[.,"'“”‘’?!]/gu, "")
+    .split(/\s+/u)
+    .filter((word) => word.length > 0);
+  return words.slice(0, Math.max(words.length - 2, 0)).map((_, index) => words.slice(index, index + 3).join(" "));
+}
+
 function visibleText(markup: string): string {
   return markup
     .replace(/<[^>]+>/g, " ")
@@ -119,12 +138,7 @@ describe("ResultStoryView", () => {
       const { markup } = renderStory(index);
       const text = visibleText(markup);
 
-      for (const section of [
-        portrait.opening,
-        portrait.drive,
-        portrait.misread,
-        portrait.whenTired,
-      ]) {
+      for (const section of PORTRAIT_SECTIONS.map((name) => portrait[name])) {
         for (const paragraph of section) expect(text).toContain(paragraph);
       }
     });
@@ -172,34 +186,79 @@ describe("ResultStoryView", () => {
 
   /*
     결과 문장이 문항을 옮겨 적은 것이면, 5~10분을 들여 답한 사람은
-    자기가 방금 읽은 문장을 다시 읽게 됩니다. 조합에서 나온 추론이어야 합니다.
+    자기가 방금 고른 문장을 다시 읽게 됩니다. 완전 일치만 보면 어미만 바꾼
+    재진술을 놓치므로 **어절 3-gram**이 겹치는지를 봅니다.
   */
-  it("성격 묘사가 문항을 그대로 옮겨 적지 않습니다", () => {
+  it("성격 묘사가 문항을 다시 쓰지 않습니다", () => {
     const found = staticAssessmentCatalog.findBySlug("teacher-style");
     if (!found.ok) throw new Error("검사용 콘텐츠를 불러오지 못했습니다.");
 
-    /** 문항 어미를 걷어낸 알맹이 — 이 덩어리가 통째로 결과에 나오면 재진술입니다. */
-    const stems = found.value.questions
-      .map((question) => question.text.replace(/\s*편이다\.?$|\s*하다\.?$|\.$/u, "").trim())
-      .filter((stem) => stem.length >= 14);
+    const questionGrams = new Map<string, string>();
+    for (const question of found.value.questions) {
+      for (const gram of triGrams(question.text)) questionGrams.set(gram, question.text);
+    }
+    expect(questionGrams.size).toBeGreaterThan(100);
 
     for (const profile of found.value.resultProfiles) {
       const portrait = profile.portrait;
       if (portrait === undefined) continue;
-      const prose = [
-        ...portrait.opening,
-        ...portrait.drive,
-        ...portrait.misread,
-        ...portrait.whenTired,
-      ].join(" ");
 
-      for (const stem of stems) {
-        expect(
-          prose.includes(stem),
-          `${profile.key}의 성격 묘사가 문항을 그대로 옮겼습니다: "${stem}"`,
-        ).toBe(false);
+      for (const paragraph of PORTRAIT_SECTIONS.flatMap((name) => portrait[name])) {
+        for (const gram of triGrams(paragraph)) {
+          expect(
+            questionGrams.get(gram) ?? null,
+            `${profile.key}의 성격 묘사가 문항을 다시 썼습니다 — 겹친 대목 "${gram}"`,
+          ).toBeNull();
+        }
       }
     }
+  });
+
+  /*
+    문항이 묻는 영역 안에만 머물면 "체크한 걸 그대로 돌려받았다"가 됩니다.
+    교실 신호와 아이 시점은 문항이 한 번도 묻지 않은 자리여야 합니다.
+  */
+  it("교실 신호와 아이 시점이 문항이 다루지 않은 것을 말합니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok) throw new Error("검사용 콘텐츠를 불러오지 못했습니다.");
+
+    /** 문항은 모두 교사 시점입니다. 아이 시점 문장은 문항에서 나올 수 없습니다. */
+    for (const profile of found.value.resultProfiles) {
+      const portrait = profile.portrait;
+      if (portrait === undefined) continue;
+
+      expect(portrait.fromKids.join(" ")).toContain("아이들은");
+      // 교실 신호는 눈으로 볼 수 있는 것을 말해야 합니다.
+      const signs = portrait.classroomSigns.join(" ");
+      expect(
+        /교실|책상|서랍|게시판|알림장|상자|파일|자료|규칙|계획/u.test(signs),
+        `${profile.key}의 교실 신호에 눈에 보이는 것이 없습니다`,
+      ).toBe(true);
+    }
+  });
+
+  it("읽는 사람을 남처럼 부르지 않습니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok) throw new Error("검사용 콘텐츠를 불러오지 못했습니다.");
+
+    // "이 선생님"은 결과지를 읽는 본인을 3인칭으로 부르는 말입니다.
+    for (const profile of found.value.resultProfiles) {
+      const portrait = profile.portrait;
+      if (portrait === undefined) continue;
+      for (const paragraph of PORTRAIT_SECTIONS.flatMap((name) => portrait[name])) {
+        expect(paragraph.startsWith("이 선생님")).toBe(false);
+        expect(paragraph).not.toContain(" 이 선생님");
+      }
+    }
+  });
+
+  it("교실 이야기를 동료·업무보다 먼저 보여 줍니다", () => {
+    const { markup } = renderStory(0);
+
+    const classroom = markup.indexOf("교실에서 드러나는 모습");
+    const colleagues = markup.indexOf("동료와 함께 일할 때");
+    expect(classroom).toBeGreaterThan(-1);
+    expect(colleagues).toBeGreaterThan(classroom);
   });
 
   it("성격 묘사가 히어로 요약보다 깁니다", () => {
@@ -214,12 +273,7 @@ describe("ResultStoryView", () => {
       const portrait = profile.portrait;
       if (portrait === undefined) continue;
 
-      const length = [
-        ...portrait.opening,
-        ...portrait.drive,
-        ...portrait.misread,
-        ...portrait.whenTired,
-      ].join("").length;
+      const length = PORTRAIT_SECTIONS.flatMap((name) => portrait[name]).join("").length;
       expect(length, `${profile.key}의 성격 묘사가 짧습니다`).toBeGreaterThan(
         profile.rhythm.length * 2,
       );

@@ -24,6 +24,8 @@ import { AXIS_DISPLAY_LEVEL_MAX, axisDisplayLevel } from "@/features/result/Axis
  *    훑어보면 남는 것이 없습니다. 한 장 안에서 구분선으로 나눕니다.
  * 5. **소제목을 명사구로 씁니다.** '두 가지가 겹칠 때'처럼 무엇을 가리키는지 알 수 없는
  *    제목은 읽는 사람을 멈춰 세웁니다. 제목만 읽어도 안에 무엇이 있는지 알려야 합니다.
+ * 6. **교실을 먼저 놓습니다.** 교사가 자기 결과에서 가장 먼저 확인하고 싶은 것은
+ *    "우리 반에서 나는 어떤 어른인가"입니다. 동료·업무는 그다음입니다.
  */
 
 /** 읽는 폭. 한 줄이 길어지면 다음 줄 첫 글자를 찾는 데 눈이 쓰입니다. */
@@ -193,21 +195,47 @@ export function ResultStoryView({
 
   return (
     <div data-result-view="story" className="flex flex-col gap-6">
-      <Card title="어떻게 일하는 선생님인가">
+      <Card title="선생님은 이런 교사입니다">
         <Block first>
           <Prose paragraphs={opening} />
         </Block>
 
         {portrait !== undefined && (
           <>
+            {/*
+              문항이 묻지 않은 자리입니다. 게시판·서랍·알림장처럼 체크한 적 없는 곳에서
+              네 방향의 조합이 실제로 만들어 내는 것을 보여 줍니다.
+            */}
+            <Block title="교실에 들어가면 보이는 것">
+              <Prose paragraphs={portrait.classroomSigns} />
+            </Block>
+            <Block title="아이들이 느끼는 선생님">
+              <Prose paragraphs={portrait.fromKids} />
+            </Block>
             <Block title="무엇을 중요하게 여기는가">
               <Prose paragraphs={portrait.drive} />
             </Block>
-            <Block title="자주 받는 오해">
+            <Block title="자주 듣는 오해">
               <Prose paragraphs={portrait.misread} />
             </Block>
           </>
         )}
+      </Card>
+
+      <Card title="교실에서 드러나는 모습">
+        <Block first title="강점이 되는 순간">
+          <SceneProse items={profile.shiningMoments} />
+        </Block>
+        <Block title="여유가 줄었을 때">
+          {/*
+            성격 묘사의 '여유가 없을 때'와 장면 목록을 한 구역에 둡니다.
+            같은 이야기를 카드 두 곳에 나눠 실으면 읽는 사람이 두 번 읽고도 덜 남습니다.
+          */}
+          <div className="flex flex-col gap-4">
+            {portrait !== undefined && <Prose paragraphs={portrait.whenTired} />}
+            <SceneProse items={profile.underPressure} />
+          </div>
+        </Block>
       </Card>
 
       <Card
@@ -245,30 +273,14 @@ export function ResultStoryView({
         })}
       </Card>
 
-      <Card title="교실에서 드러나는 모습">
-        <Block first title="강점이 되는 순간">
-          <SceneProse items={profile.shiningMoments} />
-        </Block>
-        <Block title="여유가 줄었을 때">
-          {/*
-            성격 묘사의 '여유가 없을 때'와 장면 목록을 한 구역에 둡니다.
-            같은 이야기를 카드 두 곳에 나눠 실으면 읽는 사람이 두 번 읽고도 덜 남습니다.
-          */}
-          <div className="flex flex-col gap-4">
-            {portrait !== undefined && <Prose paragraphs={portrait.whenTired} />}
-            <SceneProse items={profile.underPressure} />
-          </div>
-        </Block>
-        <Block title="동료 앞에서의 모습">
-          <SceneProse items={profile.withColleagues} />
-        </Block>
-      </Card>
-
       <Card
         title="동료와 함께 일할 때"
         lead="누가 더 잘 맞는지 가리는 내용이 아닙니다. 방식이 다를 때 무엇이 편하고 무엇을 먼저 말해 두면 좋은지를 적었습니다."
       >
-        <Block first title="따로 맞추지 않아도 되는 부분">
+        <Block first title="동료 앞에서의 모습">
+          <SceneProse items={profile.withColleagues} />
+        </Block>
+        <Block title="따로 맞추지 않아도 되는 부분">
           <Prose paragraphs={profile.collaboration.naturalFit} />
         </Block>
         <Block title="미리 말해 두면 좋은 부분">

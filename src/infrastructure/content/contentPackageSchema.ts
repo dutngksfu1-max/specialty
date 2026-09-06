@@ -126,6 +126,8 @@ const resultGuidanceSchema = z.object({
 /** 줄글 보기 전용 성격 묘사 (DEC-069). 없는 검사도 그대로 통과해야 합니다 */
 const resultPortraitSchema = z.object({
   opening: z.array(z.string().min(1)).min(1),
+  classroomSigns: z.array(z.string().min(1)).min(1),
+  fromKids: z.array(z.string().min(1)).min(1),
   drive: z.array(z.string().min(1)).min(1),
   misread: z.array(z.string().min(1)).min(1),
   whenTired: z.array(z.string().min(1)).min(1),
@@ -581,7 +583,9 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
       ...(profile.portrait === undefined
         ? []
         : [
-            ...(["opening", "drive", "misread", "whenTired"] as const).flatMap((section) =>
+            ...(
+              ["opening", "classroomSigns", "fromKids", "drive", "misread", "whenTired"] as const
+            ).flatMap((section) =>
               (profile.portrait?.[section] ?? []).map(
                 (paragraph, index) =>
                   [
