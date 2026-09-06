@@ -67,13 +67,26 @@ const PORTRAIT_SECTIONS = [
   "whenTired",
 ] as const;
 
+/**
+ * 기능어만으로 된 3-gram은 겹쳐도 재진술이 아닙니다.
+ * "몇 달 뒤", "쓸 수 있는" 같은 관용구까지 잡으면 멀쩡한 문장을 고치게 됩니다.
+ */
+const FUNCTION_WORDS = new Set(
+  ("몇 달 뒤 쓸 수 있는 것 것을 것이 때 때는 더 잘 안 못 그 이 저 하는 되는 같은 " +
+    "말 말을 일 일이 함께 먼저 다 한 그런 어떤 무슨 좀 바로 또 다시").split(" "),
+);
+
 /** 어절 3개 묶음. 이만큼 겹치면 사람이 읽었을 때 "아까 그 문장"으로 느낍니다. */
 function triGrams(text: string): readonly string[] {
   const words = text
     .replace(/[.,"'“”‘’?!]/gu, "")
     .split(/\s+/u)
     .filter((word) => word.length > 0);
-  return words.slice(0, Math.max(words.length - 2, 0)).map((_, index) => words.slice(index, index + 3).join(" "));
+  return words
+    .slice(0, Math.max(words.length - 2, 0))
+    .map((_, index) => words.slice(index, index + 3))
+    .filter((gram) => gram.some((word) => !FUNCTION_WORDS.has(word)))
+    .map((gram) => gram.join(" "));
 }
 
 function visibleText(markup: string): string {
@@ -208,6 +221,33 @@ describe("ResultStoryView", () => {
           expect(
             questionGrams.get(gram) ?? null,
             `${profile.key}의 성격 묘사가 문항을 다시 썼습니다 — 겹친 대목 "${gram}"`,
+          ).toBeNull();
+        }
+      }
+    }
+
+    /*
+      결과 제목과 장면 문장도 같은 규칙을 받습니다.
+      실제로 `아이를 살피고 미리 챙겨 두는 선생님`이라는 제목이 문항 문구를 그대로 쓰고 있었습니다.
+    */
+    for (const profile of found.value.resultProfiles) {
+      const surfaces = [
+        profile.title,
+        profile.oneLiner,
+        profile.rhythm,
+        ...[...profile.shiningMoments, ...profile.underPressure, ...profile.withColleagues].map(
+          (note) => `${note.situation} ${note.text}`,
+        ),
+        ...profile.collaboration.naturalFit,
+        ...profile.collaboration.needsTuning,
+        ...profile.nextSteps,
+        ...profile.talkingPoints,
+      ];
+      for (const surface of surfaces) {
+        for (const gram of triGrams(surface)) {
+          expect(
+            questionGrams.get(gram) ?? null,
+            `${profile.key}의 결과 문장이 문항을 다시 썼습니다 — 겹친 대목 "${gram}"`,
           ).toBeNull();
         }
       }
