@@ -474,6 +474,57 @@ describe("ResultStoryView", () => {
     }
   });
 
+  /*
+    장면은 `<상황>에는 <설명>` 한 문장으로 조립됩니다 (`SceneProse`).
+    조사를 코드에서 붙이는 것은 위험합니다 — 예전에 `생활지도할 때에서도`처럼
+    깨진 적이 있어 조립 자체를 걷어냈습니다. 여기서만 다시 허용하는 조건이
+    **모든 상황이 `~ 때`로 끝나는 것**입니다. 그 조건을 검사로 붙들어 둡니다.
+  */
+  it("장면 이름이 문장 첫머리로 붙습니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok) throw new Error("검사용 콘텐츠를 불러오지 못했습니다.");
+
+    for (const profile of found.value.resultProfiles) {
+      for (const note of [...profile.shiningMoments, ...profile.underPressure]) {
+        expect(
+          note.situation,
+          `${profile.key}: '${note.situation}에는'이 말이 되지 않습니다`,
+        ).toMatch(/ 때$/u);
+
+        /*
+          이름을 첫머리로 옮기니 `챙길 아이가 여럿일 때에는 챙길 아이가 여러 명이면…`
+          처럼 같은 말이 두 번 나오는 것이 드러났습니다. 앞 두 어절이 그대로
+          되풀이되면 읽는 사람이 더듬습니다.
+        */
+        const head = note.situation.split(/\s+/u).slice(0, 2).join(" ");
+        expect(
+          note.text.startsWith(head),
+          `${profile.key}: 장면 이름을 본문이 되풀이합니다 — "${head}"`,
+        ).toBe(false);
+      }
+    }
+  });
+
+  it("장면 이름만 보고 어느 자리인지 알 수 있습니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok) throw new Error("검사용 콘텐츠를 불러오지 못했습니다.");
+
+    /*
+      `수업 · 생활지도 · 상담 · 업무` 꼬리표는 화면에 안 나옵니다.
+      그래서 상담 장면은 이름이 **누구와 마주 앉는 자리인지** 스스로 말해야 합니다.
+      `앞일을 물어올 때`는 누가 물어보는지가 없어 상담인지 수업인지 알 수 없었습니다.
+    */
+    for (const profile of found.value.resultProfiles) {
+      for (const note of [...profile.shiningMoments, ...profile.underPressure]) {
+        if (note.scene !== "상담") continue;
+        expect(
+          /학부모|아이|상담/u.test(note.situation),
+          `${profile.key}: 상담 장면 이름에 상대가 없습니다 — "${note.situation}"`,
+        ).toBe(true);
+      }
+    }
+  });
+
   it("점수가 0이어도 결과가 온전히 그려집니다", () => {
     // DEC-068을 그대로 따릅니다. 줄글 보기가 중립 상태를 되살리면 안 됩니다.
     const { profile, markup } = renderStory(0);

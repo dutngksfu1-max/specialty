@@ -77,16 +77,20 @@ function Prose({ paragraphs }: { readonly paragraphs: readonly string[] }) {
 /**
  * 장면 묶음 — 카드 세 장이 아니라 한 구역 안의 문단 세 개
  *
- * 상황 제목을 문단 앞에 붙여 이어 읽게 합니다. 제목만 훑어도 무슨 이야기인지 알 수 있고,
- * 그대로 이어 읽으면 줄글이 됩니다.
+ * 상황을 **문장의 첫머리로** 붙입니다. `상황 — 설명`처럼 하이픈으로 끊으면 항목 목록이
+ * 되어 줄글 보기 안에서 혼자 표처럼 읽힙니다. 굵게만 남겨 구분감을 주고, 읽는 사람은
+ * 한 문장으로 이어 읽습니다.
+ *
+ * ⚠️ `situation`은 **반드시 `~ 때`로 끝나야 합니다.** 여기서 `에는`을 붙여 문장을
+ * 만들기 때문입니다. 조사를 코드에서 붙이다 `생활지도할 때에서도`처럼 깨진 적이 있어
+ * `ResultStoryView.test.tsx`가 128개 전부를 검사합니다.
  */
 function SceneProse({ items }: { readonly items: readonly SceneNote[] }) {
   return (
     <div className={`${PROSE} flex flex-col gap-4`}>
       {items.map((item) => (
         <p key={`${item.scene}-${item.situation}`} className="text-body-lg text-foreground-body">
-          <strong className="font-semibold text-foreground">{item.situation}</strong>
-          {" — "}
+          <strong className="font-semibold text-foreground">{item.situation}에는</strong>{" "}
           {item.text}
         </p>
       ))}
@@ -113,17 +117,23 @@ export function ResultStoryView({ profile }: { readonly profile: ResultProfile }
         {portrait !== undefined && (
           <>
             {/*
-              문항이 묻지 않은 자리입니다. 게시판·서랍·알림장처럼 체크한 적 없는 곳에서
-              네 방향의 조합이 실제로 만들어 내는 것을 보여 줍니다.
+              읽는 순서를 사람이 궁금해하는 순서로 둡니다.
+              내가 아이들에게 어떻게 보이는가 → 나는 무엇을 중요하게 여기는가 →
+              그것이 교실에 어떻게 남는가 → 그래서 어떤 오해를 받는가.
+              교실 신호를 먼저 보여 주면 아직 누구 이야기인지 모르는 채로 물건 목록을 읽습니다.
             */}
-            <Block title="교실에 들어가면 보이는 것">
-              <Prose paragraphs={portrait.classroomSigns} />
-            </Block>
             <Block title="아이들이 느끼는 선생님">
               <Prose paragraphs={portrait.fromKids} />
             </Block>
             <Block title="무엇을 중요하게 여기는가">
               <Prose paragraphs={portrait.drive} />
+            </Block>
+            {/*
+              문항이 묻지 않은 자리입니다. 게시판·서랍·알림장처럼 체크한 적 없는 곳에서
+              네 방향의 조합이 실제로 만들어 내는 것을 보여 줍니다.
+            */}
+            <Block title="선생님 교실은 이렇습니다">
+              <Prose paragraphs={portrait.classroomSigns} />
             </Block>
             <Block title="자주 듣는 오해">
               <Prose paragraphs={portrait.misread} />
