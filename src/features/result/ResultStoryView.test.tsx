@@ -387,6 +387,93 @@ describe("ResultStoryView", () => {
     }
   });
 
+  /*
+    전수조사에서 드러난 구멍입니다 (2026-09-06).
+
+    동료를 걷어낼 때(DEC-074) 쓴 낱말 목록에 `전담 선생님` `상담 선생님` `메신저`
+    `협조` `협의` `다른 반보다`가 없었습니다. 그래서 검사는 0건이라고 했는데
+    화면에는 남아 있었습니다. **자가 좁으면 통과는 아무 뜻이 없습니다.**
+    새 표현을 발견하면 목록에 더해 주세요.
+  */
+  const ADULT_WORDS: readonly RegExp[] = [
+    /동료/u,
+    /옆 반/u,
+    /교무실/u,
+    /협의회|학년 협의/u,
+    /회식/u,
+    // `학급 회의`는 아이들과 하는 것이라 교실 장면입니다. 그 밖의 회의만 막습니다.
+    /(?<!학급 )회의/u,
+    /다른 선생님|전담 선생님|상담 선생님|주변 선생님/u,
+    /동학년/u,
+    /옆자리/u,
+    /메신저/u,
+    /협조/u,
+    /어른들 사이/u,
+    /선생님들/u,
+    // `예상과 다른 반응`이 걸리지 않게, 옆 반과 견주는 표현만 막습니다.
+    /다른 반 선생님|다른 반보다|다른 반과 견/u,
+  ];
+
+  /** 화면(히어로 + 줄글 보기)에 실제로 나오는 문장만 모읍니다. */
+  function visibleProse(profile: {
+    readonly title: string;
+    readonly oneLiner: string;
+    readonly rhythm: string;
+    readonly portrait?: Readonly<Record<(typeof PORTRAIT_SECTIONS)[number], readonly string[]>>;
+    readonly shiningMoments: readonly { readonly situation: string; readonly text: string }[];
+    readonly underPressure: readonly { readonly situation: string; readonly text: string }[];
+  }): readonly string[] {
+    const portrait = profile.portrait;
+    return [
+      profile.title,
+      profile.oneLiner,
+      profile.rhythm,
+      ...(portrait === undefined ? [] : PORTRAIT_SECTIONS.flatMap((name) => portrait[name])),
+      ...[...profile.shiningMoments, ...profile.underPressure].map(
+        (note) => `${note.situation} ${note.text}`,
+      ),
+    ];
+  }
+
+  it("화면에 나오는 문장에 동료가 등장하지 않습니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok) throw new Error("검사용 콘텐츠를 불러오지 못했습니다.");
+
+    for (const profile of found.value.resultProfiles) {
+      for (const sentence of visibleProse(profile)) {
+        for (const pattern of ADULT_WORDS) {
+          expect(
+            sentence,
+            `${profile.key}: 결과는 교실만 다룹니다 — ${String(pattern)}`,
+          ).not.toMatch(pattern);
+        }
+      }
+    }
+  });
+
+  /*
+    `상대는 잊혔다고 느낍니다` `밖에서는 괜찮아 보입니다` `듣는 쪽은 앞서간다고 느낍니다`.
+    누가 그렇게 느끼는지가 빠져 있어서 한 번 읽고는 알 수 없고, 대개 그 자리에
+    원래 동료가 있었습니다. 결과문에서 그렇게 느끼는 쪽은 아이·학부모뿐입니다.
+  */
+  const FACELESS = ["상대는", "상대가", "상대를", "밖에서는", "듣는 쪽", "주위에서는", "남들은"] as const;
+
+  it("누가 그렇게 느끼는지를 비워 두지 않습니다", () => {
+    const found = staticAssessmentCatalog.findBySlug("teacher-style");
+    if (!found.ok) throw new Error("검사용 콘텐츠를 불러오지 못했습니다.");
+
+    for (const profile of found.value.resultProfiles) {
+      for (const sentence of visibleProse(profile)) {
+        for (const word of FACELESS) {
+          expect(
+            sentence.includes(word),
+            `${profile.key}: 누가 그러는지를 적어 주세요 — "${word}" · ${sentence}`,
+          ).toBe(false);
+        }
+      }
+    }
+  });
+
   it("점수가 0이어도 결과가 온전히 그려집니다", () => {
     // DEC-068을 그대로 따릅니다. 줄글 보기가 중립 상태를 되살리면 안 됩니다.
     const { profile, markup } = renderStory(0);

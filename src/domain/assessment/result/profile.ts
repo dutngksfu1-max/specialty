@@ -117,11 +117,29 @@ export interface ResultProfile {
   readonly rhythm: string;
   /** 줄글 보기 전용 성격 묘사 (DEC-069). 없으면 줄글 보기가 rhythm으로 대신합니다 */
   readonly portrait?: ResultPortrait;
-  /** 강점이 드러날 수 있는 장면 */
+  /**
+   * 강점이 되는 순간 — 수업 · 생활지도 · 상담 · 업무 네 장면을 하나씩 (DEC-074)
+   *
+   * 실제로 그렇게 한다는 서술이므로 **단정형**으로 씁니다.
+   */
   readonly shiningMoments: readonly SceneNote[];
-  /** 바쁠 때 나타날 수 있는 모습 */
+  /**
+   * 여유가 줄었을 때 — 같은 네 장면 (DEC-074)
+   *
+   * 늘 그런 것이 아니라 **그럴 수 있다**는 신호이므로 문장을 `~수 있습니다`로 끝냅니다.
+   * 단정하면 읽는 사람이 자기 결점을 통보받는 것처럼 느낍니다.
+   * `realContent.test.ts`가 이 묶음만 따로 검사합니다.
+   */
   readonly underPressure: readonly SceneNote[];
-  /** 동료와 함께 일할 때 */
+  /**
+   * ⚠️ 아래 네 필드는 **줄글 보기에 나오지 않습니다** (DEC-074, 2026-09-06).
+   *
+   * 결과는 선생님 자신과 그 교실의 아이들·수업·업무만 다루기로 했습니다.
+   * 동료와 일하는 방식과 내일의 행동 계획을 담던 카드 두 장을 뺐습니다.
+   * 요약 보기·자세히 보기는 아직 이 필드들을 쓰므로 **데이터는 지우지 마세요.**
+   *
+   * 줄글 보기에 이 내용을 다시 넣으려 한다면 DEC-074를 먼저 읽어 주세요.
+   */
   readonly withColleagues: readonly SceneNote[];
   readonly collaboration: CollaborationProfile;
   /** 내일 해 볼 것 — 성향 서술이 아니라 실제로 해 볼 수 있는 행동 */

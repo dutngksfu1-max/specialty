@@ -662,12 +662,26 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
    * "~해 볼 수 있어요"는 제안이지 서술이 아닙니다. 읽는 사람은 자기 이야기를 들은 게 아니라
    * 훈수를 들은 것이 됩니다. 실제로 일어나는 장면을 적습니다.
    */
+  /*
+    `여유가 줄었을 때`는 예외입니다 (DEC-074).
+
+    강점은 실제로 그렇게 한다는 서술이라 단정형이 맞습니다. 반대로 피로 신호는
+    **늘 그런 것이 아니라 그럴 수 있다**는 뜻이라, 단정하면 읽는 사람이
+    자기 결점을 통보받는 것처럼 느낍니다. 그래서 그 묶음만 `~수 있습니다`를 씁니다.
+  */
   it("장면 서술에 추측형 어미를 쓰지 않습니다", () => {
     for (const profile of definition.resultProfiles) {
-      const notes = [...profile.shiningMoments, ...profile.underPressure, ...profile.withColleagues];
-      for (const note of notes) {
+      for (const note of [...profile.shiningMoments, ...profile.withColleagues]) {
         expect(note.text, `${profile.key}: ${note.text}`).not.toMatch(
           /수 있어요|수 있습니다|것 같아요|일지도|하면 좋아요|해 보세요/,
+        );
+      }
+
+      // 피로 신호는 반대로 `~수 있습니다`로 통일합니다. 단정하면 결점 통보가 됩니다.
+      for (const note of profile.underPressure) {
+        expect(note.text, `${profile.key}: ${note.text}`).toMatch(/수 있습니다\.$/);
+        expect(note.text, `${profile.key}: ${note.text}`).not.toMatch(
+          /수 있어요|것 같아요|일지도|하면 좋아요|해 보세요/,
         );
       }
     }
