@@ -1,7 +1,10 @@
 "use client";
 
 import type { AssessmentQuestion, ResponseOption } from "@/domain/assessment/model/definition";
-import { LikertScale } from "@/features/assessment-runner/LikertScale";
+import {
+  LikertScale,
+  type SelectionIntent,
+} from "@/features/assessment-runner/LikertScale";
 import { cn } from "@/lib/cn";
 
 export function QuestionCard({
@@ -15,7 +18,7 @@ export function QuestionCard({
   readonly options: readonly ResponseOption[];
   readonly value: number | undefined;
   readonly highlightUnanswered: boolean;
-  readonly onSelect: (value: number) => void;
+  readonly onSelect: (value: number, intent: SelectionIntent) => void;
 }) {
   const isMissing = highlightUnanswered && value === undefined;
   const errorId = `question-error-${String(question.id)}`;

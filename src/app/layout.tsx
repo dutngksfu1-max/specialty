@@ -52,6 +52,9 @@ export const viewport: Viewport = {
   // 확대를 막지 않습니다 — 200% 확대해도 내용이 보여야 합니다 (design.md 15)
   maximumScale: 5,
   userScalable: true,
+  viewportFit: "cover",
+  // 지원 브라우저에서는 가상 키보드가 레이아웃도 줄여 fixed UI를 가리지 않게 합니다.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

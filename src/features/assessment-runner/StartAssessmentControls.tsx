@@ -103,7 +103,7 @@ export function StartAssessmentControls({ slug }: { readonly slug: string }) {
     existing.hasCharacterGender;
 
   return (
-    <div className="mobile-safe-action fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface px-4 pt-3 shadow-elev-1 md:static md:mt-8 md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+    <div className="mobile-safe-action fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface pt-3 shadow-elev-1 md:static md:mt-8 md:border-0 md:bg-transparent md:p-0 md:shadow-none">
       <div className="mx-auto max-w-5xl">
         {existing.kind === "outdated" && (
           <p className="mb-3 flex gap-2 text-body-sm text-foreground-body" aria-live="polite">

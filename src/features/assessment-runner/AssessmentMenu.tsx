@@ -79,7 +79,7 @@ export function AssessmentMenu({
           <Dialog.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-sand-950/35 transition-opacity duration-(--motion-scene) data-ending-style:opacity-0 data-starting-style:opacity-0" />
           <Dialog.Popup
             initialFocus={cancelRef}
-            className="fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border-strong bg-surface p-6 shadow-elev-2 transition-[opacity,transform] duration-(--motion-scene) ease-out-soft data-ending-style:translate-y-[calc(-50%+8px)] data-ending-style:opacity-0 data-starting-style:translate-y-[calc(-50%+8px)] data-starting-style:opacity-0 sm:p-8"
+            className="responsive-dialog fixed z-50 -translate-y-1/2 rounded-lg border border-border-strong bg-surface p-6 shadow-elev-2 transition-[opacity,transform] duration-(--motion-scene) ease-out-soft data-ending-style:translate-y-[calc(-50%+8px)] data-ending-style:opacity-0 data-starting-style:translate-y-[calc(-50%+8px)] data-starting-style:opacity-0 sm:p-8"
           >
             <div className="flex items-start gap-4">
               <span className="grid size-10 shrink-0 place-items-center rounded-md bg-accent-soft text-accent"><Icon name="warning" /></span>

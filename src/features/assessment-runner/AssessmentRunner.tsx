@@ -16,6 +16,7 @@ import { Button, buttonClasses } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import type { AssessmentQuestion, ResponseOption } from "@/domain/assessment/model/definition";
 import { AssessmentProgress, type SaveState } from "@/features/assessment-runner/AssessmentProgress";
+import type { SelectionIntent } from "@/features/assessment-runner/LikertScale";
 import { QuestionCard } from "@/features/assessment-runner/QuestionCard";
 import { useAssessmentServices } from "@/features/shared/AssessmentRepositoryProvider";
 import type { LocalArtwork } from "@/lib/assessmentPresentation";
@@ -50,7 +51,9 @@ function scrollBehavior(): ScrollBehavior {
 function nextQuestionTopOffset(): number {
   const header = document.querySelector<HTMLElement>("[data-assessment-progress]");
   const headerHeight = header?.getBoundingClientRect().height ?? 0;
-  const breathingRoom = Math.min(96, Math.max(48, window.innerHeight * 0.08));
+  // 주소창·가상 키보드로 실제 보이는 높이가 바뀌는 모바일에서는 visualViewport가 정확합니다.
+  const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+  const breathingRoom = Math.min(96, Math.max(48, viewportHeight * 0.08));
   return headerHeight + breathingRoom;
 }
 
@@ -105,7 +108,7 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
     setSaveState("loading");
   }
 
-  /** 자동 이동은 새로 답한 문항에서만 실행합니다. 수정 중 화면이 튀지 않도록 합니다. */
+  /** 자동 이동은 포인터로 새로 답한 문항에서만 실행합니다 (DEC-075). */
   const autoAdvanceRef = useRef<number | null>(null);
 
   const pendingSavesRef = useRef(0);
@@ -155,8 +158,22 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
   }, [focusFirstMissing, showUnanswered, status]);
 
   useEffect(() => {
+    const cancelPendingAutoAdvance = () => {
+      if (autoAdvanceRef.current === null) return;
+      window.clearTimeout(autoAdvanceRef.current);
+      autoAdvanceRef.current = null;
+    };
+
+    // 선택 직후 사용자가 다시 만지거나 스크롤하면 그 행동을 예약 이동보다 우선합니다.
+    window.addEventListener("pointerdown", cancelPendingAutoAdvance, true);
+    window.addEventListener("keydown", cancelPendingAutoAdvance, true);
+    window.addEventListener("wheel", cancelPendingAutoAdvance, { passive: true });
+
     return () => {
-      if (autoAdvanceRef.current !== null) window.clearTimeout(autoAdvanceRef.current);
+      cancelPendingAutoAdvance();
+      window.removeEventListener("pointerdown", cancelPendingAutoAdvance, true);
+      window.removeEventListener("keydown", cancelPendingAutoAdvance, true);
+      window.removeEventListener("wheel", cancelPendingAutoAdvance);
     };
   }, []);
 
@@ -232,7 +249,11 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
     [questions],
   );
 
-  function handleSelect(question: AssessmentQuestion, value: number) {
+  function handleSelect(
+    question: AssessmentQuestion,
+    value: number,
+    intent: SelectionIntent,
+  ) {
     const key = String(question.id);
     const previous = answersRef.current;
     const isNew = !previous.has(key);
@@ -242,7 +263,8 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
     if (isNew) setAnsweredCount((count) => count + 1);
     enqueueSave(question, value);
 
-    if (!isNew) return;
+    // 터치·마우스·펜으로 새 답을 고른 경우에만 흐름을 이어 줍니다. 키보드와 보조기기는 자리를 지킵니다.
+    if (!isNew || intent !== "pointer") return;
     if (autoAdvanceRef.current !== null) window.clearTimeout(autoAdvanceRef.current);
     // 선택 표시(체크·강조)가 눈에 들어온 뒤 움직이도록 한 박자 둡니다.
     autoAdvanceRef.current = window.setTimeout(() => {
@@ -381,7 +403,7 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
 
   return (
     <>
-      <div className="sticky top-0 z-30">
+      <div className="sticky top-[env(safe-area-inset-top)] z-30">
         <AssessmentProgress
           slug={slug}
           sectionOrder={sectionOrder}
@@ -434,14 +456,14 @@ export function AssessmentRunner(props: AssessmentRunnerProps) {
               options={options}
               value={answers.get(String(question.id))}
               highlightUnanswered={showUnanswered}
-              onSelect={(value) => handleSelect(question, value)}
+              onSelect={(value, intent) => handleSelect(question, value, intent)}
             />
           ))}
         </ol>
       </main>
 
-      <div className="mobile-safe-action fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface px-4 pt-3 shadow-elev-1">
-        <div className="mx-auto flex max-w-(--container-survey) gap-2 sm:px-2">
+      <div className="mobile-safe-action fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface pt-3 shadow-elev-1">
+        <div className="mx-auto flex max-w-(--container-survey) gap-2 sm:px-6">
           {previousSectionOrder !== null && (
             <Button variant="secondary" size="md" className="flex-1" disabled={submitting} onClick={() => void navigate(`/assessments/${slug}/run/${previousSectionOrder}`)}>
               <Icon name="arrow-left" /> 이전으로

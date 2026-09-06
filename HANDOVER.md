@@ -45,7 +45,7 @@ specialty/                     ← 저장소 폴더
 │  ├─ PRD.md                   요구사항 SSOT
 │  ├─ design.md                디자인 SSOT (색·간격·컴포넌트·금지 패턴)
 │  ├─ architecture.md          구조 SSOT (계층·타입·채점·Repository·PWA)
-│  ├─ decisions.md             결정 기록 DEC-001~074
+│  ├─ decisions.md             결정 기록 DEC-001~075
 │  └─ content/
 │     └─ teacher-style-v1.md   콘텐츠 작성 양식
 └─ src/
@@ -316,10 +316,10 @@ text: `[fixture] 축 ${axisId} 문항 ${order}`
 
 **Phase 1~5에서 늘어난 것 (Phase 0 기준 대비)**
 
-- 소스 파일 약 60개, 테스트 **329개** (`pnpm vitest run`) — 2026-09-06 기준
+- 소스 파일 약 60개, 테스트 **334개** (`pnpm vitest run`) — 2026-09-06 기준
 - 추가된 dependency: `zod` `idb` `html-to-image` `serwist` `@serwist/turbopack` +
   개발용 `vitest` `fake-indexeddb` `esbuild` `esbuild-wasm`
-- 새 결정: DEC-032~074 (`docs/decisions.md`)
+- 새 결정: DEC-032~075 (`docs/decisions.md`)
 - `docs/design.md`는 **v0.2**로 갱신됨 (랜딩 개편, DEC-036)
 
 각 Phase의 완료 기준은 `docs/PRD.md`의 Acceptance Criteria(AC-1~7)를 따릅니다.

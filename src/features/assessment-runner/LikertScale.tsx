@@ -1,6 +1,10 @@
 "use client";
 
+import { useRef } from "react";
+
 import type { ResponseOption } from "@/domain/assessment/model/definition";
+
+export type SelectionIntent = "pointer" | "keyboard";
 
 export function LikertScale({
   name,
@@ -11,8 +15,14 @@ export function LikertScale({
   readonly name: string;
   readonly options: readonly ResponseOption[];
   readonly value: number | undefined;
-  readonly onSelect: (value: number) => void;
+  readonly onSelect: (value: number, intent: SelectionIntent) => void;
 }) {
+  /*
+   * label을 누른 포인터 선택과 키보드·보조기기의 선택을 구분합니다 (DEC-075).
+   * 보조기기가 합성한 click에는 pointerdown이 없으므로 기본값은 keyboard입니다.
+   */
+  const selectionIntentRef = useRef<SelectionIntent>("keyboard");
+
   return (
     <div className="relative grid min-w-0 grid-cols-5 gap-0 overflow-hidden rounded-md border border-primary-soft-border bg-primary-soft/20 p-1">
       <span aria-hidden="true" className="pointer-events-none absolute top-[1.75rem] right-[10%] left-[10%] h-px bg-primary-soft-border" />
@@ -24,14 +34,31 @@ export function LikertScale({
         const distance = Math.abs(option.value - 3);
         const circleSizeClass = distance === 0 ? "size-5" : distance === 1 ? "size-6" : "size-7";
         return (
-          <label key={option.value} htmlFor={id} className="relative z-1 flex min-h-11 min-w-0 cursor-default flex-col text-center">
+          <label
+            key={option.value}
+            htmlFor={id}
+            className="relative z-1 flex min-h-11 min-w-0 cursor-default flex-col text-center"
+            onPointerDown={() => {
+              selectionIntentRef.current = "pointer";
+            }}
+            onPointerCancel={() => {
+              selectionIntentRef.current = "keyboard";
+            }}
+          >
             <input
               id={id}
               type="radio"
               name={name}
               value={option.value}
               checked={selected}
-              onChange={() => onSelect(option.value)}
+              onKeyDown={() => {
+                selectionIntentRef.current = "keyboard";
+              }}
+              onChange={() => {
+                const intent = selectionIntentRef.current;
+                selectionIntentRef.current = "keyboard";
+                onSelect(option.value, intent);
+              }}
               className="peer sr-only"
             />
             <span className={`flex min-h-20 min-w-0 flex-1 flex-col items-center rounded-sm border px-0.5 py-1 transition-[background-color,border-color] duration-(--motion-fast) ease-out-soft peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-focus-ring ${selected ? "border-primary-soft-border bg-primary-soft" : "border-transparent hover:bg-surface-inset"}`}>

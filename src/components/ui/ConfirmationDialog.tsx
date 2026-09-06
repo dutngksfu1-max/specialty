@@ -55,7 +55,7 @@ export function ConfirmationDialog({
         <Dialog.Popup
           initialFocus={cancelRef}
           className={cn(
-            "fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2",
+            "responsive-dialog fixed z-50 -translate-y-1/2",
             "rounded-lg border border-border-strong bg-surface p-6 shadow-elev-2 sm:p-8",
             "transition-[opacity,transform] duration-(--motion-scene) ease-out-soft",
             "data-ending-style:translate-y-[calc(-50%+8px)] data-ending-style:opacity-0",

@@ -218,6 +218,9 @@
     word-break: keep-all;
     overflow-wrap: break-word;
     text-wrap: pretty;
+    /* viewport-fit=cover에서도 노치·둥근 모서리 안쪽에 문서 흐름을 둡니다. */
+    padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
+    padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
   }
 
   /* 버튼은 모양과 면색 변화로 구분하고, hover 때 포인터 모양은 바꾸지 않습니다. */
@@ -262,7 +265,24 @@
   }
 
   .mobile-safe-action {
+    padding-inline-start: calc(1rem + env(safe-area-inset-left));
+    padding-inline-end: calc(1rem + env(safe-area-inset-right));
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  /* 짧은 가로 화면과 200% 확대에서도 확인창의 제목·버튼을 스크롤해 모두 조작합니다. */
+  .responsive-dialog {
+    top: calc((100dvh + env(safe-area-inset-top) - env(safe-area-inset-bottom)) / 2);
+    inset-inline-start: calc(1rem + env(safe-area-inset-left));
+    inset-inline-end: calc(1rem + env(safe-area-inset-right));
+    width: auto;
+    max-width: 28rem;
+    max-height: calc(
+      100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    );
+    margin-inline: auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .assessment-card {

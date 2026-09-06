@@ -100,6 +100,12 @@ describe("척도는 진짜 라디오여야 합니다 (design.md 10.2)", () => {
     // 실제 터치 타깃은 원 장식이 아니라 input과 연결된 label 전체입니다.
     expect(likert).toMatch(/<label[^>]*className="[^"]*min-h-11/);
   });
+
+  it("포인터 선택과 키보드·보조기기 선택을 구분합니다", () => {
+    expect(likert).toContain('SelectionIntent = "pointer" | "keyboard"');
+    expect(likert).toContain("onPointerDown");
+    expect(likert).toContain("onKeyDown");
+  });
 });
 
 describe("캐릭터 성별 선택은 진짜 라디오여야 합니다 (DEC-054)", () => {
@@ -130,6 +136,11 @@ describe("확대와 언어 설정", () => {
     expect(layout).not.toMatch(/maximumScale:\s*1\b/);
   });
 
+  it("노치와 가상 키보드에 맞는 viewport를 사용합니다", () => {
+    expect(layout).toContain('viewportFit: "cover"');
+    expect(layout).toContain('interactiveWidget: "resizes-content"');
+  });
+
   it("본문 바로가기(skip link)가 있습니다", () => {
     expect(layout).toContain('href="#main"');
     expect(layout).toContain("본문 바로가기");
@@ -146,6 +157,37 @@ describe("움직임 설정을 존중합니다", () => {
   it("스크롤 이동도 설정을 따릅니다", () => {
     const runner = read("features/assessment-runner/AssessmentRunner.tsx");
     expect(runner).toContain("prefers-reduced-motion");
+  });
+
+  it("자동 이동은 새 포인터 응답에만 적용하고 후속 조작을 우선합니다", () => {
+    const runner = read("features/assessment-runner/AssessmentRunner.tsx");
+    expect(runner).toContain('intent !== "pointer"');
+    expect(runner).toContain("visualViewport?.height");
+    expect(runner).toContain('addEventListener("pointerdown"');
+    expect(runner).toContain('addEventListener("keydown"');
+    expect(runner).toContain('addEventListener("wheel"');
+  });
+});
+
+describe("모바일 안전 영역과 짧은 화면을 지킵니다", () => {
+  it("고정 CTA와 문서 흐름이 네 방향 안전 영역을 반영합니다", () => {
+    const css = read("app/globals.css");
+    expect(css).toContain("env(safe-area-inset-top)");
+    expect(css).toContain("env(safe-area-inset-right)");
+    expect(css).toContain("env(safe-area-inset-bottom)");
+    expect(css).toContain("env(safe-area-inset-left)");
+    expect(css).toContain(".mobile-safe-action");
+  });
+
+  it("Dialog는 동적 뷰포트 안에서 내부 스크롤됩니다", () => {
+    const css = read("app/globals.css");
+    const confirmation = read("components/ui/ConfirmationDialog.tsx");
+    const menu = read("features/assessment-runner/AssessmentMenu.tsx");
+    expect(css).toContain(".responsive-dialog");
+    expect(css).toContain("100dvh - 2rem");
+    expect(css).toContain("overflow-y: auto");
+    expect(confirmation).toContain("responsive-dialog");
+    expect(menu).toContain("responsive-dialog");
   });
 });
 

@@ -15,7 +15,7 @@ function SaveStatus({ state }: { readonly state: SaveState }) {
 
   return (
     <span
-      className={`flex items-center gap-1.5 text-caption ${state === "error" ? "text-status-danger" : "text-foreground-subtle"}`}
+      className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap text-caption ${state === "error" ? "text-status-danger" : "text-foreground-subtle"}`}
       aria-live="polite"
     >
       <Icon name={state === "error" ? "warning" : state === "saved" ? "check" : "device"} className="size-4" />
@@ -53,10 +53,11 @@ export function AssessmentProgress({
     <header data-assessment-progress className="border-b border-border bg-background">
       <div className="mx-auto max-w-(--container-survey) px-4 py-3 sm:px-6">
         <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <Link href={`/assessments/${slug}`} className="inline-flex min-h-11 items-center gap-1 text-caption text-foreground-muted underline-offset-4 hover:text-primary-active hover:underline">
+          <div className="flex min-w-0 items-center gap-2">
+            <Link href={`/assessments/${slug}`} className="inline-flex min-h-11 shrink-0 items-center gap-1 text-caption text-foreground-muted underline-offset-4 hover:text-primary-active hover:underline">
               <Icon name="arrow-left" className="size-4" /> 검사 안내
             </Link>
+            <span aria-hidden="true" className="h-4 w-px shrink-0 bg-border-strong" />
             <p className="truncate text-label text-foreground">
               챕터 <span className="tabular-nums">{sectionOrder} / {sectionCount}</span>
             </p>
@@ -69,38 +70,39 @@ export function AssessmentProgress({
           </div>
         </div>
 
-        <div
-          role="progressbar"
-          aria-label="검사 진행률"
-          aria-valuenow={answeredCount}
-          aria-valuemin={0}
-          aria-valuemax={totalCount}
-          aria-valuetext={`전체 ${totalCount}문항 중 ${answeredCount}문항 응답`}
-          className="mt-3 grid h-1.5 gap-1"
-          style={{ gridTemplateColumns: `repeat(${sectionCount}, minmax(0, 1fr))` }}
-        >
-          {Array.from({ length: sectionCount }, (_, index) => {
-            const segmentStart = (index / sectionCount) * 100;
-            const segmentFill = Math.max(0, Math.min(100, (percent - segmentStart) * sectionCount));
-            /* 챕터별 고유 색상 — perspective 토큰(design.md 2.2) 활용 */
-            const segmentColor = [
-              "var(--color-perspective-sprout)",
-              "var(--color-perspective-ochre)",
-              "var(--color-perspective-berry)",
-              "var(--color-perspective-slate)",
-            ][index % 4];
-            return (
-              <span key={index} className="overflow-hidden rounded-full bg-surface-inset">
-                <span
-                  className="block h-full rounded-full transition-[width] duration-(--motion-base) ease-out-soft"
-                  style={{ width: `${segmentFill}%`, backgroundColor: segmentColor }}
-                />
-              </span>
-            );
-          })}
+        <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div
+            role="progressbar"
+            aria-label="검사 진행률"
+            aria-valuenow={answeredCount}
+            aria-valuemin={0}
+            aria-valuemax={totalCount}
+            aria-valuetext={`전체 ${totalCount}문항 중 ${answeredCount}문항 응답`}
+            className="grid h-1.5 min-w-0 gap-1"
+            style={{ gridTemplateColumns: `repeat(${sectionCount}, minmax(0, 1fr))` }}
+          >
+            {Array.from({ length: sectionCount }, (_, index) => {
+              const segmentStart = (index / sectionCount) * 100;
+              const segmentFill = Math.max(0, Math.min(100, (percent - segmentStart) * sectionCount));
+              /* 챕터별 고유 색상 — perspective 토큰(design.md 2.2) 활용 */
+              const segmentColor = [
+                "var(--color-perspective-sprout)",
+                "var(--color-perspective-ochre)",
+                "var(--color-perspective-berry)",
+                "var(--color-perspective-slate)",
+              ][index % 4];
+              return (
+                <span key={index} className="overflow-hidden rounded-full bg-surface-inset">
+                  <span
+                    className="block h-full rounded-full transition-[width] duration-(--motion-base) ease-out-soft"
+                    style={{ width: `${segmentFill}%`, backgroundColor: segmentColor }}
+                  />
+                </span>
+              );
+            })}
+          </div>
+          <SaveStatus state={saveState} />
         </div>
-
-        <div className="mt-2 flex justify-end"><SaveStatus state={saveState} /></div>
       </div>
     </header>
   );
