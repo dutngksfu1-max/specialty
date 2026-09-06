@@ -81,6 +81,8 @@ function allVisibleText(): readonly string[] {
         : [
             ...profile.portrait.opening,
             ...profile.portrait.classroomSigns,
+            ...profile.portrait.inLessons,
+            ...profile.portrait.withStudents,
             ...profile.portrait.fromKids,
             ...profile.portrait.drive,
             ...profile.portrait.misread,
@@ -467,7 +469,9 @@ describe("문항 맥락 태그 (Phase A)", () => {
       // 2 → 3. 동료 장면 문항을 모두 교실·업무로 옮기면서 수업·생활지도·업무가
       // 각각 4문항이 되었습니다. 비교할 장면이 늘어난 것은 개선입니다 (DEC-071).
       "axis-energy": 3,
-      "axis-lens": 3,
+      // 3 → 2. 연수(동료 장면) 문항 3개를 교실로 옮기면서 colleague가 자격을 잃었습니다.
+      // 남은 두 장면(수업·생활지도)만으로도 S4 비교에는 충분합니다 (DEC-074).
+      "axis-lens": 2,
       "axis-decision": 2,
       // 3 → 2. "쉬는 날에도 시간 계획을 세운다"처럼 교직과 무관한 self 문항을
       // 수업 장면으로 옮기면서 self가 자격을 잃었습니다. 남은 두 장면(수업·업무)의
@@ -637,9 +641,13 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
 
   it("각 묶음의 항목 수가 규격을 지킵니다", () => {
     for (const profile of definition.resultProfiles) {
-      // 세 묶음 모두 3개입니다 (DEC-054). 묶음마다 개수가 다르면 화면에서 높이가 어긋납니다.
-      expect(profile.shiningMoments).toHaveLength(3);
-      expect(profile.underPressure).toHaveLength(3);
+      /*
+        강점·피로 신호는 4개입니다 (DEC-074). 수업·생활지도·상담·업무 네 장면을
+        하나씩 담기 때문입니다. 한 장면이라도 빠지면 그쪽 이야기가 통째로 사라집니다.
+        `withColleagues`는 화면에서 뺐지만 데이터는 남겨 두어 3개 그대로입니다.
+      */
+      expect(profile.shiningMoments).toHaveLength(4);
+      expect(profile.underPressure).toHaveLength(4);
       expect(profile.withColleagues).toHaveLength(3);
       expect(profile.collaboration.naturalFit).toHaveLength(2);
       expect(profile.collaboration.needsTuning).toHaveLength(2);
@@ -689,8 +697,9 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
     }
   });
 
-  it("장면 라벨은 정해진 다섯 가지만 씁니다", () => {
-    const allowed = new Set(["수업", "생활지도", "업무", "동료", "학부모"]);
+  it("장면 라벨은 정해진 것만 씁니다", () => {
+    // 상담을 더했습니다 (DEC-074). 학생·학부모와 마주 앉는 자리를 가리킵니다.
+    const allowed = new Set(["수업", "생활지도", "업무", "상담", "동료", "학부모"]);
     for (const profile of definition.resultProfiles) {
       const notes = [...profile.shiningMoments, ...profile.underPressure, ...profile.withColleagues];
       for (const note of notes) {
@@ -802,10 +811,21 @@ describe("전체 문구 금지 표현", () => {
     }
   });
 
-  it("측정하지 않은 긍정적 결과를 보장하지 않습니다", () => {
+  /*
+    **추론은 막지 않습니다** (2026-09-06 완화)
+
+    예전 규칙은 "측정하지 않은 결과"를 통째로 금지했습니다. 그런데 이 검사의 값은
+    바로 그 추론에 있습니다. 문항에 없던 것을 맞혀 줄 때 "체크한 적 없는데 맞네"가
+    나오고, 그게 없으면 답한 것을 그대로 돌려받는 설문지가 됩니다.
+    `교실이 흔들리지 않는다`처럼 네 방향에서 따라 나오는 서술은 그대로 씁니다.
+
+    막는 것은 **검사가 해 줄 수 없는 약속**뿐입니다.
+    성적이 오른다, 문제가 없어진다, 반드시 그렇게 된다 같은 말입니다.
+  */
+  it("검사가 해 줄 수 없는 약속을 하지 않습니다", () => {
     for (const text of allVisibleText()) {
       expect(text, text).not.toMatch(
-        /억울한 아이가 생기지|상담에서 신뢰를 얻|상담이 희망적으로 끝|아이들이 .*오래 기억/,
+        /반드시 (?:좋아|나아|달라)|틀림없이|보장합니다|성적이 오릅니다|문제가 없어집니다|누구나 .*됩니다/,
       );
     }
   });

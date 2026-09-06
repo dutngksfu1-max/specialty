@@ -62,6 +62,21 @@ export interface ResultPortrait {
    */
   readonly classroomSigns: readonly string[];
   /**
+   * 수업을 만들고 진행할 때 (DEC-074)
+   *
+   * 예전에는 네 축을 카드 한 장에 하나씩 늘어놓았습니다. 그러면 결과를 종합하지 않고
+   * 코드 한 글자씩 해설하는 것이 됩니다. **아이와 수업을 이해하는 방식**과
+   * **업무와 수업을 진행하는 방식**을 수업이라는 한 장면에서 함께 풀어 씁니다.
+   */
+  readonly inLessons: readonly string[];
+  /**
+   * 아이를 대할 때 (DEC-074)
+   *
+   * **결정을 내리는 방식**과 **생각을 정리하는 방식**이 아이와의 사이에서
+   * 어떻게 만나는지를 한 장면으로 씁니다.
+   */
+  readonly withStudents: readonly string[];
+  /**
    * 아이들이 느끼는 선생님 — 시점을 아이 쪽으로 옮깁니다 (DEC-069)
    *
    * 교사가 자기 결과에서 가장 알고 싶은 것은 "우리 반 아이들에게 나는 어떤 어른인가"입니다.

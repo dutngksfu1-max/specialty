@@ -868,13 +868,7 @@ export function ResultRenderer({
         </TabPanel>
 
         <TabPanel value="story" className="mt-8">
-          <ResultStoryView
-            definition={definition}
-            snapshot={snapshot}
-            profile={profile}
-            narrative={narrative.axes}
-            signals={signals}
-          />
+          <ResultStoryView profile={profile} />
         </TabPanel>
 
         <TabPanel value="detail" className="mt-6">

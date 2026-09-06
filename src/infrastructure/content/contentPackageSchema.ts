@@ -127,6 +127,8 @@ const resultGuidanceSchema = z.object({
 const resultPortraitSchema = z.object({
   opening: z.array(z.string().min(1)).min(1),
   classroomSigns: z.array(z.string().min(1)).min(1),
+  inLessons: z.array(z.string().min(1)).min(1),
+  withStudents: z.array(z.string().min(1)).min(1),
   fromKids: z.array(z.string().min(1)).min(1),
   drive: z.array(z.string().min(1)).min(1),
   misread: z.array(z.string().min(1)).min(1),
@@ -588,7 +590,16 @@ export const assessmentDefinitionSchema = baseDefinitionSchema.superRefine((defi
         ? []
         : [
             ...(
-              ["opening", "classroomSigns", "fromKids", "drive", "misread", "whenTired"] as const
+              [
+                "opening",
+                "classroomSigns",
+                "inLessons",
+                "withStudents",
+                "fromKids",
+                "drive",
+                "misread",
+                "whenTired",
+              ] as const
             ).flatMap((section) =>
               (profile.portrait?.[section] ?? []).map(
                 (paragraph, index) =>

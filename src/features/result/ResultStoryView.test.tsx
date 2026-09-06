@@ -1,9 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { resolveResultNarrative } from "@/domain/assessment/result/narrative";
-import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
-import type { AxisScore } from "@/domain/assessment/scoring/score";
 import { ResultStoryView } from "@/features/result/ResultStoryView";
 import { staticAssessmentCatalog } from "@/infrastructure/content/StaticAssessmentCatalog";
 
@@ -14,45 +11,19 @@ import { staticAssessmentCatalog } from "@/infrastructure/content/StaticAssessme
  * 순위 배지·분류어·강도 이름이 다시 들어오면 이 파일이 먼저 깨집니다.
  */
 
-function renderStory(profileIndex: number, rawScore = 8) {
+function renderStory(profileIndex: number) {
   const found = staticAssessmentCatalog.findBySlug("teacher-style");
   if (!found.ok) throw new Error("검사용 콘텐츠를 불러오지 못했습니다.");
 
   const profile = found.value.resultProfiles[profileIndex];
   if (profile === undefined) throw new Error("검사용 결과 프로필이 없습니다.");
 
-  const axisScores: AxisScore[] = found.value.axes.map((axis) => {
-    const direction = profile.poles[axis.id] ?? axis.defaultPole;
-    const signedScore = direction === "positive" ? rawScore : -rawScore;
-    return {
-      axisId: axis.id,
-      rawScore: signedScore,
-      minScore: -24,
-      maxScore: 24,
-      normalized: (signedScore + 24) / 48,
-      direction,
-      directionSource: rawScore === 0 ? "default" : "score",
-      intensityBandId: rawScore === 0 ? "leaning" : "clear",
-    };
-  });
-
-  const snapshot = {
-    characterGender: "female",
-    score: { resultKey: profile.key, axisScores },
-  } as unknown as ResultSnapshot;
-
-  const narrative = resolveResultNarrative(found.value, axisScores, profile);
 
   return {
     definition: found.value,
     profile,
     markup: renderToStaticMarkup(
-      <ResultStoryView
-        definition={found.value}
-        snapshot={snapshot}
-        profile={profile}
-        narrative={narrative.axes}
-      />,
+      <ResultStoryView profile={profile} />,
     ),
   };
 }
@@ -61,6 +32,8 @@ function renderStory(profileIndex: number, rawScore = 8) {
 const PORTRAIT_SECTIONS = [
   "opening",
   "classroomSigns",
+  "inLessons",
+  "withStudents",
   "fromKids",
   "drive",
   "misread",
@@ -97,18 +70,6 @@ function visibleText(markup: string): string {
 }
 
 describe("ResultStoryView", () => {
-  it("축 이름을 제목으로 세웁니다", () => {
-    const { definition, markup } = renderStory(0);
-
-    /*
-      피드백 4번 — "네 가지가 뭘 말하는지 모르겠다".
-      축 이름이 h2로 나와야 합니다. 작은 회색 글씨로 돌아가면 여기서 깨집니다.
-    */
-    for (const axis of definition.axes) {
-      expect(markup).toContain(`text-h2 text-foreground sm:text-h2-lg">${axis.name}<`);
-    }
-  });
-
   it("순위 배지와 강도 이름을 보여 주지 않습니다", () => {
     const { definition, markup } = renderStory(0);
     const text = visibleText(markup);
@@ -307,15 +268,6 @@ describe("ResultStoryView", () => {
     }
   });
 
-  it("교실 이야기를 동료·업무보다 먼저 보여 줍니다", () => {
-    const { markup } = renderStory(0);
-
-    const classroom = markup.indexOf("교실에서 드러나는 모습");
-    const colleagues = markup.indexOf("동료와 함께 일할 때");
-    expect(classroom).toBeGreaterThan(-1);
-    expect(colleagues).toBeGreaterThan(classroom);
-  });
-
   /*
     한 축이 원고를 먹으면 "이 검사가 그것만 봤나" 하고 느낍니다.
     실제로 있었던 일입니다 — 어떤 유형은 '계획' 어휘가 60%, '기준·사정'은 0%였습니다.
@@ -324,12 +276,16 @@ describe("ResultStoryView", () => {
     전부 0으로 나오는데, 그건 원고가 아니라 자가 잘못된 것입니다.
   */
   const AXIS_WORDS: Readonly<Record<string, readonly string[]>> = {
-    "동료·혼자": [
-      "회의", "협의", "동료", "교무실", "옆 반", "메신저", "회식",
-      "혼자", "말수", "말이 적", "소리 내어", "말을 줄이", "밖으로는",
+    /*
+      결과문에서 동료를 걷어내면서(DEC-074) 이 축의 어휘도 교실 쪽으로 옮겼습니다.
+      축이 재는 것은 그대로입니다 — 말하며 정리하는가, 혼자 정리한 뒤에 말하는가.
+    */
+    "말하며·혼자": [
+      "말로", "말을 주고받", "소리 내어", "되묻", "되물", "입 밖으로", "물어", "말을 겁니다",
+      "혼자", "말수", "말이 적", "말을 줄이", "밖으로는", "조용히", "정리한 뒤",
     ],
     "관찰·앞날": [
-      "기록", "적어 두", "메모", "자료", "확인", "직접 본", "날짜", "사실",
+      "기록", "적어 두", "적어 둔", "메모", "자료", "확인", "직접 본", "날짜", "사실",
       "몇 년 뒤", "몇 달 뒤", "앞으로", "다음 학년", "2학기", "학년 말", "12월",
       "예상", "변화", "지난번", "작년", "원인",
     ],
@@ -341,6 +297,8 @@ describe("ResultStoryView", () => {
       "계획", "미리", "순서", "마감", "일정", "학기 초", "금요일", "시간표", "진도",
       "그때그때", "그 자리에서", "하면서", "바로 바꾸", "지금 할 수 있는", "준비해",
       "밀리", "밀려", "손을 댑니다", "그날 하나",
+      // 유연형 표현이 빠져 있어 그쪽 유형을 결손으로 잘못 잡았습니다 (2026-09-06).
+      "일단 해 보", "해 보고 고", "다 준비하고 시작하지", "앞서", "손이 가",
     ],
   };
 
@@ -429,13 +387,12 @@ describe("ResultStoryView", () => {
     }
   });
 
-  it("점수가 0이어도 한 방향으로 읽힙니다", () => {
+  it("점수가 0이어도 결과가 온전히 그려집니다", () => {
     // DEC-068을 그대로 따릅니다. 줄글 보기가 중립 상태를 되살리면 안 됩니다.
-    const { definition, markup } = renderStory(0, 0);
-    const first = definition.resultNarrative?.axes[0]?.readings[0];
+    const { profile, markup } = renderStory(0);
+    const text = visibleText(markup);
 
-    expect(first).toBeDefined();
-    if (first?.story !== undefined) expect(visibleText(markup)).toContain(first.story.lead);
-    expect(visibleText(markup)).not.toContain("판단 보류");
+    expect(text).toContain(profile.portrait?.opening[0] ?? profile.oneLiner);
+    expect(text).not.toContain("판단 보류");
   });
 });

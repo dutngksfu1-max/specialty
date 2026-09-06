@@ -1,30 +1,24 @@
-import type { AssessmentAxis, AssessmentDefinition } from "@/domain/assessment/model/definition";
-import type { ResolvedAxisNarrative } from "@/domain/assessment/result/narrative";
 import type { ResultProfile, SceneNote } from "@/domain/assessment/result/profile";
-import type { AssessmentSignals, AxisContextSplit } from "@/domain/assessment/result/signals";
-import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 
 /**
- * 줄글 보기 (DEC-069)
+ * 줄글 보기 (DEC-069 · DEC-074)
  *
  * 요약 보기·자세히 보기와 **같은 데이터**를 읽고 배치만 다르게 합니다.
  * 두 보기의 컴포넌트는 한 줄도 건드리지 않으므로, 이 보기를 통째로 지워도
  * 기존 결과 화면은 그대로 남습니다.
  *
- * 다르게 하는 것은 다섯 가지입니다.
+ * 지키는 것 다섯 가지.
  *
- * 1. **축 이름을 제목으로 세웁니다.** 예전에는 축 이름이 13px 회색으로 가장 작고
- *    방향 문장이 가장 컸습니다. 그래서 "이 카드가 무엇에 대한 이야기인지"가 사라졌습니다.
- * 2. **분류 이름과 강도 라벨을 뺍니다.** 처음 보는 사람에게 "몰입형"과 "근소한 차이"는
- *    자기 이야기가 아니라 외워야 할 낱말입니다. 기울기는 눈금이 말합니다 (DEC-068은
- *    "차이의 크기는 게이지가 담당한다"이지, 라벨을 반드시 적으라는 뜻이 아닙니다).
- * 3. **순위 배지를 뺍니다.** '가장 도드라짐'은 읽을 순서를 알려 주는 대신 시선을 뺏습니다.
- * 4. **카드를 합칩니다.** 같은 성격의 정보를 카드 여러 장으로 쪼개면 훑어보게 되고,
- *    훑어보면 남는 것이 없습니다. 한 장 안에서 구분선으로 나눕니다.
- * 5. **소제목을 명사구로 씁니다.** '두 가지가 겹칠 때'처럼 무엇을 가리키는지 알 수 없는
- *    제목은 읽는 사람을 멈춰 세웁니다. 제목만 읽어도 안에 무엇이 있는지 알려야 합니다.
- * 6. **교실을 먼저 놓습니다.** 교사가 자기 결과에서 가장 먼저 확인하고 싶은 것은
- *    "우리 반에서 나는 어떤 어른인가"입니다. 동료·업무는 그다음입니다.
+ * 1. **분류 이름과 강도 라벨을 쓰지 않습니다.** 처음 보는 사람에게 "몰입형"과
+ *    "근소한 차이"는 자기 이야기가 아니라 외워야 할 낱말입니다.
+ * 2. **순위 배지와 게이지를 쓰지 않습니다.** 읽을 순서를 알려 주는 대신 시선을 뺏습니다.
+ * 3. **축을 하나씩 뜯어 설명하지 않습니다** (DEC-074). 네 방향을 따로 늘어놓으면
+ *    결과를 종합하지 않고 코드 한 글자씩 해설하는 것이 됩니다. 네 방향은 아래 다섯
+ *    구역에 이미 녹아 있습니다 — 구역마다 담당 축이 정해져 있기 때문입니다.
+ * 4. **소제목을 명사구로 씁니다.** '자리에 따라 달라지는 것'처럼 무엇을 가리키는지
+ *    알 수 없는 제목은 읽는 사람을 멈춰 세웁니다.
+ * 5. **교실만 다룹니다** (DEC-074). 동료와 일하는 방식과 내일의 행동 계획은 뺐습니다.
+ *    교사가 자기 결과에서 알고 싶은 것은 우리 반에서 자기가 어떤 어른인가입니다.
  */
 
 /** 읽는 폭. 한 줄이 길어지면 다음 줄 첫 글자를 찾는 데 눈이 쓰입니다. */
@@ -32,20 +26,15 @@ const PROSE = "max-w-[40rem]";
 
 function Card({
   title,
-  lead,
   children,
 }: {
   readonly title: string;
-  readonly lead?: string;
   readonly children: React.ReactNode;
 }) {
   return (
     <section className="overflow-hidden rounded-lg border border-border bg-surface">
       <header className="border-b border-border px-5 py-5 sm:px-7 sm:py-6">
         <h2 className="text-h1 text-foreground sm:text-h1-lg">{title}</h2>
-        {lead !== undefined && (
-          <p className={`mt-2 ${PROSE} text-body text-foreground-muted`}>{lead}</p>
-        )}
       </header>
       {children}
     </section>
@@ -105,97 +94,7 @@ function SceneProse({ items }: { readonly items: readonly SceneNote[] }) {
   );
 }
 
-/**
- * 자리에 따라 달라지는 것 (DEC-071)
- *
- * 이 대비는 **문항을 하나하나 봐서는 알 수 없습니다.** 한 축의 열두 문항을 장면별로
- * 갈라 평균을 내야 나오므로, 답한 사람에게는 "체크한 적 없는데 맞네"가 됩니다.
- * 격차가 기준에 못 미치면 엔진이 아예 넘기므로, 여기 나온 대비는 실제로 갈린 것입니다.
- *
- * **문장을 조립하지 않습니다.** 예전에는 장면 이름에 조사를 붙여 문장을 만들었는데,
- * 이름이 "생활지도할 때"이면 "생활지도할 때에서도"라는 비문이 나왔습니다.
- * 한국어 조사는 앞말에 따라 달라지므로 엔진이 붙이면 언젠가 반드시 틀립니다.
- * 이름과 방향을 **표로 나란히 두면** 그 위험이 사라지고 읽기도 더 빠릅니다.
- */
-function ContextRow({
-  label,
-  mean,
-  axis,
-}: {
-  readonly label: string;
-  readonly mean: number;
-  readonly axis: AssessmentAxis;
-}) {
-  const pole = mean >= 0 ? axis.positive : axis.negative;
-
-  return (
-    <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-baseline gap-3">
-      <dt className="text-body-sm font-semibold text-foreground">{label}</dt>
-      <dd className="min-w-0 text-body-sm text-foreground-body">
-        {pole.plainLabel ?? pole.shortLabel}
-      </dd>
-    </div>
-  );
-}
-
-function ContextContrast({
-  axis,
-  split,
-  note,
-  labels,
-}: {
-  readonly axis: AssessmentAxis;
-  readonly split: AxisContextSplit;
-  readonly note?: string;
-  readonly labels?: Readonly<Record<string, string>>;
-}) {
-  const name = (context: string) => labels?.[context] ?? context;
-  const rows = [split.high, split.low];
-
-  return (
-    <div className={PROSE}>
-      <p className="text-h3 text-foreground sm:text-h3-lg">{axis.name}</p>
-      <dl
-        className="mt-3 flex flex-col gap-2"
-        aria-label={rows
-          .map((sample) => {
-            const pole = sample.mean >= 0 ? axis.positive : axis.negative;
-            return `${name(sample.context)}: ${pole.plainLabel ?? pole.shortLabel}`;
-          })
-          .join(", ")}
-      >
-        {rows.map((sample) => (
-          <ContextRow
-            key={sample.context}
-            label={name(sample.context)}
-            mean={sample.mean}
-            axis={axis}
-          />
-        ))}
-      </dl>
-      {note !== undefined && (
-        <p className="mt-3 text-body-lg text-foreground-body">{note}</p>
-      )}
-    </div>
-  );
-}
-
-export function ResultStoryView({
-  definition,
-  snapshot,
-  profile,
-  narrative,
-  signals,
-}: {
-  readonly definition: AssessmentDefinition;
-  readonly snapshot: ResultSnapshot;
-  readonly profile: ResultProfile;
-  readonly narrative: readonly ResolvedAxisNarrative[];
-  /** 응답이 지워졌으면 없을 수 있습니다. 없으면 장면 대비 구역만 빠집니다. */
-  readonly signals?: AssessmentSignals;
-}) {
-  const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
-  const narrativeById = new Map(narrative.map((item) => [String(item.axisId), item]));
+export function ResultStoryView({ profile }: { readonly profile: ResultProfile }) {
   const portrait = profile.portrait;
 
   /*
@@ -203,18 +102,6 @@ export function ResultStoryView({
     그때는 기존 필드로 대신 채우고, 없는 구역은 그리지 않습니다.
   */
   const opening = portrait?.opening ?? [profile.oneLiner, profile.rhythm];
-
-  const contextLabels = definition.resultNarrative?.contextLabels;
-  const noteByAxis = new Map(
-    (definition.resultNarrative?.axes ?? []).map((axis) => [
-      String(axis.axisId),
-      axis.contextSplitNote,
-    ]),
-  );
-  const contrasts = (signals?.contextSplits ?? []).flatMap((split) => {
-    const axis = axisById.get(String(split.axisId));
-    return axis === undefined ? [] : [{ split, axis }];
-  });
 
   return (
     <div data-result-view="story" className="flex flex-col gap-6">
@@ -243,30 +130,26 @@ export function ResultStoryView({
             </Block>
           </>
         )}
-
-        {/*
-          갈린 장면이 없으면 이 구역은 아예 나오지 않습니다.
-          "차이가 없었습니다" 같은 빈 말을 채워 넣지 않습니다 (DEC-038).
-        */}
-        {contrasts.length > 0 && (
-          <Block title="자리에 따라 달라지는 것">
-            <div className="flex flex-col gap-6">
-              {contrasts.map(({ split, axis }) => (
-                <ContextContrast
-                  key={String(split.axisId)}
-                  axis={axis}
-                  split={split}
-                  note={noteByAxis.get(String(split.axisId))}
-                  labels={contextLabels}
-                />
-              ))}
-            </div>
-          </Block>
-        )}
       </Card>
 
       <Card title="교실에서 드러나는 모습">
-        <Block first title="강점이 되는 순간">
+        {/*
+          네 방향을 하나씩 뜯어 설명하던 카드를 없애고 그 내용을 여기로 녹였습니다 (DEC-074).
+          축 이름은 나오지 않고, 읽는 사람은 수업과 아이라는 두 장면만 봅니다.
+            수업을 만들 때  — 아이와 수업을 이해하는 방식 + 업무와 수업을 진행하는 방식
+            아이를 대할 때  — 결정을 내리는 방식 + 생각을 정리하는 방식
+        */}
+        {portrait !== undefined && (
+          <>
+            <Block first title="수업을 만들 때">
+              <Prose paragraphs={portrait.inLessons} />
+            </Block>
+            <Block title="아이를 대할 때">
+              <Prose paragraphs={portrait.withStudents} />
+            </Block>
+          </>
+        )}
+        <Block first={portrait === undefined} title="강점이 되는 순간">
           <SceneProse items={profile.shiningMoments} />
         </Block>
         <Block title="여유가 줄었을 때">
@@ -278,64 +161,6 @@ export function ResultStoryView({
             {portrait !== undefined && <Prose paragraphs={portrait.whenTired} />}
             <SceneProse items={profile.underPressure} />
           </div>
-        </Block>
-      </Card>
-
-      <Card
-        title="네 가지 방식을 하나씩"
-        lead="이 네 가지를 따로 재고, 그 결과를 합쳐 위의 이야기를 썼습니다."
-      >
-        {snapshot.score.axisScores.map((score, index) => {
-          const axis = axisById.get(String(score.axisId));
-          const item = narrativeById.get(String(score.axisId));
-          if (axis === undefined) return null;
-
-          const story = item?.reading.story;
-          const lead = story?.lead ?? item?.reading.headline;
-          const body =
-            story?.body ?? (item === undefined ? [] : [item.reading.summary, item.reading.scene]);
-
-          return (
-            <div
-              key={String(score.axisId)}
-              className={`px-5 py-6 sm:px-7 sm:py-7 ${index === 0 ? "" : "border-t border-border"}`}
-            >
-              {/* 축 이름이 이 구역의 제목입니다. 여기가 무엇에 관한 이야기인지가 먼저 보여야 합니다. */}
-              <h3 className="text-h2 text-foreground sm:text-h2-lg">{axis.name}</h3>
-              {lead !== undefined && (
-                <p className={`mt-2 ${PROSE} text-body-lg font-semibold text-foreground-body`}>
-                  {lead}
-                </p>
-              )}
-              <div className="mt-4">
-                <Prose paragraphs={body} />
-              </div>
-            </div>
-          );
-        })}
-      </Card>
-
-      <Card
-        title="동료와 함께 일할 때"
-        lead="누가 더 잘 맞는지 가리는 내용이 아닙니다. 방식이 다를 때 무엇이 편하고 무엇을 먼저 말해 두면 좋은지를 적었습니다."
-      >
-        <Block first title="동료 앞에서의 모습">
-          <SceneProse items={profile.withColleagues} />
-        </Block>
-        <Block title="따로 맞추지 않아도 되는 부분">
-          <Prose paragraphs={profile.collaboration.naturalFit} />
-        </Block>
-        <Block title="미리 말해 두면 좋은 부분">
-          <Prose paragraphs={profile.collaboration.needsTuning} />
-        </Block>
-      </Card>
-
-      <Card title="내일 해 볼 것과 나눌 질문">
-        <Block first title="내일 해 볼 것">
-          <Prose paragraphs={profile.nextSteps} />
-        </Block>
-        <Block title="동료와 나눌 질문">
-          <Prose paragraphs={profile.talkingPoints} />
         </Block>
       </Card>
     </div>
