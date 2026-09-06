@@ -382,7 +382,7 @@ export const questions = [
     id: "decision-07",
     sectionId: "part-3",
     order: 34,
-    text: "평가 결과를 설명할 때 누가 봐도 같은 답이 나오는 기준을 두는 편이다.",
+    text: "평가는 누가 채점해도 같은 결과가 나오도록 기준을 정하는 편이다.",
     axisId: "axis-decision",
     polarity: 1,
     weight: 1,

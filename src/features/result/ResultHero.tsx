@@ -158,7 +158,7 @@ export function ResultHero({
             className="result-rhythm-summary mt-5 max-w-prose border-t border-primary-soft-border pt-4 sm:grid sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start sm:gap-4"
           >
             <h2 className="result-rhythm-label inline-flex w-fit rounded-sm bg-accent-soft px-3 py-1.5 text-caption font-semibold text-accent">
-              결과 요약
+              나의 교직 리듬
             </h2>
             <p className="mt-3 text-body font-medium text-foreground-body sm:mt-0">
               {narrative.rhythm}

@@ -64,14 +64,40 @@ function allVisibleText(): readonly string[] {
       profile.title,
       profile.oneLiner,
       profile.rhythm,
-      ...profile.shiningMoments.flatMap((note) => [note.scene, note.text]),
-      ...profile.underPressure.flatMap((note) => [note.scene, note.text]),
-      ...profile.withColleagues.flatMap((note) => [note.scene, note.text]),
+      /*
+        장면 제목(`situation`)과 성격 묘사(`portrait`)가 이 목록에서 빠져 있었습니다.
+        새 필드를 만들면서 여기 더하지 않아, 금지 표현·과장 보장·fixture 검사가
+        그 텍스트를 한 번도 보지 않고 있었습니다 (2026-09-06).
+      */
+      ...profile.shiningMoments.flatMap((note) => [note.scene, note.situation, note.text]),
+      ...profile.underPressure.flatMap((note) => [note.scene, note.situation, note.text]),
+      ...profile.withColleagues.flatMap((note) => [note.scene, note.situation, note.text]),
       ...profile.collaboration.naturalFit,
       ...profile.collaboration.needsTuning,
       ...profile.nextSteps,
       ...profile.talkingPoints,
+      ...(profile.portrait === undefined
+        ? []
+        : [
+            ...profile.portrait.opening,
+            ...profile.portrait.classroomSigns,
+            ...profile.portrait.fromKids,
+            ...profile.portrait.drive,
+            ...profile.portrait.misread,
+            ...profile.portrait.whenTired,
+          ]),
     ]),
+    ...(definition.resultNarrative === undefined
+      ? []
+      : [
+          ...Object.values(definition.resultNarrative.contextLabels ?? {}),
+          ...definition.resultNarrative.axes.flatMap((axis) => [
+            ...(axis.contextSplitNote === undefined ? [] : [axis.contextSplitNote]),
+            ...axis.readings.flatMap((reading) =>
+              reading.story === undefined ? [] : [reading.story.lead, ...reading.story.body],
+            ),
+          ]),
+        ]),
   ];
 }
 

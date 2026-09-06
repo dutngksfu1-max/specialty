@@ -126,7 +126,7 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).toContain(narrative.title);
     expect(markup).toContain(narrative.rhythm);
     expect(markup).toContain("4렌즈 코드");
-    expect(markup).toContain("결과 요약");
+    expect(markup).toContain("나의 교직 리듬");
     expect(markup).toContain("나를 상징하는 캐릭터");
     expect(markup).toContain(artwork?.src.split("/").at(-1));
     expect(markup).not.toContain(String(profile.key));

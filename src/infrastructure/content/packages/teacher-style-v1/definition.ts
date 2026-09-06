@@ -65,7 +65,7 @@ const axes = [
       side: "negative",
       label: "혼자 정리하는 몰입형",
       shortLabel: "몰입형",
-      plainLabel: "혼자 정리한 뒤에",
+      plainLabel: "먼저 혼자 정리",
       code: "D",
       crosswalkCode: "I",
       description:
@@ -81,7 +81,7 @@ const axes = [
       side: "positive",
       label: "구체적인 사실을 보는 실제형",
       shortLabel: "실제형",
-      plainLabel: "직접 본 것부터",
+      plainLabel: "직접 본 것",
       code: "A",
       crosswalkCode: "S",
       description:
@@ -91,7 +91,7 @@ const axes = [
       side: "negative",
       label: "앞으로의 변화를 보는 가능성형",
       shortLabel: "가능성형",
-      plainLabel: "다음 변화부터",
+      plainLabel: "앞으로의 변화",
       code: "O",
       crosswalkCode: "N",
       description:
@@ -107,7 +107,7 @@ const axes = [
       side: "positive",
       label: "공통 기준을 세우는 원칙형",
       shortLabel: "원칙형",
-      plainLabel: "같은 기준으로",
+      plainLabel: "같은 기준",
       code: "R",
       crosswalkCode: "T",
       description:
@@ -117,7 +117,7 @@ const axes = [
       side: "negative",
       label: "개별 상황을 살피는 맥락형",
       shortLabel: "맥락형",
-      plainLabel: "그 아이 사정부터",
+      plainLabel: "그 아이 사정",
       code: "C",
       crosswalkCode: "F",
       description:
@@ -133,7 +133,7 @@ const axes = [
       side: "positive",
       label: "미리 계획하는 계획형",
       shortLabel: "계획형",
-      plainLabel: "미리 정해 두고",
+      plainLabel: "미리 정해 두기",
       code: "M",
       crosswalkCode: "J",
       description:
@@ -143,7 +143,7 @@ const axes = [
       side: "negative",
       label: "현장에서 조정하는 유연형",
       shortLabel: "유연형",
-      plainLabel: "하면서 맞추며",
+      plainLabel: "하면서 맞추기",
       code: "L",
       crosswalkCode: "P",
       description:

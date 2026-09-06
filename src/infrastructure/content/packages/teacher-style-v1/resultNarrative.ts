@@ -15,11 +15,11 @@ export const resultNarrative = {
    * 결과에서는 "수업"보다 "아이들 앞"이 무엇을 비교하는지 분명합니다.
    */
   contextLabels: {
-    lesson: "아이들 앞",
-    guidance: "생활지도할 때",
-    admin: "업무를 볼 때",
-    colleague: "동료 앞",
-    family: "학부모 앞",
+    lesson: "수업",
+    guidance: "생활지도",
+    admin: "업무",
+    colleague: "동료 사이",
+    family: "학부모 상담",
     self: "혼자 있을 때",
   },
   /**
@@ -31,7 +31,7 @@ export const resultNarrative = {
     "혼자 있는 시간을 거쳐야",
     "남아 있는 기록과 결과물",
     "몇 달 뒤에 생길 변화",
-    "답이 달라지지 않는지",
+    "같은 답이 나오는지",
     "놓인 형편에 따라",
     "무엇을 언제 할지",
     "그날 상황에 맞는 방법",
@@ -122,7 +122,7 @@ export const resultNarrative = {
           direction: "positive",
           headline: "정해 둔 기준부터 확인해요",
           summary:
-            "같은 일이 다시 왔을 때 답이 달라지지 않는지를 신경 써요. 남에게 이유를 설명할 수 없는 결정은 잘 내리지 않습니다.",
+            "같은 일이 다시 왔을 때 같은 답이 나오는지를 신경 써요. 남에게 이유를 설명할 수 없는 결정은 잘 내리지 않습니다.",
           scene: "다툼을 중재할 때도 먼저 약속을 확인하고 시작합니다.",
           story: {
             lead: "같은 일에는 같은 답을 줍니다.",
@@ -159,7 +159,7 @@ export const resultNarrative = {
           direction: "positive",
           headline: "순서를 정해 놓고 시작해요",
           summary:
-            "무엇을 언제 할지가 보이면 바로 시작해요. 준비가 덜 된 채로 시작하는 것은 잘 견디지 않습니다.",
+            "무엇을 언제 할지가 보이면 바로 시작해요. 준비가 덜 된 채로 시작하면 마음이 불편하곤 합니다.",
           scene: "다음 주 수업을 금요일에 미리 훑어 둡니다.",
           story: {
             lead: "미리 정해 두고 시작합니다.",

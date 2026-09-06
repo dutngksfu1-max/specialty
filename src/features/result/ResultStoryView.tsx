@@ -179,36 +179,85 @@ function SceneProse({ items }: { readonly items: readonly SceneNote[] }) {
  * 이 대비는 **문항을 하나하나 봐서는 알 수 없습니다.** 한 축의 열두 문항을 장면별로
  * 갈라 평균을 내야 나오므로, 답한 사람에게는 "체크한 적 없는데 맞네"가 됩니다.
  * 격차가 기준에 못 미치면 엔진이 아예 넘기므로, 여기 나온 대비는 실제로 갈린 것입니다.
+ *
+ * **문장을 조립하지 않습니다.** 예전에는 장면 이름에 조사를 붙여 문장을 만들었는데,
+ * 이름이 "생활지도할 때"이면 "생활지도할 때에서도"라는 비문이 나왔습니다.
+ * 한국어 조사는 앞말에 따라 달라지므로 엔진이 붙이면 언젠가 반드시 틀립니다.
+ * 이름과 방향을 **표로 나란히 두면** 그 위험이 사라지고 읽기도 더 빠릅니다.
  */
+function ContextRow({
+  label,
+  mean,
+  axis,
+  extent,
+}: {
+  readonly label: string;
+  readonly mean: number;
+  readonly axis: AssessmentAxis;
+  readonly extent: number;
+}) {
+  const toPositive = mean >= 0;
+  const pole = toPositive ? axis.positive : axis.negative;
+  const steps = Math.max(1, Math.ceil((Math.abs(mean) / extent) * AXIS_DISPLAY_LEVEL_MAX));
+
+  return (
+    <div className="grid grid-cols-[5.5rem_auto_minmax(0,1fr)] items-center gap-3">
+      <dt className="text-body-sm font-semibold text-foreground">{label}</dt>
+      <dd aria-hidden="true" className="flex h-1.5 w-16 items-stretch gap-0.5">
+        {Array.from({ length: AXIS_DISPLAY_LEVEL_MAX }, (_, index) => (
+          <span
+            key={index}
+            className={`flex-1 rounded-xs ${index < steps ? "bg-chart-positive" : "bg-border"}`}
+          />
+        ))}
+      </dd>
+      <dd className="min-w-0 text-body-sm text-foreground-body">
+        {pole.plainLabel ?? pole.shortLabel}
+      </dd>
+    </div>
+  );
+}
+
 function ContextContrast({
   axis,
   split,
   note,
   labels,
+  extent,
 }: {
   readonly axis: AssessmentAxis;
   readonly split: AxisContextSplit;
   readonly note?: string;
   readonly labels?: Readonly<Record<string, string>>;
+  readonly extent: number;
 }) {
   const name = (context: string) => labels?.[context] ?? context;
-  const plain = (pole: AssessmentAxis["positive"]) => pole.plainLabel ?? pole.shortLabel;
-
-  /* 장면 평균은 이미 positive 방향으로 정렬되어 옵니다. */
-  const highPole = split.high.mean >= 0 ? axis.positive : axis.negative;
-  const lowPole = split.low.mean >= 0 ? axis.positive : axis.negative;
-  const sameSide = split.high.mean >= 0 === split.low.mean >= 0;
+  const rows = [split.high, split.low];
 
   return (
     <div className={PROSE}>
       <p className="text-h3 text-foreground sm:text-h3-lg">{axis.name}</p>
-      <p className="mt-2 text-body-lg font-semibold text-foreground-body">
-        {sameSide
-          ? `${name(split.high.context)}에서도 ${name(split.low.context)}에서도 ${plain(highPole)} 쪽이지만, ${name(split.high.context)}에서 훨씬 뚜렷합니다.`
-          : `${name(split.high.context)}에서는 ${plain(highPole)}, ${name(split.low.context)}에서는 ${plain(lowPole)} 쪽으로 갈렸습니다.`}
-      </p>
+      <dl
+        className="mt-3 flex flex-col gap-2"
+        aria-label={rows
+          .map((sample) => {
+            const pole = sample.mean >= 0 ? axis.positive : axis.negative;
+            return `${name(sample.context)}: ${pole.plainLabel ?? pole.shortLabel}`;
+          })
+          .join(", ")}
+      >
+        {rows.map((sample) => (
+          <ContextRow
+            key={sample.context}
+            label={name(sample.context)}
+            mean={sample.mean}
+            axis={axis}
+            extent={extent}
+          />
+        ))}
+      </dl>
       {note !== undefined && (
-        <p className="mt-2 text-body-lg text-foreground-body">{note}</p>
+        <p className="mt-3 text-body-lg text-foreground-body">{note}</p>
       )}
     </div>
   );
@@ -244,6 +293,13 @@ export function ResultStoryView({
       String(axis.axisId),
       axis.contextSplitNote,
     ]),
+  );
+  /** 척도 한쪽 끝까지의 거리. 5점 척도면 2입니다. */
+  const scaleExtent = Math.max(
+    ...definition.scale.options.map((option) =>
+      Math.abs(option.value - definition.scale.centerValue),
+    ),
+    1,
   );
   const contrasts = (signals?.contextSplits ?? []).flatMap((split) => {
     const axis = axisById.get(String(split.axisId));
@@ -292,6 +348,7 @@ export function ResultStoryView({
                   split={split}
                   note={noteByAxis.get(String(split.axisId))}
                   labels={contextLabels}
+                  extent={scaleExtent}
                 />
               ))}
             </div>
