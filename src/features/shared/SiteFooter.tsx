@@ -7,9 +7,17 @@ import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 import { Icon } from "@/components/ui/Icon";
 import { useAssessmentServices } from "@/features/shared/AssessmentRepositoryProvider";
 import { messageFor } from "@/lib/errorMessages";
-import { BRAND_NAME, PRIVACY_NOTE } from "@/lib/siteCopy";
+import { COPYRIGHT_START_YEAR, PRIVACY_NOTE } from "@/lib/siteCopy";
 
 type DeleteState = "idle" | "done" | "failed";
+
+/** 시작 연도와 현재 연도가 같으면 "2026", 다르면 "2026-2027"로 보여줍니다. */
+function copyrightYearLabel(): string {
+  const currentYear = new Date().getFullYear();
+  return currentYear > COPYRIGHT_START_YEAR
+    ? `${COPYRIGHT_START_YEAR}-${currentYear}`
+    : `${COPYRIGHT_START_YEAR}`;
+}
 
 /**
  * Footer — 개인정보 안내(DEC-029 초안) + 저장 데이터 수동 삭제(DEC-015)
@@ -35,7 +43,7 @@ export function SiteFooter() {
   }
 
   return (
-    <footer className="mt-20 border-t border-border bg-background">
+    <footer className="mt-20 border-t border-border bg-background pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-(--container-landing) px-5 py-12 sm:px-6">
         <p className="max-w-prose text-body-sm text-foreground-muted">{PRIVACY_NOTE.long}</p>
 
@@ -67,7 +75,9 @@ export function SiteFooter() {
           )}
         </div>
 
-        <p className="mt-8 text-caption text-foreground-subtle">{BRAND_NAME}</p>
+        <p className="mt-8 text-center text-caption text-foreground-subtle">
+          © {copyrightYearLabel()}. Classlens by 스파크쌤 &amp; 찰떡쌤. All rights reserved.
+        </p>
       </div>
     </footer>
   );
