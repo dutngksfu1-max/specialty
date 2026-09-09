@@ -136,7 +136,8 @@ describe("결과 페이지 정보 구조", () => {
     const { markup, definition, narrative } = renderResult();
     const text = visibleText(markup);
 
-    expect([...markup.matchAll(/data-perspective-tone=/g)]).toHaveLength(8);
+    // 요약 보기를 빼면서 4장이 되었습니다 (예전에는 요약·자세히 두 벌이라 8장).
+    expect([...markup.matchAll(/data-perspective-tone=/g)]).toHaveLength(4);
     for (const axisNarrative of narrative.axes) {
       const axis = definition.axes.find((item) => item.id === axisNarrative.axisId);
       if (axis === undefined) throw new Error("축을 찾지 못했습니다.");
@@ -144,8 +145,8 @@ describe("결과 페이지 정보 구조", () => {
 
       expect(markup).toContain(pole.code);
       expect(markup).toContain(pole.label);
-      expect(text.split(axisNarrative.reading.headline)).toHaveLength(3);
-      expect(text.split(axisNarrative.reading.summary)).toHaveLength(3);
+      expect(text.split(axisNarrative.reading.headline)).toHaveLength(2);
+      expect(text.split(axisNarrative.reading.summary)).toHaveLength(2);
       expect(text).toContain(axisNarrative.reading.scene);
     }
     expect(markup).toContain("5단계 중");
@@ -164,31 +165,48 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).toContain(reportedCode);
   });
 
-  it("요약 보기는 네 방향과 대표 장면, 협업, 다음 행동을 빠뜨리지 않습니다", () => {
-    const { markup, profile } = renderResult();
-    const text = visibleText(markup);
+  /*
+    요약 보기를 뺐습니다 (2026-09-09). 갈래는 둘입니다.
+    예전에는 셋이었고, 요약 보기가 자세히 보기의 첫 항목을 그대로 다시 보여 주고
+    있었습니다. 같은 문장이 한 화면에 두 번 나오던 것이 사라졌습니다.
+  */
+  it("결과 보기 갈래가 둘입니다", () => {
+    const { markup } = renderResult();
 
-    expect(markup).toContain("나를 설명하는 네 가지 방향");
-    expect(markup).toContain("교실에서 나타나는 핵심 모습");
-    expect(markup).toContain(profile.shiningMoments[0]!.situation);
-    expect(markup).toContain(profile.underPressure[0]!.situation);
-    expect(markup).toContain(profile.withColleagues[0]!.situation);
-    expect(text).toContain(profile.collaboration.naturalFit[0]);
-    expect(text).toContain(profile.collaboration.needsTuning[0]);
-    expect(text).toContain(profile.nextSteps[0]);
-    expect(markup).toContain("전체 결과 자세히 보기");
+    expect(markup).toContain("검사 결과 보기");
+    expect(markup).toContain("줄글 톺아보기");
+    expect(markup).not.toContain("요약 보기");
+    expect(markup).not.toContain("전체 결과 자세히 보기");
   });
 
-  it("자세히 보기에는 장면, 조합, 협업, 대화 질문을 유지합니다", () => {
+  it("검사 결과 보기에 장면, 협업, 대화 질문을 유지합니다", () => {
     const { markup, profile } = renderResult();
+    const text = visibleText(markup);
 
     for (const id of ["result-overview", "result-scenes", "result-collaboration", "result-next"]) {
       expect(markup).toContain(`href=\"#${id}\"`);
       expect(markup).toContain(`id=\"${id}\"`);
     }
-    expect(markup).toContain("자세히 보기");
-    expect(markup).toContain("두 관점이 겹칠 때");
-    expect(visibleText(markup)).toContain(profile.talkingPoints[0]);
+    expect(markup).toContain(profile.shiningMoments[0]!.situation);
+    expect(markup).toContain(profile.underPressure[0]!.situation);
+    /*
+      `withColleagues`는 화면에 나오지 않습니다. 동료 장면을 걷어낼 때(DEC-074)
+      묶음을 뺐고 데이터만 남겨 두었습니다. 요약 보기가 그것을 마지막으로 쓰고
+      있었는데, 그 보기마저 사라졌으므로 이제 어디에서도 그리지 않습니다.
+    */
+    expect([...markup.matchAll(/data-scene-tone=/g)]).toHaveLength(2);
+    expect(text).toContain(profile.collaboration.naturalFit[0]);
+    expect(text).toContain(profile.collaboration.needsTuning[0]);
+    expect([...markup.matchAll(/data-collab-kind="description"/g)]).toHaveLength(
+      profile.collaboration.naturalFit.length,
+    );
+    expect([...markup.matchAll(/data-collab-kind="suggestion"/g)]).toHaveLength(
+      profile.collaboration.needsTuning.length,
+    );
+    expect(markup).toContain("함께일 때 시너지 효과");
+    expect(markup).toContain("다만 이땐 이렇게!");
+    expect(text).toContain(profile.nextSteps[0]);
+    expect(text).toContain(profile.talkingPoints[0]);
   });
 });
 
@@ -238,7 +256,7 @@ describe("응답 신호", () => {
     const { markup, narrative } = renderResult();
 
     expect(markup).toContain(narrative.rhythm);
-    expect(markup).toContain("나를 설명하는 네 가지 방향");
+    expect(markup).toContain("한눈에 보는 나");
     expect(markup).not.toContain("상황에 따라 달라지는 점");
   });
 });

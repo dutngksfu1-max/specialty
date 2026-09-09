@@ -764,28 +764,115 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
     }
   });
 
-  it("'미리 맞춰 두면 좋은 점'에 구체적인 조율 방법이 들어 있습니다", () => {
+  /*
+    협업 문구 규칙 (DEC-062 유지 + 2026-09-08 개편)
+
+    예전 자는 모든 항목에 `동료와는`을 요구했습니다. 뜻은 옳았지만
+    **어절 하나를 문장 맨 앞에 못 박은 탓에 64문장이 전부 같은 모양**이 되었습니다.
+    실제로 64/64가 `~하는 동료와는,`으로 시작했고 48/64가 `쉬워요`로 끝났습니다.
+    자가 획일성을 강제하고 있었던 것입니다.
+
+    지금은 뜻만 봅니다.
+      · 상대가 누구인지 밝힌다 (분류 라벨이 아니라 일하는 방식으로)
+      · 학교 안의 일을 적는다  ← 예전에는 64문장 중 3문장에만 학교 낱말이 있었습니다
+      · 한 종결어가 전체를 덮지 않는다
+  */
+  /*
+    ⚠️ 이 목록이 좁으면 멀쩡한 문장을 고치게 됩니다.
+    처음에는 `활동`·`업무`·`목표`·`자료`가 빠져 있어서, "새 활동을 하자는
+    교사에게…"처럼 누가 봐도 학교 이야기인 문장이 걸렸습니다.
+    새 낱말을 쓰면 여기에도 더해 주세요.
+  */
+  const COLLAB_SCHOOL_WORDS: readonly string[] = [
+    "아이", "학생", "수업", "단원", "학급", "교실", "진도", "평가", "상담",
+    "담임", "학년", "학교", "학부모", "공문", "알림장", "교육과정", "협의회",
+    "행사", "학기", "생활지도", "학예회", "현장체험학습", "회의", "시간표", "반",
+    "활동", "업무", "목표", "자료", "지도", "교원", "관리자", "선생님", "교사",
+  ];
+
+  function collaborationItems(): readonly string[] {
+    return definition.resultProfiles.flatMap((profile) => [
+      ...profile.collaboration.naturalFit,
+      ...profile.collaboration.needsTuning,
+    ]);
+  }
+
+  it("협업 문구가 어떤 동료인지 분류 라벨 없이 밝힙니다", () => {
     for (const profile of definition.resultProfiles) {
-      for (const item of profile.collaboration.needsTuning) {
-        // 어떤 동료와의 이야기인지 밝히고("~하는 동료와는"),
-        // "~해 두면 / ~해 주면" 형태로 구체적인 방법을 한 번은 제안해야 합니다.
-        // 분류 라벨("~형")을 그대로 쓰지 않습니다. 읽는 분이 라벨 뜻을 되짚지 않아도 되게,
-        // 그 동료가 실제로 어떻게 일하는지를 적습니다.
-        expect(item, item).toMatch(/동료와는/);
-        expect(item, item).not.toMatch(/[가-힣]형과는/);
-        // "~해 두면 / ~해 주면 / ~하면" 처럼 조건절이 있어야 실제로 해 볼 수 있는 조언입니다.
-        expect(item, item).toMatch(/[가-힣]면[\s,]/);
+      for (const item of [
+        ...profile.collaboration.naturalFit,
+        ...profile.collaboration.needsTuning,
+      ]) {
+        /*
+          상대가 문장 어딘가에 있어야 합니다. 어디에 둘지는 정하지 않습니다.
+          `동료`만 보던 자를 넓혔습니다 — 사용자가 `교사`·`선생님`·`교원`으로
+          고쳐 쓴 문장이 무더기로 걸렸는데, 다 같은 사람을 가리키는 말입니다.
+        */
+        expect(item, item).toMatch(/동료|교사|선생님|교원|관리자/);
+        // 라벨을 되짚게 하지 않습니다 (DEC-062). 어떻게 일하는지로 적습니다.
+        expect(item, item).not.toMatch(/[가-힣]형(과는|\s*동료|\s*선생님)/);
       }
     }
   });
 
-  it("'함께할 때 잘 이어지는 점'도 어떤 동료인지 밝힙니다", () => {
+  /*
+    문장이 조언 목록으로만 흐르지 않게 봅니다 (2026-09-09에 자를 고쳤습니다).
+
+    바로 전 규칙은 `naturalFit`에 `~세요`를 **금지**했습니다. 두 칸이 나란히
+    서던 시절의 자인데, 칸을 합친 뒤에도 남아 있었습니다. 사용자가 64문장을
+    직접 고쳐 보내자 그 절반이 이 규칙에 걸렸습니다 — 문장이 나빠서가 아니라
+    **자가 낡아서**입니다. 조언 묶음에서 "이렇게 해 보세요"는 자연스러운 말인데,
+    필드 이름 하나로 그것을 막고 있었습니다.
+
+    지키려던 것은 따로 있습니다. 넷이 전부 권유로 끝나면 잔소리 목록이 된다는
+    것입니다. 그래서 필드로 강제하지 않고 **한 유형 안에서 넷이 다 권유형이면**
+    걸리게 합니다. 어느 칸이 서술이어야 하는지는 원고가 정합니다.
+  */
+  it("한 유형의 조언 넷이 모두 권유형으로 끝나지는 않습니다", () => {
     for (const profile of definition.resultProfiles) {
-      for (const item of profile.collaboration.naturalFit) {
-        expect(item, item).toMatch(/동료와는/);
-        expect(item, item).not.toMatch(/[가-힣]형과는/);
-      }
+      const all = [
+        ...profile.collaboration.naturalFit,
+        ...profile.collaboration.needsTuning,
+      ];
+      const asked = all.filter((item) => /(세요|십시오)/.test(item));
+      expect(
+        asked.length,
+        `${profile.key}: 넷이 모두 권유형입니다 — 한 문장은 그렇게 하면 무엇이 되는지로 적어 주세요`,
+      ).toBeLessThan(all.length);
     }
+  });
+
+  it("협업 문구가 학교 안의 일을 말합니다", () => {
+    /*
+      개편 전에는 64문장 가운데 3문장에만 학교 낱말이 있었습니다.
+      나머지 61문장은 학교를 빼도 그대로 성립해서, 교직 검사의 결과로 읽히지
+      않았습니다. "범위를 나누어 정하면 역할을 확인하기 쉬워요"에는 교실이 없습니다.
+    */
+    for (const item of collaborationItems()) {
+      expect(
+        COLLAB_SCHOOL_WORDS.some((word) => item.includes(word)),
+        `학교가 없는 협업 문구: ${item}`,
+      ).toBe(true);
+    }
+  });
+
+  it("협업 문구의 종결어가 한 가지로 쏠리지 않습니다", () => {
+    /*
+      이 검사가 "AI가 쓴 것 같다"를 실제로 재는 자입니다.
+      개편 전에는 64문장 중 48개가 `쉬워요`로 끝났습니다. 낱말을 조금씩 바꿔도
+      같은 틀로 찍어낸 티가 나는 것은 여기서 드러납니다.
+    */
+    const items = collaborationItems();
+    const endings = new Map<string, number>();
+    for (const item of items) {
+      const last = item.trim().replace(/\.$/, "").split(/\s+/).at(-1) ?? "";
+      endings.set(last, (endings.get(last) ?? 0) + 1);
+    }
+    const [word, count] = [...endings].sort((left, right) => right[1] - left[1])[0] ?? ["", 0];
+    expect(
+      count / items.length,
+      `종결어 "${word}"가 ${count}/${items.length}개입니다`,
+    ).toBeLessThanOrEqual(0.25);
   });
 });
 

@@ -1,17 +1,14 @@
 "use client";
 
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
-import { buttonClasses } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { SegmentedTabs, TabPanel } from "@/components/ui/Tabs";
 import type {
   AssessmentAxis,
   AssessmentDefinition,
-  PoleSide,
 } from "@/domain/assessment/model/definition";
-import { resolveAxisCombinations } from "@/domain/assessment/result/axisCombination";
 import {
   resolveAxisRanking,
   type AxisRanking,
@@ -48,17 +45,9 @@ import { resultViewHref } from "@/lib/resultViewHref";
 const RESULT_NAVIGATION = [
   { href: "#result-overview", number: "01", label: "한눈에 보는 나" },
   { href: "#result-scenes", number: "02", label: "교실에서의 모습" },
-  { href: "#result-collaboration", number: "03", label: "함께 일하는 방식" },
+  { href: "#result-collaboration", number: "03", label: "나와 너무 다른 선생님과는" },
   { href: "#result-next", number: "04", label: "다음 대화로" },
 ] as const;
-
-/**
- * 두 관점 해석을 몇 장까지 보여 줄지 (DEC-062)
- *
- * 여섯 쌍을 다 펼치면 400자짜리 카드 더미가 되어, 여기서 읽기를 멈추게 됩니다.
- * 축 개수에 딸린 값이 아니라 "한 번에 읽을 수 있는 장 수"라서 화면이 정합니다.
- */
-const COMBINATION_LIMIT = 2;
 
 /**
  * 결과를 어느 깊이로 읽을지 — 주소의 `?view=`와 같은 값입니다.
@@ -66,12 +55,12 @@ const COMBINATION_LIMIT = 2;
  * `story`는 DEC-069로 붙인 세 번째 갈래입니다. 요약·자세히와 **같은 데이터**를 읽고
  * 배치만 다르게 하므로, 이 값을 지우면 기존 두 갈래가 그대로 남습니다.
  */
-type ResultViewKey = "summary" | "detail" | "story";
+type ResultViewKey = "detail" | "story";
 
-const RESULT_VIEW_KEYS: readonly ResultViewKey[] = ["summary", "detail", "story"];
+const RESULT_VIEW_KEYS: readonly ResultViewKey[] = ["detail", "story"];
 
 function toResultViewKey(value: string | null): ResultViewKey {
-  return RESULT_VIEW_KEYS.find((candidate) => candidate === value) ?? "summary";
+  return RESULT_VIEW_KEYS.find((candidate) => candidate === value) ?? "detail";
 }
 
 const CONTEXT_LABELS: Readonly<Record<string, string>> = {
@@ -309,54 +298,6 @@ function ContextSplitCard({
   );
 }
 
-function CombinationQuadrant({
-  axes,
-  poles,
-}: {
-  readonly axes: readonly [AssessmentAxis, AssessmentAxis];
-  readonly poles: Readonly<Record<string, PoleSide>>;
-}) {
-  const [horizontal, vertical] = axes;
-  const horizontalPole = poles[String(horizontal.id)] ?? "positive";
-  const verticalPole = poles[String(vertical.id)] ?? "positive";
-  const position = {
-    "--quadrant-x": horizontalPole === "positive" ? "72%" : "28%",
-    "--quadrant-y": verticalPole === "positive" ? "28%" : "72%",
-  } as CSSProperties;
-
-  return (
-    <div
-      className="result-quadrant relative mt-5 h-32 border-y border-border"
-      style={position}
-      role="img"
-      aria-label={`${horizontal.name}은 ${horizontalPole === "positive" ? horizontal.positive.label : horizontal.negative.label}, ${vertical.name}은 ${verticalPole === "positive" ? vertical.positive.label : vertical.negative.label}`}
-    >
-      <span aria-hidden="true" className="absolute inset-x-0 top-1/2 h-px bg-border-strong" />
-      <span aria-hidden="true" className="absolute inset-y-0 left-1/2 w-px bg-border-strong" />
-      <span aria-hidden="true" className="result-quadrant-point absolute" />
-      <span className="absolute top-2 left-2 text-caption text-foreground-muted">{vertical.positive.shortLabel}</span>
-      <span className="absolute right-2 bottom-2 text-caption text-foreground-muted">{vertical.negative.shortLabel}</span>
-      <span className="absolute bottom-2 left-2 text-caption text-foreground-muted">{horizontal.negative.shortLabel}</span>
-      <span className="absolute top-2 right-2 text-right text-caption text-foreground-muted">{horizontal.positive.shortLabel}</span>
-    </div>
-  );
-}
-
-function Points({ items, icon = "check" }: { readonly items: readonly string[]; readonly icon?: IconName }) {
-  return (
-    <ul className="flex flex-col gap-4">
-      {items.map((item) => (
-        <li key={item} className="flex gap-3">
-          <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-sm bg-primary-soft text-primary-active">
-            <Icon name={icon} className="size-4" />
-          </span>
-          <span className="max-w-prose">{item}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function iconForScene(scene: string): IconName {
   if (scene.includes("수업") || scene.includes("교실")) return "book";
   if (scene.includes("동료") || scene.includes("회의")) return "message";
@@ -371,8 +312,15 @@ function ScenePoints({
   readonly items: readonly SceneNote[];
   readonly terms?: readonly string[];
 }) {
+  /*
+    칸 수를 장면 수에 맞춥니다.
+    넷을 3열에 넣으면 마지막 하나가 혼자 남아 빈 칸 두 개를 끌고 다녔습니다.
+    넷은 2×2, 셋은 그대로 3열이라 어느 쪽도 줄 끝이 비지 않습니다.
+  */
+  const columns = items.length % 3 === 0 ? "md:grid-cols-3" : "sm:grid-cols-2";
+
   return (
-    <ul className="result-scene-list mt-5 grid gap-3 md:grid-cols-3">
+    <ul className={`result-scene-list mt-5 grid gap-3 ${columns}`}>
       {items.map((item) => (
         <li key={`${item.scene}-${item.situation}`} className="result-scene-item min-w-0">
           {/*
@@ -507,14 +455,14 @@ function axisCardMeta(
         : pole?.code,
     poleLabel: pole?.shortLabel,
     badge: isPrimary
-          ? "가장 도드라짐"
-          : isSharedLead
-            ? "함께 도드라짐"
-            : undefined,
+      ? "가장 도드라짐"
+      : isSharedLead
+        ? "함께 도드라짐"
+        : undefined,
   };
 }
 
-/** 네 관점 카드 한 벌. 요약 보기와 자세히 보기가 깊이만 달리해 같이 씁니다. */
+/** 네 관점 카드 한 벌. `detail` 옵션으로 깊이를 달리합니다. */
 function AxisCardGrid({
   definition,
   scores,
@@ -562,192 +510,6 @@ function AxisCardGrid({
   );
 }
 
-/**
- * 요약 보기의 대표 장면 — 강점·신호·동료를 한 개씩만 보여 줍니다.
- *
- * 세 묶음을 면과 아이콘으로 갈라 두어야 지금 읽는 것이 강점인지 주의 신호인지
- * 색을 보지 않고도 알 수 있습니다 (DEC-054, design.md 5장).
- */
-function SummaryScenes({
-  guidance,
-  terms,
-}: {
-  readonly guidance: {
-    readonly shiningMoments: readonly SceneNote[];
-    readonly underPressure: readonly SceneNote[];
-    readonly withColleagues: readonly SceneNote[];
-  };
-  readonly terms?: readonly string[];
-}) {
-  const rows: readonly {
-    readonly tone: SceneGroupTone;
-    readonly label: string;
-    readonly icon: IconName;
-    readonly note?: SceneNote;
-  }[] = [
-    {
-      tone: "strength",
-      label: "이럴 때 강점이 돼요",
-      icon: "check",
-      note: guidance.shiningMoments[0],
-    },
-    {
-      tone: "pressure",
-      label: "바빠지면 이런 신호가 와요",
-      icon: "warning",
-      note: guidance.underPressure[0],
-    },
-    {
-      tone: "colleague",
-      label: "동료와 있을 때는",
-      icon: "message",
-      note: guidance.withColleagues[0],
-    },
-  ];
-
-  return (
-    <ul className="mt-5 grid gap-4 md:grid-cols-3">
-      {rows.map((row) =>
-        row.note === undefined ? null : (
-          <li
-            key={row.tone}
-            data-scene-tone={row.tone}
-            data-summary-scene={row.tone}
-            className="result-scene-group min-w-0 p-5"
-          >
-            <p className="flex min-w-0 items-center gap-2">
-              <span
-                aria-hidden="true"
-                className="result-scene-badge flex size-8 shrink-0 items-center justify-center rounded-sm"
-              >
-                <Icon name={row.icon} className="size-4" />
-              </span>
-              <span className="result-scene-index text-caption font-semibold">{row.label}</span>
-            </p>
-            <p className="result-scene-situation mt-3 text-body font-semibold text-foreground">
-              {row.note.situation}
-            </p>
-            <p className="mt-2 text-body-sm text-foreground-body">
-              <EmphasizedText text={row.note.text} terms={terms} />
-            </p>
-          </li>
-        ),
-      )}
-    </ul>
-  );
-}
-
-/**
- * 요약 보기 (DEC-062 · DEC-068)
- *
- * 전체를 다 읽지 않아도 결과가 손에 남도록, 관점 네 장과 대표 장면을 남깁니다.
- * 여기서 새 해석을 만들지 않습니다. 자세히 보기의 첫 항목을 그대로 씁니다.
- */
-function SummaryView({
-  definition,
-  snapshot,
-  narrativeById,
-  ranking,
-  guidance,
-  terms,
-  onOpenDetail,
-}: {
-  readonly definition: AssessmentDefinition;
-  readonly snapshot: ResultSnapshot;
-  readonly narrativeById: ReadonlyMap<string, ResolvedAxisNarrative>;
-  readonly ranking: AxisRanking;
-  readonly guidance: {
-    readonly shiningMoments: readonly SceneNote[];
-    readonly underPressure: readonly SceneNote[];
-    readonly withColleagues: readonly SceneNote[];
-    readonly collaboration: {
-      readonly naturalFit: readonly string[];
-      readonly needsTuning: readonly string[];
-    };
-    readonly nextSteps: readonly string[];
-  };
-  readonly terms?: readonly string[];
-  readonly onOpenDetail: () => void;
-}) {
-  const naturalFit = guidance.collaboration.naturalFit[0];
-  const needsTuning = guidance.collaboration.needsTuning[0];
-  const nextStep = guidance.nextSteps[0];
-
-  return (
-    <div data-result-view="summary">
-      <section aria-labelledby="result-summary-axes">
-        <h2 id="result-summary-axes" className="text-h2 text-foreground sm:text-h2-lg">
-          나를 설명하는 네 가지 방향
-        </h2>
-        <p className="mt-2 max-w-prose text-body text-foreground-muted">
-          각 문장은 선택된 방향을 설명합니다. 어느 정도 기울었는지는 막대에서 확인해 주세요.
-        </p>
-        <div className="mt-5">
-          <AxisCardGrid
-            definition={definition}
-            scores={snapshot.score.axisScores}
-            narrativeById={narrativeById}
-            ranking={ranking}
-            terms={terms}
-            detail={false}
-          />
-        </div>
-      </section>
-
-      <section aria-labelledby="result-summary-scenes" className="mt-10">
-        <h2 id="result-summary-scenes" className="text-h2 text-foreground sm:text-h2-lg">
-          교실에서 나타나는 핵심 모습
-        </h2>
-        <p className="mt-2 max-w-prose text-body text-foreground-muted">
-          강점, 피로 신호, 동료와 함께할 때의 모습을 하나씩 정리했습니다.
-        </p>
-        <SummaryScenes guidance={guidance} terms={terms} />
-      </section>
-
-      <section aria-labelledby="result-summary-next" className="mt-10">
-        <h2 id="result-summary-next" className="text-h2 text-foreground sm:text-h2-lg">
-          동료와 함께 일할 때
-        </h2>
-        <div className="mt-5 overflow-hidden rounded-lg border border-border bg-surface">
-          <div className="grid md:grid-cols-2 md:divide-x md:divide-border">
-            {naturalFit !== undefined && (
-              <section className="border-b border-border p-5 md:border-b-0">
-                <p className="text-caption font-semibold text-primary-active">함께할 때 잘 이어지는 점</p>
-                <p className="mt-2 text-body text-foreground-body">{naturalFit}</p>
-              </section>
-            )}
-            {needsTuning !== undefined && (
-              <section className="p-5">
-                <p className="text-caption font-semibold text-accent">미리 맞춰 두면 좋은 점</p>
-                <p className="mt-2 text-body text-foreground-body">{needsTuning}</p>
-              </section>
-            )}
-          </div>
-          {nextStep !== undefined && (
-            <section className="border-t border-primary-soft-border bg-primary-soft p-5 sm:grid sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start sm:gap-5">
-              <p className="text-caption font-semibold text-primary-active">내일 해 볼 것 하나</p>
-              <p className="mt-2 text-body font-medium text-foreground-body sm:mt-0">{nextStep}</p>
-            </section>
-          )}
-        </div>
-      </section>
-
-      <div className="mt-10 border-t border-border pt-6">
-        <button
-          type="button"
-          onClick={onOpenDetail}
-          className={buttonClasses("secondary", "md", "w-full sm:w-auto")}
-        >
-          <Icon name="compass" /> 전체 결과 자세히 보기
-        </button>
-        <p className="mt-3 text-body-sm text-foreground-muted">
-          더 많은 교실 장면, 두 관점의 조합, 협업 방법을 이어서 볼 수 있습니다.
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export function ResultRenderer({
   definition,
   snapshot,
@@ -770,7 +532,6 @@ export function ResultRenderer({
   const axisById = new Map(definition.axes.map((axis) => [String(axis.id), axis]));
   const narrative = resolveResultNarrative(definition, snapshot.score.axisScores, profile);
   const guidance = profile;
-  const combinationReadings = resolveAxisCombinations(definition.axisCombinations, profile.poles);
   const ranking = resolveAxisRanking(definition.axes, snapshot.score.axisScores);
   const emphasisTerms = definition.resultNarrative?.emphasisTerms;
   const narrativeById = new Map(narrative.axes.map((item) => [String(item.axisId), item]));
@@ -782,35 +543,19 @@ export function ResultRenderer({
   );
 
   /*
-    두 관점 해석은 여섯 쌍이 모두 나오면 400자짜리 카드 더미가 됩니다 (DEC-062).
-    기울기가 큰 두 축이 들어간 쌍만 남겨, 지금 이 사람에게 가장 할 말이 있는 것부터 읽게 합니다.
-  */
-  const absByAxis = new Map(ranking.ordered.map((item) => [String(item.axisId), item.absScore]));
-  const topCombinations = combinationReadings
-    .map((combination) => {
-      const spec = definition.axisCombinations.find(
-        (candidate) => candidate.id === combination.id,
-      );
-      const weight = (spec?.axisIds ?? []).reduce(
-        (sum, axisId) => sum + (absByAxis.get(String(axisId)) ?? 0),
-        0,
-      );
-      return { combination, spec, weight };
-    })
-    .sort((left, right) => right.weight - left.weight)
-    .slice(0, COMBINATION_LIMIT);
-
-  /*
     새로고침하거나 링크를 다시 열어도 보던 깊이가 유지되도록 주소에 남깁니다.
     이 화면은 저장된 응답을 불러온 뒤에야 그려지므로 브라우저에서만 실행됩니다.
-    서버 렌더와 테스트에는 window가 없으므로 그때는 요약으로 시작합니다.
+    서버 렌더와 테스트에는 window가 없으므로 그때는 검사 결과 보기로 시작합니다.
+
+    요약 보기를 뺐으므로(2026-09-09) 기본 갈래는 `detail`입니다. 예전 주소에
+    남아 있는 `?view=summary`는 `toResultViewKey`가 모르는 값으로 보고
+    기본값으로 떨어뜨리므로, 오래된 링크를 열어도 빈 화면이 되지 않습니다.
   */
   const [view, setView] = useState<ResultViewKey>(() =>
     typeof window === "undefined"
-      ? "summary"
+      ? "detail"
       : toResultViewKey(new URLSearchParams(window.location.search).get("view")),
   );
-  const detailStartRef = useRef<HTMLDivElement | null>(null);
 
   function changeView(next: ResultViewKey) {
     setView(next);
@@ -824,13 +569,8 @@ export function ResultRenderer({
     window.history.replaceState(
       null,
       "",
-      resultViewHref(window.location, next === "summary" ? null : next),
+      resultViewHref(window.location, next === "detail" ? null : next),
     );
-  }
-
-  function openDetail() {
-    changeView("detail");
-    window.requestAnimationFrame(() => detailStartRef.current?.focus());
   }
 
   return (
@@ -850,29 +590,17 @@ export function ResultRenderer({
         value={view}
         onValueChange={(next) => changeView(toResultViewKey(next))}
         items={[
-          { value: "summary", label: "요약 보기", hint: "약 1분" },
-          { value: "detail", label: "자세히 보기", hint: "약 5분" },
-          { value: "story", label: "줄글 보기", hint: "약 3분" },
+          { value: "detail", label: "검사 결과 보기", hint: "약 5분" },
+          { value: "story", label: "줄글 톺아보기", hint: "약 3분" },
         ]}
       >
-        <TabPanel value="summary" className="mt-8">
-          <SummaryView
-            definition={definition}
-            snapshot={snapshot}
-            narrativeById={narrativeById}
-            ranking={ranking}
-            guidance={guidance}
-            terms={emphasisTerms}
-            onOpenDetail={openDetail}
-          />
-        </TabPanel>
 
         <TabPanel value="story" className="mt-8">
           <ResultStoryView profile={profile} />
         </TabPanel>
 
         <TabPanel value="detail" className="mt-6">
-          <div ref={detailStartRef} tabIndex={-1} data-result-view="detail">
+          <div data-result-view="detail">
             <div className="grid gap-8 lg:grid-cols-4">
               <div className="lg:col-start-4 lg:row-start-1">
                 <ResultNavigation items={RESULT_NAVIGATION} />
@@ -926,43 +654,6 @@ export function ResultRenderer({
                     </section>
                   )}
 
-                  {topCombinations.length > 0 && (
-                    <section className="mt-8">
-                      <h3 className="text-h3 text-foreground sm:text-h3-lg">두 관점이 겹칠 때</h3>
-                      <p className="mt-2 max-w-prose text-body text-foreground-muted">
-                        지금 가장 도드라진 두 관점이 수업과 업무에서 어떻게 만나는지 적었습니다.
-                      </p>
-                      <div className="mt-5 grid gap-4 md:grid-cols-2">
-                        {topCombinations.map(({ combination, spec }) => {
-                          const first = spec?.axisIds[0]
-                            ? axisById.get(String(spec.axisIds[0]))
-                            : undefined;
-                          const second = spec?.axisIds[1]
-                            ? axisById.get(String(spec.axisIds[1]))
-                            : undefined;
-
-                          return (
-                            <section
-                              key={combination.id}
-                              className="assessment-card min-w-0 p-4 sm:p-5"
-                            >
-                              <p className="text-caption font-semibold text-primary-active">두 관점이 만날 때</p>
-                              <h4 className="mt-2 text-h3 text-foreground">{combination.title}</h4>
-                              {first !== undefined && second !== undefined && (
-                                <CombinationQuadrant
-                                  axes={[first, second]}
-                                  poles={profile.poles}
-                                />
-                              )}
-                              <p className="mt-4 text-body text-foreground-body">
-                                <EmphasizedText text={combination.text} terms={emphasisTerms} />
-                              </p>
-                            </section>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  )}
                 </section>
 
                 <section id="result-scenes" className="mt-10 scroll-mt-28">
@@ -991,39 +682,66 @@ export function ResultRenderer({
                       icon="warning"
                       items={guidance.underPressure}
                     />
-                    <SceneGroup
-                      tone="colleague"
-                      index={3}
-                      terms={emphasisTerms}
-                      title="동료와 함께 일할 때"
-                      description="학년 협의나 업무를 나눌 때 자주 보이는 모습이에요."
-                      icon="message"
-                      items={guidance.withColleagues}
-                    />
                   </div>
                 </section>
 
                 <section id="result-collaboration" className="mt-10 scroll-mt-28">
                   <ChapterHeading
                     number="03"
-                    title="함께 일하는 방식"
-                    description="누가 더 잘 맞는지 가르는 내용이 아니에요. 방식이 서로 다를 때 무엇이 편하고, 무엇을 먼저 말해 두면 좋은지 적었습니다."
+                    title="나와 너무 다른 선생님과는"
+                    description="서로 다른 방식이 만날 때 시너지가 나는 점과 미리 맞춰 둘 점을 함께 살펴보세요."
                   />
-                  <div className="mt-6 grid overflow-hidden rounded-lg border border-border bg-surface md:grid-cols-2 md:divide-x md:divide-border">
-                    <section className="border-b border-border p-5 md:border-b-0 sm:p-7">
-                      <p className="text-caption font-semibold text-primary-active">함께할 때 이어지기 쉬운 부분</p>
-                      <h3 className="mt-2 text-h3 text-foreground">함께할 때 잘 이어지는 점</h3>
-                      <div className="mt-5 text-body text-foreground-body">
-                        <Points items={guidance.collaboration.naturalFit} />
-                      </div>
-                    </section>
-                    <section className="p-5 sm:p-7">
-                      <p className="text-caption font-semibold text-accent">먼저 말해 두면 좋은 부분</p>
-                      <h3 className="mt-2 text-h3 text-foreground">미리 맞춰 두면 좋은 점</h3>
-                      <div className="mt-5 text-body text-foreground-body">
-                        <Points items={guidance.collaboration.needsTuning} icon="message" />
-                      </div>
-                    </section>
+                  {/*
+                    두 칸을 한 묶음으로 합쳤습니다 (2026-09-08).
+
+                    예전에는 `함께할 때 잘 이어지는 점`과 `미리 맞춰 두면 좋은 점`이
+                    나란히 섰는데, 16유형 가운데 **14유형에서 같은 동료가 양쪽에
+                    다 나왔습니다.** 한 유형은 두 동료가 양쪽 모두 똑같았습니다.
+                    같은 동료가 양쪽에 반복되므로 둘을 별도 패널로 양분하지 않습니다.
+
+                    지금은 한 묶음 안에서 서술과 권유의 역할만 아이콘과 라벨로
+                    구분합니다. 주 카드 안에 미니 카드 — 2단계까지입니다 (design.md 29행).
+                  */}
+                  <div className="assessment-card mt-6 p-4 sm:p-6">
+                    <ul className="collab-note-list grid gap-3">
+                      {[
+                        {
+                          kind: "description",
+                          label: "함께일 때 시너지 효과",
+                          icon: "layers" as const,
+                          items: guidance.collaboration.naturalFit,
+                        },
+                        {
+                          kind: "suggestion",
+                          label: "다만 이땐 이렇게!",
+                          icon: "compass" as const,
+                          items: guidance.collaboration.needsTuning,
+                        },
+                      ].flatMap(({ kind, label, icon, items }) =>
+                        items.map((item) => (
+                          <li
+                            key={item}
+                            data-collab-kind={kind}
+                            className="collab-note min-w-0 p-4 sm:p-5"
+                          >
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span
+                                aria-hidden="true"
+                                className="collab-note-badge flex size-8 shrink-0 items-center justify-center rounded-sm"
+                              >
+                                <Icon name={icon} className="size-4" />
+                              </span>
+                              <span className="collab-note-label text-caption font-semibold">
+                                {label}
+                              </span>
+                            </div>
+                            <p className="collab-note-copy mt-3 text-body text-foreground-body">
+                              <EmphasizedText text={item} terms={emphasisTerms} />
+                            </p>
+                          </li>
+                        )),
+                      )}
+                    </ul>
                   </div>
                 </section>
 

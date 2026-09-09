@@ -42,25 +42,25 @@ export function SegmentedTabs({
     >
       <BaseTabs.List
         aria-label={label}
-        className="flex w-full max-w-md min-w-0 items-stretch gap-1 rounded-md border border-border bg-surface-muted p-1"
+        className="result-view-tabs flex w-full max-w-(--container-survey) min-w-0 items-stretch gap-1 rounded-md border border-border-strong bg-surface-muted p-1"
       >
         {items.map((item) => (
           <BaseTabs.Tab
             key={item.value}
             value={item.value}
             className={cn(
-              // 갈래가 셋이 된 뒤로 360px에서 라벨이 잘렸습니다. 좁은 화면에서만 여백을 줄입니다.
-              "min-h-11 min-w-0 flex-1 cursor-default rounded-sm px-2 py-2 text-body-sm font-medium text-foreground-muted sm:px-3",
+              // 확대 화면에서는 줄 수를 늘려 라벨을 보존하고, 최소 높이로 터치 영역을 지킵니다.
+              "result-view-tab relative min-h-16 min-w-0 flex-1 cursor-default rounded-sm px-2 py-3 text-body font-medium text-foreground-muted sm:px-4",
               "transition-[background-color,border-color,color] duration-(--motion-fast) ease-out-soft",
               "hover:bg-surface hover:text-foreground",
-              "aria-selected:border aria-selected:border-border-strong aria-selected:bg-surface",
+              "aria-selected:border aria-selected:border-primary-soft-border aria-selected:bg-surface",
               "aria-selected:font-semibold aria-selected:text-foreground",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring",
             )}
           >
-            <span className="block truncate">{item.label}</span>
+            <span className="block">{item.label}</span>
             {item.hint !== undefined && (
-              <span className="mt-0.5 block truncate text-caption font-normal text-foreground-muted">
+              <span className="result-view-tab-hint mt-0.5 block text-caption font-normal text-foreground-muted">
                 {item.hint}
               </span>
             )}
