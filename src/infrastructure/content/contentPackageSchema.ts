@@ -114,6 +114,17 @@ const sceneNoteSchema = z.object({
   text: z.string().min(1),
 });
 
+/**
+ * 선생님께 어울리는 학년 (DEC-076)
+ *
+ * `grades`를 자유 문자열로 두면 언젠가 "3학년"처럼 특정 학년이 들어와
+ * 근거 없이 정확한 척하게 됩니다. 학년군 세 값만 허용해 그 여지를 막습니다.
+ */
+const gradeFitSchema = z.object({
+  grades: z.enum(["1~2학년", "3~4학년", "5~6학년"]),
+  reason: z.string().min(1),
+});
+
 const resultGuidanceSchema = z.object({
   shiningMoments: z.array(sceneNoteSchema).min(1),
   underPressure: z.array(sceneNoteSchema).min(1),
@@ -121,6 +132,7 @@ const resultGuidanceSchema = z.object({
   collaboration: collaborationProfileSchema,
   nextSteps: z.array(z.string().min(1)).min(1),
   talkingPoints: z.array(z.string().min(1)).min(1),
+  gradeFit: gradeFitSchema,
 });
 
 /** 줄글 보기 전용 성격 묘사 (DEC-069). 없는 검사도 그대로 통과해야 합니다 */

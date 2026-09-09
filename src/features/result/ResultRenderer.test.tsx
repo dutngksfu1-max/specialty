@@ -130,6 +130,11 @@ describe("결과 페이지 정보 구조", () => {
     expect(markup).toContain("나를 상징하는 캐릭터");
     expect(markup).toContain(artwork?.src.split("/").at(-1));
     expect(markup).not.toContain(String(profile.key));
+
+    // 선생님께 어울리는 학년 (DEC-076)은 데이터·구현만 보존하고 잠정 비노출합니다.
+    expect(markup).not.toContain("선생님께 어울리는 학년");
+    expect(markup).not.toContain(profile.gradeFit.grades);
+    expect(markup).not.toContain(profile.gradeFit.reason);
   });
 
   it("네 축마다 선택된 방향의 글자, 설명, 게이지를 함께 보여 줍니다", () => {

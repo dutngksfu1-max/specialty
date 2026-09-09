@@ -125,6 +125,7 @@ function buildProfiles(axes: readonly AssessmentAxis[]): readonly ResultProfile[
       },
       nextSteps: [`[fixture] 내일 해 볼 것 ${key}`],
       talkingPoints: [`[fixture] 나눌 질문 ${key}`],
+      gradeFit: { grades: "3~4학년", reason: `[fixture] 어울리는 학년 ${key}` },
     };
   });
 }

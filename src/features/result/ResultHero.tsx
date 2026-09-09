@@ -4,11 +4,18 @@ import type { RefObject } from "react";
 import type { AssessmentDefinition } from "@/domain/assessment/model/definition";
 import type { ResolvedResultNarrative } from "@/domain/assessment/result/narrative";
 import { buildTypeCode } from "@/domain/assessment/result/typeCode";
+import type { GradeFit } from "@/domain/assessment/result/profile";
 import type { ResultSnapshot } from "@/domain/assessment/result/snapshot";
 import {
   findTypeArtwork,
   type AssessmentPresentation,
 } from "@/lib/assessmentPresentation";
+
+/**
+ * 학년 추천은 데이터와 UI 구현을 보존하되 잠정적으로 화면에 표시하지 않습니다.
+ * 다시 노출할 때는 DEC-076의 임시 비활성 기록을 먼저 갱신합니다.
+ */
+const SHOW_GRADE_FIT: boolean = false;
 
 function withHonorific(nickname: string): string {
   const trimmed = nickname.trim();
@@ -125,6 +132,7 @@ export function ResultHero({
   narrative,
   presentation,
   heroRef,
+  gradeFit,
 }: {
   readonly definition: AssessmentDefinition;
   readonly snapshot: ResultSnapshot;
@@ -133,6 +141,8 @@ export function ResultHero({
   readonly presentation?: AssessmentPresentation;
   /** 외부에서 Hero 영역을 캡처할 수 있도록 header 요소를 가리키는 ref */
   readonly heroRef?: RefObject<HTMLElement | null>;
+  /** 선생님께 어울리는 학년 (DEC-076). 캐릭터가 있을 때만 그 아래에 붙습니다 */
+  readonly gradeFit: GradeFit;
 }) {
   const artwork = findTypeArtwork(
     presentation,
@@ -193,6 +203,26 @@ export function ResultHero({
                 className="h-auto w-full rounded-xs bg-surface"
               />
             </div>
+
+            {/*
+              캐릭터 아래 남는 공간을 채웁니다 (DEC-076).
+
+              오른쪽 칸은 왼쪽 글 칸보다 짧아서, `items-start` 그리드에서
+              캐릭터 액자 밑에 빈 배경만 남았습니다. 옅은 클레이색 면과 충분한
+              안쪽 여백으로 결과 카드 안의 한 단계짜리 미니 정보 카드로 묶습니다.
+            */}
+            {SHOW_GRADE_FIT && (
+              <div
+                data-result-grade-fit="true"
+                className="mt-4 overflow-hidden rounded-md border border-primary-soft-border bg-accent-soft p-4 text-center sm:p-5"
+              >
+                <span className="inline-flex rounded-sm border border-primary-soft-border bg-surface px-3 py-1.5 text-label font-semibold text-accent">
+                  선생님께 어울리는 학년
+                </span>
+                <p className="mt-3 text-h2 font-bold text-foreground">{gradeFit.grades}</p>
+                <p className="mt-2 text-body-sm text-foreground-body">{gradeFit.reason}</p>
+              </div>
+            )}
           </figure>
         )}
       </div>

@@ -76,6 +76,8 @@ function allVisibleText(): readonly string[] {
       ...profile.collaboration.needsTuning,
       ...profile.nextSteps,
       ...profile.talkingPoints,
+      profile.gradeFit.grades,
+      profile.gradeFit.reason,
       ...(profile.portrait === undefined
         ? []
         : [
@@ -653,6 +655,38 @@ describe("결과 프로필 작성 규칙 (6.3)", () => {
       expect(profile.collaboration.needsTuning).toHaveLength(2);
       expect(profile.nextSteps).toHaveLength(3);
       expect(profile.talkingPoints).toHaveLength(3);
+    }
+  });
+
+  /**
+   * 선생님께 어울리는 학년 (DEC-076)
+   *
+   * AGENTS.md 6절 "유형별 직업/업무 추천 금지"의 예외입니다. 배정 판단처럼
+   * 읽히지 않도록 두 가지를 지킵니다 — ① 학년군 세 값만 쓰고 한 학년을
+   * 집어내지 않는다 ② 16유형이 한 학년군에 쏠리지 않는다. 스키마가 이미
+   * 학년군 값을 강제하지만(zod enum), 실제로 골고루 나뉘었는지는 스키마가
+   * 못 보므로 여기서 셉니다.
+   */
+  it("어울리는 학년이 세 학년군에 고르게 나뉩니다", () => {
+    const counts = new Map<string, number>();
+    for (const profile of definition.resultProfiles) {
+      const grades = profile.gradeFit.grades;
+      counts.set(grades, (counts.get(grades) ?? 0) + 1);
+    }
+
+    expect(counts.size, "학년군이 하나로 쏠렸습니다").toBeGreaterThanOrEqual(2);
+    for (const [grades, count] of counts) {
+      expect(count, `${grades}에 ${count}유형이 몰렸습니다`).toBeLessThanOrEqual(8);
+    }
+  });
+
+  it("어울리는 학년 문구가 배정이 아니라 가벼운 참고로 읽힙니다", () => {
+    // "이 학년을 맡아야 한다"가 아니라 "이런 학년에서 빛난다"는 톤을 지킵니다.
+    for (const profile of definition.resultProfiles) {
+      const reason = profile.gradeFit.reason;
+      expect(reason, reason).not.toMatch(/맡아야|배정|적합|우수|최적|가장 잘/);
+      // 학년군 표기가 실제로 이유 문장에도 나와야, 태그와 문장이 따로 놀지 않습니다.
+      expect(reason, reason).toContain(profile.gradeFit.grades);
     }
   });
 

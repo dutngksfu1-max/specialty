@@ -106,6 +106,24 @@ export interface ResultPortrait {
   readonly whenTired: readonly string[];
 }
 
+/**
+ * 선생님께 어울리는 학년 (DEC-076, 2026-09-09)
+ *
+ * AGENTS.md 6절의 "유형별 직업/업무 추천 금지"에 대한 **예외**입니다.
+ * "이 학년을 맡아야 한다"는 배정 판단이 아니라, "이런 학년에서 특히 빛나요"라는
+ * 가벼운 참고 태그로만 씁니다. 그래서 등급·우열로 읽히지 않게 이 문구만 씁니다.
+ *
+ * `grades`는 **학년군 단위**(1~2 · 3~4 · 5~6학년)만 씁니다. 네 축만으로 특정
+ * 한 학년(예: "3학년")까지 집어내면 근거 없이 정확한 척하게 됩니다. 초등 교육과정이
+ * 실제로 쓰는 학년군 구분과 맞춰, 있는 만큼만 말합니다.
+ */
+export interface GradeFit {
+  /** 학년군 표기. "1~2학년" · "3~4학년" · "5~6학년" 셋만 씁니다 */
+  readonly grades: string;
+  /** 그 학년군과 잘 맞는 이유 한 문장. 이 유형의 특징에서 그대로 이어져야 합니다 */
+  readonly reason: string;
+}
+
 export interface ResultProfile {
   /** 내부 식별자. 화면에 그대로 노출하지 않습니다. */
   readonly key: ResultKey;
@@ -146,4 +164,6 @@ export interface ResultProfile {
   readonly nextSteps: readonly string[];
   /** 동료와 나눌 질문 — 연수 아이스브레이킹에 쓰입니다 */
   readonly talkingPoints: readonly string[];
+  /** 선생님께 어울리는 학년 (DEC-076) */
+  readonly gradeFit: GradeFit;
 }

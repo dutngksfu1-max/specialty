@@ -89,6 +89,7 @@ const resultProfiles = Array.from({ length: 2 ** AXIS_IDS.length }, (_, mask) =>
     collaboration: { naturalFit: [`[fixture] ${key}`], needsTuning: [`[fixture] ${key}`] },
     nextSteps: [`[fixture] ${key}`],
     talkingPoints: [`[fixture] ${key}`],
+    gradeFit: { grades: "3~4학년", reason: `[fixture] ${key}` },
   };
 });
 

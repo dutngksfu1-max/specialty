@@ -582,6 +582,7 @@ export function ResultRenderer({
         narrative={narrative}
         presentation={presentation}
         heroRef={heroRef}
+        gradeFit={profile.gradeFit}
       />
 
       <SegmentedTabs

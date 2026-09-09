@@ -1,5 +1,5 @@
 /**
- * 콘텐츠 패키지 — teacher-style-v1 (contentVersion 6.0.0)
+ * 콘텐츠 패키지 — teacher-style-v1 (contentVersion 6.0.1)
  *
  * 2026-08-20 전면 개정. 검수안: docs/content/teacher-style-v1-revision.md
  *
@@ -396,7 +396,8 @@ export const teacherStyleV1Base = {
   // 점수가 됩니다. 새 문항에는 새 id(energy-13~19)를 주어 잘못 매핑될 여지도 없앴습니다.
   assessmentVersion: 6,
   // 6.0.0 — 축 이름과 축 원고가 바뀌고, 결과에 장면 대비 구역이 생겼습니다 (DEC-071).
-  contentVersion: "6.0.0",
+  // 6.0.1 — 강점·피로 신호·행동 제안·대화 질문을 더 구체적이고 쉬운 문장으로 다듬었습니다.
+  contentVersion: "6.0.1",
   scale,
   axes,
   typeCode,
