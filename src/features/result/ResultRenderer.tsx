@@ -55,12 +55,12 @@ const RESULT_NAVIGATION = [
  * `story`는 DEC-069로 붙인 세 번째 갈래입니다. 요약·자세히와 **같은 데이터**를 읽고
  * 배치만 다르게 하므로, 이 값을 지우면 기존 두 갈래가 그대로 남습니다.
  */
-type ResultViewKey = "detail" | "story";
+type ResultViewKey = "story" | "detail";
 
-const RESULT_VIEW_KEYS: readonly ResultViewKey[] = ["detail", "story"];
+const RESULT_VIEW_KEYS: readonly ResultViewKey[] = ["story", "detail"];
 
 function toResultViewKey(value: string | null): ResultViewKey {
-  return RESULT_VIEW_KEYS.find((candidate) => candidate === value) ?? "detail";
+  return RESULT_VIEW_KEYS.find((candidate) => candidate === value) ?? "story";
 }
 
 const CONTEXT_LABELS: Readonly<Record<string, string>> = {
@@ -545,15 +545,15 @@ export function ResultRenderer({
   /*
     새로고침하거나 링크를 다시 열어도 보던 깊이가 유지되도록 주소에 남깁니다.
     이 화면은 저장된 응답을 불러온 뒤에야 그려지므로 브라우저에서만 실행됩니다.
-    서버 렌더와 테스트에는 window가 없으므로 그때는 검사 결과 보기로 시작합니다.
+    서버 렌더와 테스트에는 window가 없으므로 그때는 줄글로 보기로 시작합니다.
 
-    요약 보기를 뺐으므로(2026-09-09) 기본 갈래는 `detail`입니다. 예전 주소에
+    줄글로 보기를 앞으로 옮겼으므로(2026-09-09) 기본 갈래는 `story`입니다. 예전 주소에
     남아 있는 `?view=summary`는 `toResultViewKey`가 모르는 값으로 보고
     기본값으로 떨어뜨리므로, 오래된 링크를 열어도 빈 화면이 되지 않습니다.
   */
   const [view, setView] = useState<ResultViewKey>(() =>
     typeof window === "undefined"
-      ? "detail"
+      ? "story"
       : toResultViewKey(new URLSearchParams(window.location.search).get("view")),
   );
 
@@ -569,7 +569,7 @@ export function ResultRenderer({
     window.history.replaceState(
       null,
       "",
-      resultViewHref(window.location, next === "detail" ? null : next),
+      resultViewHref(window.location, next === "story" ? null : next),
     );
   }
 
@@ -591,8 +591,8 @@ export function ResultRenderer({
         value={view}
         onValueChange={(next) => changeView(toResultViewKey(next))}
         items={[
-          { value: "detail", label: "검사 결과 보기", hint: "약 5분" },
-          { value: "story", label: "줄글 톺아보기", hint: "약 3분" },
+          { value: "story", label: "줄글로 보기", hint: "약 3분" },
+          { value: "detail", label: "카드로 보기", hint: "약 5분" },
         ]}
       >
 

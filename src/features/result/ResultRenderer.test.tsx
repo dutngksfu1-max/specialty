@@ -178,13 +178,13 @@ describe("결과 페이지 정보 구조", () => {
   it("결과 보기 갈래가 둘입니다", () => {
     const { markup } = renderResult();
 
-    expect(markup).toContain("검사 결과 보기");
-    expect(markup).toContain("줄글 톺아보기");
+    expect(markup).toContain("줄글로 보기");
+    expect(markup).toContain("카드로 보기");
     expect(markup).not.toContain("요약 보기");
     expect(markup).not.toContain("전체 결과 자세히 보기");
   });
 
-  it("검사 결과 보기에 장면, 협업, 대화 질문을 유지합니다", () => {
+  it("카드로 보기에 장면, 협업, 대화 질문을 유지합니다", () => {
     const { markup, profile } = renderResult();
     const text = visibleText(markup);
 

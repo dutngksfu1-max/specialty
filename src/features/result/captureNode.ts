@@ -394,7 +394,7 @@ export async function captureNodeAsPng(node: HTMLElement): Promise<string> {
 /**
  * 캡처할 노드가 숨은 조상 안에 있으면 잠깐 펼칩니다 (DEC-062).
  *
- * 결과 본문은 `검사 결과 보기 / 줄글 톺아보기` 탭 패널 안에 있고, 고르지 않은 패널에는
+ * 결과 본문은 `줄글로 보기 / 카드로 보기` 탭 패널 안에 있고, 고르지 않은 패널에는
  * `hidden` 속성이 붙습니다. `hidden`은 `display: none`이라 크기가 0이 되고,
  * 그대로 캡처하면 **빈 페이지가 담긴 PDF**가 나옵니다.
  *
