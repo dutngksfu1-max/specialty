@@ -23,7 +23,12 @@ function renderStory(profileIndex: number) {
     definition: found.value,
     profile,
     markup: renderToStaticMarkup(
-      <ResultStoryView profile={profile} />,
+      <ResultStoryView
+        profile={profile}
+        artwork={
+          staticAssessmentCatalog.findPresentationBySlug("teacher-style")?.resultStoryArtwork
+        }
+      />,
     ),
   };
 }
@@ -70,6 +75,14 @@ function visibleText(markup: string): string {
 }
 
 describe("ResultStoryView", () => {
+  it("넓은 화면용 장면 삽화를 아홉 구역에 장식 이미지로 둡니다", () => {
+    const { markup } = renderStory(0);
+
+    expect(markup.match(/data-result-story-artwork="true"/gu)).toHaveLength(9);
+    expect(markup.match(/alt=""/gu)).toHaveLength(9);
+    expect(markup).toContain("hidden aspect-4/3 w-56");
+  });
+
   it("순위 배지와 강도 이름을 보여 주지 않습니다", () => {
     const { definition, markup } = renderStory(0);
     const text = visibleText(markup);

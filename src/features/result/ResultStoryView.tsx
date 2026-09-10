@@ -1,4 +1,10 @@
+import Image from "next/image";
+
 import type { ResultProfile, SceneNote } from "@/domain/assessment/result/profile";
+import type {
+  LocalArtwork,
+  ResultStoryArtworkSet,
+} from "@/lib/assessmentPresentation";
 
 /**
  * 줄글 보기 (DEC-069 · DEC-074)
@@ -45,10 +51,12 @@ function Card({
 function Block({
   title,
   children,
+  artwork,
   first = false,
 }: {
   readonly title?: string;
   readonly children: React.ReactNode;
+  readonly artwork?: LocalArtwork;
   readonly first?: boolean;
 }) {
   return (
@@ -56,7 +64,27 @@ function Block({
       {title !== undefined && (
         <h3 className="text-h3 text-foreground sm:text-h3-lg">{title}</h3>
       )}
-      <div className={title === undefined ? undefined : "mt-3"}>{children}</div>
+      <div
+        className={`${title === undefined ? "" : "mt-3"} min-w-0 lg:grid lg:grid-cols-[minmax(0,40rem)_14rem] lg:items-start lg:justify-between lg:gap-8`}
+      >
+        <div className="min-w-0">{children}</div>
+        {artwork !== undefined && (
+          <div
+            data-result-story-artwork="true"
+            aria-hidden="true"
+            className="hidden aspect-4/3 w-56 self-start overflow-hidden lg:block"
+          >
+            <Image
+              src={artwork.src}
+              width={artwork.width}
+              height={artwork.height}
+              alt={artwork.alt}
+              sizes="(min-width: 1024px) 224px, 0px"
+              className="h-full w-full object-contain"
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -98,7 +126,13 @@ function SceneProse({ items }: { readonly items: readonly SceneNote[] }) {
   );
 }
 
-export function ResultStoryView({ profile }: { readonly profile: ResultProfile }) {
+export function ResultStoryView({
+  profile,
+  artwork,
+}: {
+  readonly profile: ResultProfile;
+  readonly artwork?: ResultStoryArtworkSet;
+}) {
   const portrait = profile.portrait;
 
   /*
@@ -110,7 +144,7 @@ export function ResultStoryView({ profile }: { readonly profile: ResultProfile }
   return (
     <div data-result-view="story" className="flex flex-col gap-6">
       <Card title="선생님은 이런 교사입니다">
-        <Block first>
+        <Block first artwork={artwork?.intro}>
           <Prose paragraphs={opening} />
         </Block>
 
@@ -122,20 +156,20 @@ export function ResultStoryView({ profile }: { readonly profile: ResultProfile }
               그것이 교실에 어떻게 남는가 → 그래서 어떤 오해를 받는가.
               교실 신호를 먼저 보여 주면 아직 누구 이야기인지 모르는 채로 물건 목록을 읽습니다.
             */}
-            <Block title="아이들이 느끼는 선생님">
+            <Block title="아이들이 느끼는 선생님" artwork={artwork?.fromKids}>
               <Prose paragraphs={portrait.fromKids} />
             </Block>
-            <Block title="무엇을 중요하게 여기는가">
+            <Block title="무엇을 중요하게 여기는가" artwork={artwork?.drive}>
               <Prose paragraphs={portrait.drive} />
             </Block>
             {/*
               문항이 묻지 않은 자리입니다. 게시판·서랍·알림장처럼 체크한 적 없는 곳에서
               네 방향의 조합이 실제로 만들어 내는 것을 보여 줍니다.
             */}
-            <Block title="선생님 교실은 이렇습니다">
+            <Block title="선생님 교실은 이렇습니다" artwork={artwork?.classroomSigns}>
               <Prose paragraphs={portrait.classroomSigns} />
             </Block>
-            <Block title="자주 듣는 오해">
+            <Block title="자주 듣는 오해" artwork={artwork?.misread}>
               <Prose paragraphs={portrait.misread} />
             </Block>
           </>
@@ -151,18 +185,22 @@ export function ResultStoryView({ profile }: { readonly profile: ResultProfile }
         */}
         {portrait !== undefined && (
           <>
-            <Block first title="수업을 만들 때">
+            <Block first title="수업을 만들 때" artwork={artwork?.inLessons}>
               <Prose paragraphs={portrait.inLessons} />
             </Block>
-            <Block title="아이를 대할 때">
+            <Block title="아이를 대할 때" artwork={artwork?.withStudents}>
               <Prose paragraphs={portrait.withStudents} />
             </Block>
           </>
         )}
-        <Block first={portrait === undefined} title="강점이 되는 순간">
+        <Block
+          first={portrait === undefined}
+          title="강점이 되는 순간"
+          artwork={artwork?.shiningMoments}
+        >
           <SceneProse items={profile.shiningMoments} />
         </Block>
-        <Block title="여유가 줄었을 때">
+        <Block title="여유가 줄었을 때" artwork={artwork?.whenTired}>
           {/*
             성격 묘사의 '여유가 없을 때'와 장면 목록을 한 구역에 둡니다.
             같은 이야기를 카드 두 곳에 나눠 실으면 읽는 사람이 두 번 읽고도 덜 남습니다.

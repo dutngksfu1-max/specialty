@@ -339,6 +339,7 @@ describe("StaticAssessmentCatalog", () => {
     expect(presentation?.heroArtwork.src).toMatch(/^\/assessments\//);
     expect(presentation?.sectionArtwork).toHaveLength(4);
     expect(presentation?.typeArtwork).toHaveLength(16);
+    expect(Object.keys(presentation?.resultStoryArtwork ?? {})).toHaveLength(9);
     expect(presentation?.responseScaleGuide).toHaveLength(5);
     expect(presentation?.descriptionEmphasisTerms).toHaveLength(3);
     for (const term of presentation?.descriptionEmphasisTerms ?? []) {
@@ -452,6 +453,20 @@ describe("검사 프레젠테이션 무결성", () => {
     expect(artwork).toHaveLength(32);
     expect(new Set(artwork.map((item) => item.src)).size).toBe(32);
     for (const item of artwork) {
+      expect(existsSync(resolve(process.cwd(), "public", item.src.slice(1))), item.src).toBe(true);
+    }
+  });
+
+  it("줄글 보기의 아홉 장면 삽화가 같은 규격의 로컬 파일로 존재합니다", () => {
+    const presentation = staticAssessmentCatalog.findPresentationBySlug("teacher-style");
+    const artwork = Object.values(presentation?.resultStoryArtwork ?? {});
+
+    expect(artwork).toHaveLength(9);
+    expect(new Set(artwork.map((item) => item.src)).size).toBe(9);
+    for (const item of artwork) {
+      expect(item.width).toBe(640);
+      expect(item.height).toBe(480);
+      expect(item.alt).toBe("");
       expect(existsSync(resolve(process.cwd(), "public", item.src.slice(1))), item.src).toBe(true);
     }
   });

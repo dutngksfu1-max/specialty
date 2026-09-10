@@ -72,6 +72,62 @@ export const teacherStylePresentation = {
     { resultKey: "nnnp", artwork: characterArtwork("docm") },
     { resultKey: "nnnn", artwork: characterArtwork("docl") },
   ],
+  resultStoryArtwork: {
+    intro: {
+      src: "/assessments/teacher-style/story/intro.png",
+      width: 640,
+      height: 480,
+      alt: "",
+    },
+    fromKids: {
+      src: "/assessments/teacher-style/story/from-kids.png",
+      width: 640,
+      height: 480,
+      alt: "",
+    },
+    drive: {
+      src: "/assessments/teacher-style/story/values.png",
+      width: 640,
+      height: 480,
+      alt: "",
+    },
+    classroomSigns: {
+      src: "/assessments/teacher-style/story/classroom.png",
+      width: 640,
+      height: 480,
+      alt: "",
+    },
+    misread: {
+      src: "/assessments/teacher-style/story/misread.png",
+      width: 640,
+      height: 480,
+      alt: "",
+    },
+    inLessons: {
+      src: "/assessments/teacher-style/story/lessons.png",
+      width: 640,
+      height: 480,
+      alt: "",
+    },
+    withStudents: {
+      src: "/assessments/teacher-style/story/with-students.png",
+      width: 640,
+      height: 480,
+      alt: "",
+    },
+    shiningMoments: {
+      src: "/assessments/teacher-style/story/strengths.png",
+      width: 640,
+      height: 480,
+      alt: "",
+    },
+    whenTired: {
+      src: "/assessments/teacher-style/story/when-tired.png",
+      width: 640,
+      height: 480,
+      alt: "",
+    },
+  },
   responseScaleGuide: [
     {
       value: 1,

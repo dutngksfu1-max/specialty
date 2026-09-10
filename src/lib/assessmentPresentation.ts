@@ -54,6 +54,19 @@ export interface CharacterArtworkSet {
   readonly female: LocalArtwork;
 }
 
+/** 줄글 보기의 고정 구역에 대응하는 검사별 장면 삽화입니다. */
+export interface ResultStoryArtworkSet {
+  readonly intro: LocalArtwork;
+  readonly fromKids: LocalArtwork;
+  readonly drive: LocalArtwork;
+  readonly classroomSigns: LocalArtwork;
+  readonly misread: LocalArtwork;
+  readonly inLessons: LocalArtwork;
+  readonly withStudents: LocalArtwork;
+  readonly shiningMoments: LocalArtwork;
+  readonly whenTired: LocalArtwork;
+}
+
 /** 검사 소개에서만 쓰는 척도별 판단 기준입니다. 채점·세션 모델에는 포함하지 않습니다. */
 export interface ResponseScaleGuideItem {
   readonly value: number;
@@ -75,6 +88,8 @@ export interface AssessmentPresentation {
     readonly resultKey: ResultKey;
     readonly artwork: CharacterArtworkSet;
   }[];
+  /** 제공하면 줄글 보기의 넓은 화면에서 구역별 장면 삽화를 표시합니다. */
+  readonly resultStoryArtwork?: ResultStoryArtworkSet;
   /** 제공하면 소개 화면에서 각 응답 라벨과 함께 표시합니다. */
   readonly responseScaleGuide?: readonly ResponseScaleGuideItem[];
 }

@@ -597,7 +597,10 @@ export function ResultRenderer({
       >
 
         <TabPanel value="story" className="mt-8">
-          <ResultStoryView profile={profile} />
+          <ResultStoryView
+            profile={profile}
+            artwork={presentation?.resultStoryArtwork}
+          />
         </TabPanel>
 
         <TabPanel value="detail" className="mt-6">

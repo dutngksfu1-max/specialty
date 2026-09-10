@@ -63,6 +63,17 @@ type AssessmentPresentation = {
     sectionId: SectionId;
     artwork: LocalArtwork;
   }[];
+  resultStoryArtwork?: {
+    intro: LocalArtwork;
+    fromKids: LocalArtwork;
+    drive: LocalArtwork;
+    classroomSigns: LocalArtwork;
+    misread: LocalArtwork;
+    inLessons: LocalArtwork;
+    withStudents: LocalArtwork;
+    shiningMoments: LocalArtwork;
+    whenTired: LocalArtwork;
+  };
   responseScaleGuide?: readonly {
     value: number;
     criterion: string;
@@ -358,6 +369,9 @@ hover에서 카드 전체를 위로 들어 올리지 않습니다. Button·Menu 
 - 캐릭터 영역의 명칭은 **나를 상징하는 캐릭터**로 통일합니다. 명칭은 이미지 상단 테두리보다 위에 옅은 클레이색 `radius-sm` 라벨로 배치합니다. 데스크톱 캐릭터 열은 최소 18rem, 이미지는 최대 21rem을 확보해 왼쪽 결과 정보와 상·하단의 시각적 무게를 맞춥니다 (DEC-057).
 - 히어로의 **4렌즈 코드**는 결과 제목 다음으로 큰 요소이며, 자리별 해설을 함께 둡니다 (DEC-049). 네 자리 모두 선택된 방향의 글자를 하나씩 표시합니다. 환산 표기는 구분선으로 나눈 별도 구역에 접힘 없이 두되, 4렌즈 코드보다 작게 둡니다 (DEC-057). 라벨이 값을 담는 세로 배치를 쓰고 semantic 토큰만 씁니다 (DEC-056).
 - 저장·재검사·이름 변경은 결과 본문 뒤의 하나의 마무리 구역에 모읍니다.
+- 줄글 보기의 각 구역은 1024px 이상에서만 `본문 최대 40rem + 장면 삽화 14rem`의 두 열을 사용합니다. 1024px 미만과 200% 확대에서는 삽화를 숨겨 글의 폭과 읽는 순서를 지킵니다.
+- 줄글 삽화는 검사 `presentation.resultStoryArtwork`로 주입합니다. 아홉 구역 모두 4:3·640×480 원본, 투명 배경, 같은 선 굵기와 낮은 채도의 세이지·클레이 수채 문법을 사용하며 정보가 아닌 장식 이미지로 처리합니다.
+- 삽화에는 학생 얼굴·그림 속 글자·별도 카드·그림자·캡션을 두지 않습니다. 긴 구역에서도 그림을 늘이거나 반복하지 않고 첫 문단 위쪽 기준선에 한 장만 정렬합니다.
 
 ### 9.1 Phase D 결과 카드 문법
 

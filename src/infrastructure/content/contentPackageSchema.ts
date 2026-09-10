@@ -257,6 +257,18 @@ const characterArtworkSetSchema = z.object({
   female: localArtworkSchema,
 });
 
+const resultStoryArtworkSetSchema = z.object({
+  intro: localArtworkSchema,
+  fromKids: localArtworkSchema,
+  drive: localArtworkSchema,
+  classroomSigns: localArtworkSchema,
+  misread: localArtworkSchema,
+  inLessons: localArtworkSchema,
+  withStudents: localArtworkSchema,
+  shiningMoments: localArtworkSchema,
+  whenTired: localArtworkSchema,
+});
+
 const responseScaleGuideItemSchema = z.object({
   value: z.number().int(),
   criterion: z.string().min(1),
@@ -287,6 +299,7 @@ const presentationSchema = z.object({
       }),
     )
     .optional(),
+  resultStoryArtwork: resultStoryArtworkSetSchema.optional(),
   responseScaleGuide: z.array(responseScaleGuideItemSchema).optional(),
 });
 
@@ -731,6 +744,7 @@ export function parseAssessmentContentPackage(
   const responseScaleGuide = presentation.responseScaleGuide;
   const descriptionEmphasisTerms = presentation.descriptionEmphasisTerms ?? [];
   const typeArtwork = presentation.typeArtwork;
+  const resultStoryArtwork = presentation.resultStoryArtwork;
   const typeArtworkKeys = typeArtwork?.map((item) => String(item.resultKey)) ?? [];
   const resultKeys = definition.value.resultProfiles.map((profile) => String(profile.key));
   const duplicates = findDuplicates(artworkSectionIds);
@@ -751,6 +765,9 @@ export function parseAssessmentContentPackage(
       hasForbiddenTerm(item.artwork.male.src) ||
       hasForbiddenTerm(item.artwork.female.src),
   );
+  const forbiddenResultStoryArtwork = resultStoryArtwork === undefined
+    ? undefined
+    : Object.entries(resultStoryArtwork).find(([, artwork]) => hasForbiddenTerm(artwork.src));
   const missingGuideValues = responseScaleGuide === undefined
     ? []
     : responseValues.filter((value) => !guideValues.includes(value));
@@ -794,6 +811,9 @@ export function parseAssessmentContentPackage(
     forbiddenTypeArtwork === undefined
       ? ""
       : `presentation.typeArtwork.${String(forbiddenTypeArtwork.resultKey)} 경로에 노출 금지 표현이 있습니다.`,
+    forbiddenResultStoryArtwork === undefined
+      ? ""
+      : `presentation.resultStoryArtwork.${forbiddenResultStoryArtwork[0]} 경로에 노출 금지 표현이 있습니다.`,
     forbiddenGuide === undefined
       ? ""
       : `presentation.responseScaleGuide.${forbiddenGuide.value}에 노출 금지 표현이 있습니다.`,
